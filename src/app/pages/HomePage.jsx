@@ -11,17 +11,10 @@ import { supabase } from '../../lib/supabase';
 import { SHIPPING_INFO } from '../../lib/config';
 import { formatPrice } from '../../lib/utils';
 
-// Default hero banners (gambar dari luar/unsplash)
-const DEFAULT_HERO_BANNERS = [
-  { id: 1, image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&h=1080&fit=crop', alt: 'Banner 1' },
-  { id: 2, image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=1920&h=1080&fit=crop', alt: 'Banner 2' },
-  { id: 3, image: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=1920&h=1080&fit=crop', alt: 'Banner 3' },
-];
 
 export const HomePage = () => {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState({ newest: [], bestsellers: [], sale: [] });
-  const [heroBanners, setHeroBanners] = useState(DEFAULT_HERO_BANNERS);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -75,36 +68,16 @@ export const HomePage = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
       {/* Hero Section - Clean & Bold */}
-      <section className="relative h-[60vh] md:h-[70vh] flex items-center justify-center overflow-hidden bg-background">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
+      <section className="relative">
+        <div className="w-full mt-20 aspect-[4/2] md:aspect-[16/9] overflow-hidden">
           <img
-            src="https://images.unsplash.com/photo-1693071433903-41260e7f07e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwbHVzJTIwc2l6ZSUyMG1hbiUyMGNvbmZpZGVudCUyMGZhc2hpb24lMjBwb3J0cmFpdHxlbnwxfHx8fDE3NzI5NTg2MjV8MA&ixlib=rb-4.1.0&q=80&w=1080"
-            alt="Highest World Hero"
-            className="w-full h-full object-cover object-center"
+            src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1773074885/CONTOH_BANNER_omzplm.jpg"
+            alt="Highest World Collection"
+            className="w-full h-full object-cover"
           />
-          {/* Subtle Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/30 to-background"></div>
-        </div>
-        
-        {/* Hero Content */}
-        <div className="container mx-auto px-4 relative z-10 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl tracking-[0.15em] leading-tight mb-4">
-              <span className="block text-foreground drop-shadow-2xl">SIZE DOESN'T</span>
-              <span className="block text-foreground drop-shadow-2xl">ALWAYS</span>
-              <span className="block gold-shimmer drop-shadow-2xl">MATTER</span>
-            </h1>
-          </motion.div>
         </div>
       </section>
-
       {/* Categories Section */}
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
