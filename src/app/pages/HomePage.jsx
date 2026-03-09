@@ -76,67 +76,31 @@ export const HomePage = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Hero Section - Clean & Bold */}
+      <section className="relative h-[60vh] md:h-[70vh] flex items-center justify-center overflow-hidden bg-background">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img
-            src="https://images.unsplash.com/photo-1741709847316-0f5f29779ae7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBzdHJlZXR3ZWFyJTIwZmFzaGlvbiUyMG1hbiUyMG92ZXJzaXplZHxlbnwxfHx8fDE3NzI5NTc0NDF8MA&ixlib=rb-4.1.0&q=80&w=1080"
-            alt="Hero Background"
-            className="w-full h-full object-cover"
+            src="https://images.unsplash.com/photo-1693071433903-41260e7f07e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwbHVzJTIwc2l6ZSUyMG1hbiUyMGNvbmZpZGVudCUyMGZhc2hpb24lMjBwb3J0cmFpdHxlbnwxfHx8fDE3NzI5NTg2MjV8MA&ixlib=rb-4.1.0&q=80&w=1080"
+            alt="Highest World Hero"
+            className="w-full h-full object-cover object-center"
           />
-          {/* Dark Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-background"></div>
+          {/* Subtle Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/30 to-background"></div>
         </div>
         
-        <div className="container mx-auto px-4 text-center relative z-10">
+        {/* Hero Content */}
+        <div className="container mx-auto px-4 relative z-10 text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="space-y-6"
+            transition={{ duration: 0.6 }}
           >
-            <motion.h1 
-              className="font-display text-6xl md:text-8xl lg:text-9xl tracking-[0.15em] leading-none"
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              <span className="block text-foreground">BIG SIZE.</span>
-              <span className="block gold-shimmer">REAL STYLE.</span>
-            </motion.h1>
-
-            <motion.p 
-              className="text-lg md:text-xl mb-4 text-muted-foreground max-w-2xl mx-auto font-body"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-            >
-              Toko fashion premium spesialis pakaian bigsize untuk pria. <br />
-              Ukuran lengkap 2XL-8XL dengan kualitas terbaik.
-            </motion.p>
-
-            <motion.div 
-              className="flex flex-col sm:flex-row gap-4 mt-16 justify-center items-center pt-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-            >
-              <Button asChild size="lg" className="border-2 border-accent-gold text-accent-gold hover:bg-accent-gold hover:text-accent-gold font-subheading uppercase tracking-wider text-lg px-8">
-                <Link to="/produk">BELANJA SEKARANG</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="border-2 border-accent-gold text-accent-gold hover:bg-accent-gold hover:text-accent-gold font-subheading uppercase tracking-wider text-lg px-8">
-                <Link to="/koleksi">LIHAT KOLEKSI</Link>
-              </Button>
-            </motion.div>
-          </motion.div>
-
-          <motion.div 
-            className="absolute bottom-14 mb-12 left-1/2 -translate-x-1/2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, y: [0, 10, 0] }}
-            transition={{ opacity: { delay: 1 }, y: { repeat: Infinity, duration: 1.5 } }}
-          >
-            <ChevronDown className="w-8 h-8 text-accent-gold" />
+            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl tracking-[0.15em] leading-tight mb-4">
+              <span className="block text-foreground drop-shadow-2xl">SIZE DOESN'T</span>
+              <span className="block text-foreground drop-shadow-2xl">ALWAYS</span>
+              <span className="block gold-shimmer drop-shadow-2xl">MATTER</span>
+            </h1>
           </motion.div>
         </div>
       </section>
