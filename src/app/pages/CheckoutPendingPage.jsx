@@ -16,7 +16,7 @@ export const CheckoutPendingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen mt-20 bg-background flex items-center justify-center py-12 px-4">
       <div className="max-w-lg w-full">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-yellow-500/20 rounded-full mb-6">

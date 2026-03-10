@@ -176,7 +176,7 @@ export const ProductsPage = () => {
 
         <div className="flex gap-8">
           <aside className="hidden lg:block w-64 flex-shrink-0">
-            <div className="sticky top-32 bg-card border border-border rounded-lg p-6">
+            <div className="sticky top-32 bg-card border border-border rounded-lg p-4 max-h-[calc(100vh-160px)] overflow-y-auto">
               <FilterPanel />
             </div>
           </aside>
@@ -191,13 +191,13 @@ export const ProductsPage = () => {
                       Filter
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="left" className="w-[300px]">
-                    <SheetHeader>
+                  <SheetContent side="left" className="w-[300px] [&>div]:!overflow-y-auto">
+                    <SheetHeader className="sticky top-0 bg-background z-10">
                       <SheetTitle className="font-display tracking-wider">
                         FILTER PRODUK
                       </SheetTitle>
                     </SheetHeader>
-                    <div className="mt-6">
+                    <div className="mt-6 overflow-y-auto h-[calc(100vh-100px)]">
                       <FilterPanel />
                     </div>
                   </SheetContent>
