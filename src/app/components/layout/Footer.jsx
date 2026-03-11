@@ -5,9 +5,25 @@ import { Separator } from '../ui/separator';
 import { SITE_CONFIG } from '../../../lib/config';
 import { categories } from '../../../data/categories';
 import { generateGeneralWAMessage } from '../../../lib/utils';
+import { supabase } from '../../../lib/supabase';
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const [categories, setCategories] = React.useState([]);
+
+  React.useEffect(() => {
+    const fetchCategories = async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name, slug')
+        .eq('is_active', true)
+        .order('name')
+        .limit(5); // Batasi jumlah kategori yang ditampilkan
+
+      if (data) setCategories(data);
+    };
+    fetchCategories();
+  }, []);
 
   const socialLinks = [
     { name: 'Instagram', icon: Instagram, url: `https://instagram.com/${SITE_CONFIG.instagram.replace('@', '')}` },
@@ -32,6 +48,11 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Column */}
           <div>
+            <img 
+              src="/logo-hw-kuning.png" 
+              alt="Highest World" 
+              className="h-10 md:h-12 w-auto"
+            />
             <h3 className="font-display text-2xl tracking-[0.15em] text-accent-gold mb-3">
               HIGHEST WORLD
             </h3>
@@ -85,6 +106,7 @@ export const Footer = () => {
                 <li key={category.id}>
                   <Link
                     to={`/koleksi/${category.slug}`}
+                    alt={category.name}
                     className="text-sm text-muted-foreground hover:text-accent-gold transition-colors"
                   >
                     {category.name}

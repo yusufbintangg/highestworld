@@ -109,12 +109,12 @@ export const ProductsPage = () => {
               checked={filters.category === 'all'}
               onCheckedChange={() => handleCategoryFilter('all')}
             />
-            <Label htmlFor="cat-all" className="cursor-pointer">
+            <Label htmlFor="cat-all" className="cursor-pointer h-8">
               Semua Produk
             </Label>
           </div>
           {categories.map((category) => (
-            <div key={category.id} className="flex items-center space-x-2">
+            <div key={category.id} className="flex items-center h-8 space-x-2">
               <Checkbox
                 id={`cat-${category.slug}`}
                 checked={filters.category === category.slug}
@@ -140,7 +140,7 @@ export const ProductsPage = () => {
             { value: 'Best Seller', label: 'Best Seller' },
             { value: 'Sale', label: 'Sedang Promo' },
           ].map((badge) => (
-            <div key={badge.value} className="flex items-center space-x-2">
+            <div key={badge.value} className="flex items-center h-8 space-x-2">
               <Checkbox
                 id={`badge-${badge.value}`}
                 checked={filters.badges.includes(badge.value)}

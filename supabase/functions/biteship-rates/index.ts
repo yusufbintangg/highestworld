@@ -24,8 +24,7 @@ serve(async (req) => {
       body: JSON.stringify({
         origin_postal_code: parseInt(origin_postal_code),
         destination_postal_code: parseInt(destination_postal_code),
-        couriers: "jne,j&t,sicepat,pos,tiki,ninja,lion,anteraja,wahana",
-        items: [
+        couriers: "jne,jnt,sicepat,ide",        items: [
           {
             name: "Produk Highest World",
             description: "Pakaian",
