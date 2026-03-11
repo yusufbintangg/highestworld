@@ -89,7 +89,7 @@ export const OrderDetailPage = () => {
   const minutesLeft = expiredAt ? Math.max(0, Math.ceil((expiredAt - now) / (1000 * 60))) : 0;
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
+    <div className="min-h-screen mt-20 bg-background py-8 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
 
         {/* Header */}

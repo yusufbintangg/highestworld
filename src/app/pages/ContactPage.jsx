@@ -223,6 +223,36 @@ ${data.message}`;
                 CHAT WHATSAPP LANGSUNG
               </a>
             </Button>
+
+            {/* Google Maps */}
+            <Separator />
+
+            <div>
+              <h3 className="font-subheading text-xl uppercase tracking-wider mb-4 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-accent-gold" />
+                Lokasi Toko
+              </h3>
+              <div className="rounded-lg overflow-hidden border border-border h-64">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3952.523469764618!2d110.4003815!3d-7.1042166!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7088e767bb481b%3A0x5c07527a968091ed!2sHighest%20World!5e0!3m2!1sid!2sid!4v1700000000000!5m2!1sid!2sid"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Lokasi Highest World"
+                />
+              </div>
+              <a
+                href="https://www.google.com/maps/place/Highest+World/@-7.1042166,110.4003815,17z/data=!3m1!4b1!4m6!3m5!1s0x2e7088e767bb481b:0x5c07527a968091ed!8m2!3d-7.1042166!4d110.4029564!16s%2Fg%2F11j4028cgf?entry=ttu&g_ep=EgoyMDI2MDMwNS4wIKXMDSoASAFQAw%3D%3D"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-center text-sm text-muted-foreground hover:text-accent-gold transition-colors mt-2"
+              >
+                Buka di Google Maps →
+              </a>
+            </div>
           </div>
         </div>
       </div>
