@@ -1,5 +1,5 @@
+import { useParams, Navigate, useNavigate } from 'react-router';
 import React, { useState, useEffect } from 'react';
-import { useParams, Navigate } from 'react-router';
 import { Share2, ShoppingCart, MessageCircle, Package, Truck, ShieldCheck } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -20,6 +20,7 @@ const Label = ({ children, className = '' }) => (
 export const ProductDetailPage = () => {
   const { slug } = useParams();
   const { addToCart } = useCart();
+  const navigate = useNavigate();
 
   const [product, setProduct] = useState(null);
   const [variants, setVariants] = useState([]);
@@ -156,6 +157,25 @@ export const ProductDetailPage = () => {
     if (!selectedSize) { toast.error('Pilih ukuran terlebih dahulu'); return; }
     const waUrl = generateProductWAMessage(product, selectedColor, selectedSize);
     window.open(waUrl, '_blank');
+  };
+
+  const handleDirectCheckout = () => {
+    if (!selectedColor) { toast.error('Pilih warna terlebih dahulu'); return; }
+    if (!selectedSize) { toast.error('Pilih ukuran terlebih dahulu'); return; }
+    if (currentStock === 0) { toast.error('Stok habis untuk pilihan ini'); return; }
+    
+    addToCart({
+      ...product,
+      price: activePrice,
+      variantId: selectedVariant?.id || null,
+      variantImages: selectedVariant?.images || [],
+      maxStock: currentStock,
+    }, selectedColor, selectedSize, 1);
+    
+    toast.success('Redirecting ke checkout...');
+    setTimeout(() => {
+      navigate('/checkout');
+    }, 500);
   };
 
   const handleShare = () => {
@@ -346,12 +366,20 @@ export const ProductDetailPage = () => {
                 TAMBAH KE KERANJANG
               </Button>
               <Button
+                onClick={handleDirectCheckout}
+                disabled={currentStock === 0}
+                className="w-full bg-gradient-to-r from-accent-gold to-accent-gold-light border-2 border-accent-gold text-accent-gold font-subheading uppercase tracking-wider h-14 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+              >
+                🛒 CHECKOUT LANGSUNG
+              </Button>
+              <Button
                 onClick={handleWhatsAppOrder}
-                className="w-full bg-accent-gold hover:bg-accent-gold-light text-background font-subheading uppercase tracking-wider h-12"
+                className="w-full bg-accent-gold hover:bg-accent-gold-light text-accent-gold font-subheading uppercase tracking-wider h-12"
               >
                 <MessageCircle className="w-5 h-5 mr-2" />
                 BELI VIA WHATSAPP
               </Button>
+
             </div>
 
             <Separator />

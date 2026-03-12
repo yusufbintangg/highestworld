@@ -135,12 +135,3 @@ export const CartDrawer = ({ children }) => {
     </Sheet>
   );
 };
-
-
-//alert-dialog.tsx, aspect-ratio.tsx, avatar.tsx, breadcrumb.tsx,
-//collapsible.tsx, command.tsx, context-menu.tsx, dropdown-menu.tsx,
-//hover-card.tsx, input-otp.tsx, menubar.tsx, navigation-menu.tsx,
-//pagination.tsx, progress.tsx, resizable.tsx, scroll-area.tsx,
-//skeleton.tsx, slider.tsx, switch.tsx, table.tsx, tabs.tsx,
-//toggle-group.tsx, toggle.tsx, tooltip.tsx, use-mobile.ts
-//
