@@ -254,6 +254,9 @@ export const ProductDetailPage = () => {
             </div>
 
             <Separator className="bg-accent-gold" />
+                  <Badge variant="destructive" className="text-2xl font-subheading">
+                    HEMAT {discount}%
+                  </Badge>
 
             {/* Harga */}
             <div className="flex items-baseline gap-3">
@@ -265,9 +268,6 @@ export const ProductDetailPage = () => {
                   <span className="font-mono text-lg text-muted-foreground line-through">
                     {formatPrice(activeOriginalPrice)}
                   </span>
-                  <Badge variant="destructive" className="font-subheading">
-                    HEMAT {discount}%
-                  </Badge>
                 </>
               )}
             </div>
@@ -362,7 +362,6 @@ export const ProductDetailPage = () => {
                 disabled={currentStock === 0}
                 className="w-full border-2 text-accent-gold font-subheading uppercase tracking-wider h-12"
               >
-                <ShoppingCart className="w-5 h-5 mr-2" />
                 TAMBAH KE KERANJANG
               </Button>
               <Button
