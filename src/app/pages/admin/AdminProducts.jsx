@@ -271,7 +271,7 @@ export const AdminProducts = () => {
                     <Input type="number" placeholder="Berat (gram) *" value={form.weight} onChange={(e) => setForm(p => ({ ...p, weight: e.target.value }))} required />
                   </div>
                   <textarea
-                    className="w-full border border-border rounded-md px-3 py-2 bg-background text-sm min-h-[60px]"
+                    className="w-full border border-border rounded-md px-3 py-2 bg-background text-sm min-h-[150px]"
                     placeholder="URL Gambar (satu per baris)"
                     value={form.images}
                     onChange={(e) => setForm(p => ({ ...p, images: e.target.value }))}
@@ -321,13 +321,13 @@ export const AdminProducts = () => {
                           <div className="col-span-2 text-right">Aksi</div>
                         </div>
                         {/* Rows */}
-                        <div className="space-y-1 max-h-64 overflow-y-auto">
+                        <div className="space-y-1 max-h-134 overflow-y-auto">
                           {existingVariants.map((v) => (
                             <div key={v.id} className="grid grid-cols-12 gap-2 p-3 items-center text-xs bg-background hover:bg-muted/50 border-b border-border last:border-b-0">
                               {/* Warna */}
                               <div className="col-span-2 flex items-center gap-2">
                                 {v.images && Array.isArray(v.images) && v.images.length > 0 ? (
-                                  <img src={v.images[0]} alt={v.color} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                                  <img src={v.images[0]} alt={v.color} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
                                 ) : (
                                   <div className="w-6 h-6 rounded-full border flex-shrink-0" style={{ backgroundColor: v.color_hex }} />
                                 )}
@@ -454,7 +454,7 @@ export const AdminProducts = () => {
                       <div className="space-y-1">
                         <p className="text-xs text-muted-foreground">URL Gambar warna ini (satu per baris)</p>
                         <textarea
-                          className="w-full border border-border rounded-md px-2 py-1.5 bg-background text-xs min-h-[50px]"
+                          className="w-full border border-border rounded-md px-2 py-1.5 bg-background text-xs min-h-[160px]"
                           placeholder={"https://...\nhttps://..."}
                           value={v.images || ''}
                           onChange={(e) => updateVariant(i, 'images', e.target.value)}
@@ -530,13 +530,13 @@ export const AdminProducts = () => {
                   <textarea 
                     value={editingVariant.images ? (Array.isArray(editingVariant.images) ? editingVariant.images.join('\n') : editingVariant.images) : ''}
                     onChange={(e) => setEditingVariant(p => ({ ...p, images: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) }))}
-                    className="w-full border border-border rounded-md px-3 py-2 bg-background text-sm min-h-[80px]"
+                    className="w-full border border-border rounded-md px-3 py-2 bg-background text-sm min-h-[160px]"
                     placeholder="https://...\nhttps://..."
                   />
                   {editingVariant.images && Array.isArray(editingVariant.images) && editingVariant.images.length > 0 && (
                     <div className="mt-3 grid grid-cols-4 gap-2">
                       {editingVariant.images.slice(0, 4).map((img, i) => (
-                        <img key={i} src={img} alt={`Preview ${i}`} className="w-20 h-20 object-cover rounded-lg border border-border" />
+                        <img key={i} src={img} alt={`Preview ${i}`} className="w-40 h-40 object-cover rounded-lg border border-border" />
                       ))}
                     </div>
                   )}
