@@ -47,7 +47,7 @@ export const AdminStock = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, []);
+    useEffect(() => { fetchData(); }, []);
 
   const handleStockChange = (variantId, value) => {
     setEditedStocks(prev => ({ ...prev, [variantId]: value }));
@@ -61,26 +61,25 @@ export const AdminStock = () => {
     setEditedStocks(prev => ({ ...prev, [variantId]: newVal }));
   };
 
-  const handleSaveAll = async () => {
+    const handleSaveAll = async () => {
     if (Object.keys(editedStocks).length === 0) {
       toast.info('Tidak ada perubahan');
       return;
     }
     setSaving(true);
 
-    const updates = Object.entries(editedStocks).map(([id, stock]) =>
+     const updates = Object.entries(editedStocks).map(([id, stock]) =>
       supabase.from('product_variants').update({ stock: parseInt(stock) }).eq('id', id)
     );
 
-    await Promise.all(updates);
+     await Promise.all(updates);
     toast.success(`${Object.keys(editedStocks).length} varian berhasil diupdate!`);
     setEditedStocks({});
     setSaving(false);
     fetchData();
   };
 
-  // Group variants by product
-  const filtered = variants.filter(v => {
+    const filtered = variants.filter(v => {
     const matchSearch = !search ||
       v.products?.name?.toLowerCase().includes(search.toLowerCase()) ||
       v.sku?.toLowerCase().includes(search.toLowerCase()) ||
@@ -90,22 +89,21 @@ export const AdminStock = () => {
     return matchSearch && matchProduct;
   });
 
-  // Sort variants: by color (alphabetically), then by size
-  const sortedVariants = [...filtered].sort((a, b) => {
+    const sortedVariants = [...filtered].sort((a, b) => {
     const colorA = (a.color || '').toLowerCase();
     const colorB = (b.color || '').toLowerCase();
     if (colorA !== colorB) return colorA.localeCompare(colorB);
     return getSizeOrder(a.size) - getSizeOrder(b.size);
   });
 
-  const grouped = sortedVariants.reduce((acc, v) => {
+    const grouped = sortedVariants.reduce((acc, v) => {
     const prodId = v.products?.id;
     if (!acc[prodId]) acc[prodId] = { name: v.products?.name, price: v.products?.price, original_price: v.products?.original_price, variants: [] };
     acc[prodId].variants.push(v);
     return acc;
   }, {});
 
-  const hasChanges = Object.keys(editedStocks).length > 0;
+    const hasChanges = Object.keys(editedStocks).length > 0;
 
   return (
     <div className="space-y-6">
