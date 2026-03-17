@@ -19,11 +19,16 @@ export const ProductsPage = () => {
     badges: []
   });
 
+  // State untuk search query jika ingin menambahkan fitur pencarian
+  // const [searchQuery, setSearchQuery] = useState('');
+  // State untuk menyimpan produk yang sedang diedit jika ingin menambahkan fitur edit produk
+  // const [editingProduct, setEditingProduct] = useState(null);
   // Fetch products dari Supabase
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
 
+      
       // Fetch categories
       const { data: catsData } = await supabase
         .from('categories')
@@ -60,8 +65,8 @@ export const ProductsPage = () => {
         filters.badges.every(badge => p.badges?.includes(badge))
       );
     }
-
-    // Sort
+    
+    // Sort produk berdasarkan sortBy
     switch (sortBy) {
       case 'price-low':
         result.sort((a, b) => a.price - b.price);
@@ -75,14 +80,19 @@ export const ProductsPage = () => {
       default:
         break;
     }
-
+    
+    // Jika ingin menambahkan fitur pencarian, bisa tambahkan filter berdasarkan searchQuery di sini
+    // contoh: result = result.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
     return result;
   }, [products, filters, sortBy]);
 
+    // Handler untuk filter kategori dan badge
+    // Untuk filter kategori, kita update state filters dengan category yang dipilih
   const handleCategoryFilter = (categorySlug) => {
     setFilters(prev => ({ ...prev, category: categorySlug }));
   };
 
+    // Untuk filter badge, kita update state filters dengan menambahkan atau menghapus badge dari array badges, tergantung apakah checkbox dicentang atau tidak
   const handleBadgeFilter = (badge, checked) => {
     setFilters(prev => ({
       ...prev,
@@ -92,6 +102,7 @@ export const ProductsPage = () => {
     }));
   };
 
+    // Handler untuk reset filter, kita set state filters kembali ke nilai awal yaitu category 'all' dan badges kosong
   const resetFilters = () => {
     setFilters({ category: 'all', badges: [] });
   };
