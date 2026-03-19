@@ -4,10 +4,10 @@
 // IMPORTANT: Replace these with your actual Midtrans credentials
 // Get your keys from https://dashboard.midtrans.com/
 export const MIDTRANS_CONFIG = {
-  clientKey: 'Mid-client-vJ85dMN8LuBSAmEt', // Replace with your Client Key
-  serverKey: 'Mid-server-Bpy5vHW4-qwb__05qrbSaYFA', // Replace with your Server Key (keep this secret!)
-  isProduction: false, // Set to true for production
-  apiUrl: 'https://app.sandbox.midtrans.com/snap/v1/transactions', // Sandbox URL
+  clientKey: import.meta.env.VITE_MIDTRANS_CLIENT_KEY, // Replace with your Client Key
+  serverKey: import.meta.env.VITE_MIDTRANS_SERVER_KEY, // Replace with your Server Key (keep this secret!)
+  isProduction: true, // Set to true for production
+  apiUrl: 'https://app.midtrans.com/snap/v1/transactions', // Sandbox URL
 };
 
 // Load Midtrans Snap script
@@ -199,7 +199,7 @@ export async function openMidtransPayment(orderData, callbacks = {}) {
       },
       onClose: () => {
         console.log('Payment popup closed');
-        if (callbacks.onClose) callbacks.onClose();
+        if (callbacks.onClose) callbacks.onClose({ order_number: orderNumber });
       },
     });
   } catch (error) {

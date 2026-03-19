@@ -58,6 +58,7 @@ export const CheckoutPage = () => {
   const [selectedArea, setSelectedArea] = useState(null);
   const areaRef = useRef(null);
   const searchTimeout = useRef(null);
+  const [pendingOrderNumber, setPendingOrderNumber] = useState(null);
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -245,7 +246,12 @@ export const CheckoutPage = () => {
           toast.error('Pembayaran gagal. Silakan coba lagi.');
           setIsProcessing(false);
         },
-        onClose: () => { setIsProcessing(false); },
+        onClose: () => {
+  setIsProcessing(false);
+  if (result?.order_number) {
+    navigate('/pesanan/' + result.order_number);
+  }
+},
       });
     } catch (error) {
       toast.error('Terjadi kesalahan. Silakan coba lagi.');
@@ -283,6 +289,7 @@ export const CheckoutPage = () => {
   };
 
   if (cartItems.length === 0) return null;
+  
 
   return (
     <div className="min-h-screen pt-32 pb-20">
