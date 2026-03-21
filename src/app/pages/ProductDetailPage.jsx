@@ -1,4 +1,6 @@
 import { useParams, Navigate, useNavigate } from 'react-router';
+import { useIsMobile } from '../components/ui/use-mobile';
+
 import React, { useState, useEffect } from 'react';
 import { Share2, ShoppingCart, MessageCircle, Package, Truck, ShieldCheck } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -21,8 +23,10 @@ export const ProductDetailPage = () => {
   const { slug } = useParams();
   const { addToCart } = useCart();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const [product, setProduct] = useState(null);
+
   const [variants, setVariants] = useState([]);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -244,7 +248,41 @@ export const ProductDetailPage = () => {
 
           {/* Kanan: Info Produk */}
           <div className="lg:sticky lg:top-24 lg:self-start space-y-6">
-            <div>
+            <div >
+              {isMobile ? (
+                /* Warna UNTUK MOBILE DEVICE */
+                <div className="space-y-3 mb-6">
+                  <div>
+                    <Label className="font-subheading uppercase tracking-wider">
+                      Pilih Warna
+                    </Label>
+                    {selectedColor && (
+                      <span className="text-bold text-accent-gold ml-2">
+                        — {selectedColor}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    {uniqueColors.map((color) => (
+                      <button
+                        key={color.name}
+                        onClick={() => handleColorSelect(color.name)}
+                        title={color.name}
+                        className={`
+                          w-8 h-8 rounded-full border-2
+                          transition-all duration-200
+                          ${selectedColor === color.name
+                            ? "border-amber-400 ring-1px ring-amber-300 scale-110"
+                            : "border-border hover:border-amber-300"
+                          }
+                        `}
+                        style={{ backgroundColor: color.hex }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
               <p className="text-xs font-subheading uppercase tracking-wider text-accent-gold mb-2">
                 {product.categories?.name || 'HIGHEST WORLD'}
               </p>
@@ -273,51 +311,47 @@ export const ProductDetailPage = () => {
             </div>
 
             <Separator />
-
-            {/* Pilih Warna */}
-            <div className="space-y-3">
-              <div>
-                <Label className="font-subheading uppercase tracking-wider">
-                  Pilih Warna
-                </Label>
-                        
-                {selectedColor && (
-                  <span className="text-sm text-muted-foreground ml-2">
-                    — {selectedColor}
-                  </span>
-                )}
+            {!isMobile ? (
+              /* Pilih Warna UNTUK DESKTOP MODE */
+              <div className="space-y-3 mb-6 lg:mb-0">
+                <div>
+                  <Label className="font-subheading uppercase tracking-wider">
+                    Pilih Warna
+                  </Label>
+                  {selectedColor && (
+                    <span className="text-bold text-accent-gold ml-2">
+                      — {selectedColor}
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {uniqueColors.map((color) => (
+                    <button
+                      key={color.name}
+                      onClick={() => handleColorSelect(color.name)}
+                      title={color.name}
+                      className={`
+                        w-8 h-8 rounded-full border-2
+                        transition-all duration-200
+                        ${selectedColor === color.name
+                          ? "border-amber-400 ring-1px ring-amber-300 scale-110"
+                          : "border-border hover:border-amber-300"
+                        }
+                      `}
+                      style={{ backgroundColor: color.hex }}
+                    />
+                  ))}
+                </div>
               </div>
-              
-              <div className="flex gap-2 flex-wrap">
-                {uniqueColors.map((color) => (
-                  <button
-                    key={color.name}
-                    onClick={() => handleColorSelect(color.name)}
-                    title={color.name}
-                    
-                    className={`
-                      w-8 h-8 rounded-full border-2
-                      transition-all duration-200
-                    
-                      ${selectedColor === color.name
-                        ? "border-amber-400 ring-1px ring-amber-300 scale-110"
-                        : "border-border hover:border-amber-300"
-                      }
-                    `}
-                    
-                    style={{ backgroundColor: color.hex }}
-                  />
-                ))}
-              </div>
-            </div>
+            ) : null}
 
             {/* Pilih Ukuran */}
-            <div className="space-y-3">
+            <div className="space-y-3 mt-3">
               <div className="flex justify-between items-center">
                 <div>
                   <Label className="font-subheading uppercase tracking-wider">Pilih Ukuran</Label>
                   {selectedSize && (
-                    <span className="text-sm text-muted-foreground ml-2">— {selectedSize}</span>
+                    <span className="text-bold text-accent-gold ml-2">— {selectedSize}</span>
                   )}
                 </div>
               </div>
