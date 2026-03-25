@@ -20,14 +20,10 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Generate order number
     const orderNumber = `HW-${Date.now()}`;
-
-    // Hitung total
     const subtotal = items.reduce((sum, i) => sum + (i.price * i.qty), 0);
     const total = subtotal + shipping.cost;
 
-    // Simpan order ke DB
     const { data: newOrder, error: orderError } = await supabase
       .from("orders")
       .insert({
@@ -55,14 +51,13 @@ serve(async (req) => {
 
     if (orderError) throw orderError;
 
-    // Simpan order items
     const orderItems = items.map(i => ({
       order_id: newOrder.id,
       product_id: i.product_id,
       variant_id: i.variant_id,
       product_name: i.name,
       size: i.size,
-      color: i.color,
+      sku_variant: i.sku || null,
       qty: i.qty,
       price: i.price,
       subtotal: i.price * i.qty,
@@ -70,17 +65,19 @@ serve(async (req) => {
     }));
 
     console.log('Inserting order items:', orderItems);
-    
-    const { data: insertedItems, error: orderItemsError } = await supabase.from("order_items").insert(orderItems).select();
-    
+
+    const { data: insertedItems, error: orderItemsError } = await supabase
+      .from("order_items")
+      .insert(orderItems)
+      .select();
+
     if (orderItemsError) {
       console.error('Error inserting order_items:', orderItemsError);
       throw new Error('Gagal simpan order items: ' + orderItemsError.message);
     }
-    
+
     console.log('Order items inserted successfully:', insertedItems);
 
-    // Buat transaksi Midtrans
     const midtransOrderId = `HW-${newOrder.id}`;
 
     const midtransPayload = {
@@ -101,7 +98,7 @@ serve(async (req) => {
           id: i.product_id,
           price: i.price,
           quantity: i.qty,
-          name: `${i.name} (${i.color}/${i.size})`.substring(0, 50),
+          name: `${i.name} (${i.sku || i.size})`.substring(0, 50),
         })),
         {
           id: "SHIPPING",
@@ -113,7 +110,7 @@ serve(async (req) => {
     };
 
     const midtransResponse = await fetch(
-      "https://app.midtrans.com/snap/v1/transactions",
+      "https://app.sandbox.midtrans.com/snap/v1/transactions",
       {
         method: "POST",
         headers: {
@@ -128,7 +125,6 @@ serve(async (req) => {
 
     if (!midtransData.token) throw new Error("Gagal buat transaksi Midtrans");
 
-    // Simpan payment record
     await supabase.from("payments").insert({
       order_id: newOrder.id,
       method: "midtrans",
@@ -137,7 +133,6 @@ serve(async (req) => {
       status: "pending",
     });
 
-    // Simpan snap_token + expired 24 jam
     const expiredAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     await supabase.from("orders").update({
       snap_token: midtransData.token,

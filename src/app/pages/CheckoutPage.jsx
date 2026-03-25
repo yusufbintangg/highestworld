@@ -8,8 +8,8 @@ import { Separator } from '../components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { Textarea } from '../components/ui/textarea';
 import { useCart } from '../../context/CartContext';
-import { formatPrice, generateCartWAMessage } from '../../lib/utils';
-import { SHIPPING_INFO, WHATSAPP_NUMBER } from '../../lib/config';
+import { formatPrice } from '../../lib/utils';
+import { WHATSAPP_NUMBER } from '../../lib/config';
 import { openMidtransPayment, generateOrderId } from '../../lib/midtrans';
 import { toast } from 'sonner';
 
@@ -58,7 +58,6 @@ export const CheckoutPage = () => {
   const [selectedArea, setSelectedArea] = useState(null);
   const areaRef = useRef(null);
   const searchTimeout = useRef(null);
-  const [pendingOrderNumber, setPendingOrderNumber] = useState(null);
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -227,31 +226,30 @@ export const CheckoutPage = () => {
           price: item.product.price,
           qty: item.quantity,
           size: item.size,
-          color: item.color,
+          sku: item.sku || null,
           variant_images: item.variantImages || [],
         })),
       };
+
       await openMidtransPayment(orderPayload, {
         onSuccess: (result) => {
-          toast.success('Pembayaran berhasil!');
           clearCart();
-          setTimeout(() => navigate('/pesanan/' + result.order_number), 300);
+          window.location.href = '/pesanan/' + result.order_number;
         },
         onPending: (result) => {
-          toast.info('Selesaikan pembayaran sebelum expired!');
           clearCart();
-          setTimeout(() => navigate('/pesanan/' + result.order_number), 300);
+          window.location.href = '/pesanan/' + result.order_number;
         },
         onError: () => {
           toast.error('Pembayaran gagal. Silakan coba lagi.');
           setIsProcessing(false);
         },
-        onClose: () => {
-  setIsProcessing(false);
-  if (result?.order_number) {
-    navigate('/pesanan/' + result.order_number);
-  }
-},
+        onClose: (result) => {
+          setIsProcessing(false);
+          if (result?.order_number) {
+            window.location.href = '/pesanan/' + result.order_number;
+          }
+        },
       });
     } catch (error) {
       toast.error('Terjadi kesalahan. Silakan coba lagi.');
@@ -268,7 +266,7 @@ export const CheckoutPage = () => {
     if (formData.notes) message += `📝 Catatan: ${formData.notes}\n\n`;
     message += `🛍️ PESANAN:\n`;
     cartItems.forEach((item, i) => {
-      message += `${i + 1}. ${item.product.name} • ${item.color} • ${item.size} • ${item.quantity}x • ${formatPrice(item.product.price)}\n`;
+      message += `${i + 1}. ${item.product.name} • ${item.sku || item.color || ''} • ${item.size} • ${item.quantity}x • ${formatPrice(item.product.price)}\n`;
     });
     message += `\n💰 Subtotal: ${formatPrice(cartTotal)}\nOngkir: ${formatPrice(shippingCost)}\nTotal: ${formatPrice(grandTotal)}\n\nMohon kirimkan detail rekening. Terima kasih!`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
@@ -289,7 +287,6 @@ export const CheckoutPage = () => {
   };
 
   if (cartItems.length === 0) return null;
-  
 
   return (
     <div className="min-h-screen pt-32 pb-20">
@@ -367,7 +364,6 @@ export const CheckoutPage = () => {
                   </div>
                   {errors.area && <p className="text-xs text-destructive mt-1">{errors.area}</p>}
 
-                  {/* Dropdown */}
                   {showAreaDropdown && areaResults.length > 0 && (
                     <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-lg shadow-xl max-h-64 overflow-y-auto">
                       {areaResults.map((area, i) => (
@@ -397,7 +393,6 @@ export const CheckoutPage = () => {
                   )}
                 </div>
 
-                {/* Kurir */}
                 {loadingRates && (
                   <div className="flex items-center gap-2 p-3 bg-secondary rounded-lg border border-border">
                     <Loader2 className="w-4 h-4 animate-spin text-accent-gold" />
@@ -490,7 +485,7 @@ export const CheckoutPage = () => {
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-medium line-clamp-2 mb-1">{item.product.name}</h3>
                       <div className="text-xs text-muted-foreground space-y-0.5">
-                        <p>{item.color} • {item.size}</p>
+                        <p>{item.sku || item.color} • {item.size}</p>
                         <p>Qty: {item.quantity}</p>
                       </div>
                     </div>

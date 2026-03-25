@@ -137,7 +137,8 @@ export const ProductDetailPage = () => {
   };
 
   const handleAddToCart = () => {
-    if (!selectedColor) { toast.error('Pilih warna terlebih dahulu'); return; }
+    const needsColorSelection = variants.length > 0 && uniqueColors.length > 1;
+    if (needsColorSelection && !selectedColor) { toast.error('Pilih warna terlebih dahulu'); return; }
     if (!selectedSize) { toast.error('Pilih ukuran terlebih dahulu'); return; }
     if (currentStock === 0) { toast.error('Stok habis untuk pilihan ini'); return; }
     
@@ -164,7 +165,8 @@ export const ProductDetailPage = () => {
   };
 
   const handleDirectCheckout = () => {
-    if (!selectedColor) { toast.error('Pilih warna terlebih dahulu'); return; }
+    const needsColorSelection = variants.length > 0 && uniqueColors.length > 1;
+    if (needsColorSelection && !selectedColor) { toast.error('Pilih warna terlebih dahulu'); return; }
     if (!selectedSize) { toast.error('Pilih ukuran terlebih dahulu'); return; }
     if (currentStock === 0) { toast.error('Stok habis untuk pilihan ini'); return; }
     
@@ -249,7 +251,7 @@ export const ProductDetailPage = () => {
           {/* Kanan: Info Produk */}
           <div className="lg:sticky lg:top-24 lg:self-start space-y-6">
             <div >
-              {isMobile ? (
+              {isMobile && uniqueColors.some(c => c.name) ? (
                 /* Warna UNTUK MOBILE DEVICE */
                 <div className="space-y-3 mb-6">
                   <div>
@@ -311,7 +313,7 @@ export const ProductDetailPage = () => {
             </div>
 
             <Separator />
-            {!isMobile ? (
+            {!isMobile && uniqueColors.some(c => c.name) ? (
               /* Pilih Warna UNTUK DESKTOP MODE */
               <div className="space-y-3 mb-6 lg:mb-0">
                 <div>

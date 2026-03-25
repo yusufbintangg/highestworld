@@ -58,6 +58,7 @@ export const CartProvider = ({ children }) => {
         variantId: product.variantId || null,
         variantImages: product.variantImages || [],
         maxStock: product.maxStock || 99,
+        sku: product.sku || `${color.toUpperCase()}-${size}`,
       }];
       }
     });

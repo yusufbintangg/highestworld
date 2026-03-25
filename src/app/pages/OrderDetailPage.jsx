@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router';
 import { CheckCircle, Clock, Package, Truck, XCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { formatPrice } from '../../lib/utils';
-import { openMidtransPayment } from '../../lib/midtrans';
+import { loadMidtransScript } from '../../lib/midtrans';
 import { toast } from 'sonner';
 
 const STATUS_CONFIG = {
@@ -47,10 +47,9 @@ export const OrderDetailPage = () => {
       toast.error('Token pembayaran tidak ditemukan');
       return;
     }
-
     setPaying(true);
     try {
-      const snap = await import('../../lib/midtrans').then(m => m.loadMidtransScript());
+      const snap = await loadMidtransScript();
       snap.pay(order.snap_token, {
         onSuccess: () => {
           toast.success('Pembayaran berhasil!');
@@ -92,7 +91,6 @@ export const OrderDetailPage = () => {
     <div className="min-h-screen mt-20 bg-background py-8 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
 
-        {/* Header */}
         <div className="text-center">
           <h1 className="font-display text-2xl tracking-wider mb-1">Detail Pesanan</h1>
           <p className="text-muted-foreground text-sm">{order.order_number}</p>
@@ -119,9 +117,7 @@ export const OrderDetailPage = () => {
               <p className="font-semibold text-yellow-500 text-sm">Segera Selesaikan Pembayaran</p>
               <p className="text-xs text-muted-foreground mt-1">
                 Bayar sebelum {expiredAt.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} pukul {expiredAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                {minutesLeft < 60
-                  ? ` (${minutesLeft} menit lagi)`
-                  : ` (${hoursLeft} jam lagi)`}
+                {minutesLeft < 60 ? ` (${minutesLeft} menit lagi)` : ` (${hoursLeft} jam lagi)`}
               </p>
             </div>
           </div>
@@ -160,7 +156,7 @@ export const OrderDetailPage = () => {
               )}
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm line-clamp-1">{item.product_name}</p>
-                <p className="text-xs text-muted-foreground">{item.color} / {item.size} × {item.qty}</p>
+                <p className="text-xs text-muted-foreground">{item.sku_variant || item.size} × {item.qty}</p>
               </div>
               <p className="font-mono text-sm font-bold">{formatPrice(item.subtotal)}</p>
             </div>

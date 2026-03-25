@@ -19,27 +19,35 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Ambil data order + items dari DB
+    // Ambil data order + items + variant SKU dari DB
     const { data: order, error } = await supabase
       .from("orders")
-      .select("*, order_items(*)")
+      .select("*, order_items(*, product_variants(sku))")
       .eq("id", order_id)
       .single();
 
     if (error || !order) throw new Error("Order tidak ditemukan");
 
     // Format items untuk Biteship
-    const items = order.order_items.map(item => ({
-      name: item.product_name,
-      description: `${item.color} / ${item.size}`,
-      value: item.price,
-      weight: 500, // gram per item, bisa disesuaikan
-      quantity: item.qty,
-    }));
+    const items = order.order_items.map(item => {
+      const variantSku = item.product_variants?.sku || item.size;
+      // SKU base: ambil bagian sebelum tanda "-" terakhir (misal HQS19-2XL → HQS19)
+      const skuBase = variantSku.includes('-')
+        ? variantSku.split('-').slice(0, -1).join('-')
+        : variantSku;
+
+      return {
+        name: item.product_name,
+        description: `${skuBase}, ${item.size}`,
+        value: item.price,
+        weight: 500,
+        quantity: item.qty,
+      };
+    });
 
     const payload = {
       shipper_contact_name: "Highest World",
-      shipper_contact_phone: "081328769922", // Ganti nomor toko lo
+      shipper_contact_phone: "081328769922",
       shipper_contact_email: "highestworld@gmail.com",
       shipper_organization: "Highest World",
       origin_contact_name: "Highest World",
