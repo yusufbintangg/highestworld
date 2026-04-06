@@ -1,13 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Filter } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../components/ui/sheet';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Checkbox } from '../components/ui/checkbox';
-import { Label } from '../components/ui/label';
-import { Separator } from '../components/ui/separator';
-import { ProductGrid } from '../components/product/ProductGrid';
 import { supabase } from '../../lib/supabase';
+import { ProductGrid } from '../components/product/ProductGrid';
 
 export const ProductsPage = () => {
   const [products, setProducts] = useState([]);
@@ -19,24 +12,16 @@ export const ProductsPage = () => {
     badges: []
   });
 
-  // State untuk search query jika ingin menambahkan fitur pencarian
-  // const [searchQuery, setSearchQuery] = useState('');
-  // State untuk menyimpan produk yang sedang diedit jika ingin menambahkan fitur edit produk
-  // const [editingProduct, setEditingProduct] = useState(null);
-  // Fetch products dari Supabase
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
 
-      
-      // Fetch categories
       const { data: catsData } = await supabase
         .from('categories')
         .select('*')
         .eq('is_active', true)
         .order('name');
 
-      // Fetch products
       const { data: prodsData } = await supabase
         .from('products')
         .select('*, categories(name, slug)')
@@ -50,23 +35,19 @@ export const ProductsPage = () => {
     fetchData();
   }, []);
 
-  // Filter & sort di frontend
   const filteredAndSortedProducts = useMemo(() => {
     let result = [...products];
 
-    // Filter kategori
     if (filters.category !== 'all') {
       result = result.filter(p => p.categories?.slug === filters.category);
     }
 
-    // Filter badges
     if (filters.badges.length > 0) {
       result = result.filter(p =>
         filters.badges.every(badge => p.badges?.includes(badge))
       );
     }
-    
-    // Sort produk berdasarkan sortBy
+
     switch (sortBy) {
       case 'price-low':
         result.sort((a, b) => a.price - b.price);
@@ -80,19 +61,14 @@ export const ProductsPage = () => {
       default:
         break;
     }
-    
-    // Jika ingin menambahkan fitur pencarian, bisa tambahkan filter berdasarkan searchQuery di sini
-    // contoh: result = result.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
     return result;
   }, [products, filters, sortBy]);
 
-    // Handler untuk filter kategori dan badge
-    // Untuk filter kategori, kita update state filters dengan category yang dipilih
   const handleCategoryFilter = (categorySlug) => {
     setFilters(prev => ({ ...prev, category: categorySlug }));
   };
 
-    // Untuk filter badge, kita update state filters dengan menambahkan atau menghapus badge dari array badges, tergantung apakah checkbox dicentang atau tidak
   const handleBadgeFilter = (badge, checked) => {
     setFilters(prev => ({
       ...prev,
@@ -102,144 +78,136 @@ export const ProductsPage = () => {
     }));
   };
 
-    // Handler untuk reset filter, kita set state filters kembali ke nilai awal yaitu category 'all' dan badges kosong
   const resetFilters = () => {
     setFilters({ category: 'all', badges: [] });
   };
 
-  const FilterPanel = () => (
-    <div className="space-y-6 p-2">
-      <div>
-        <h3 className="font-subheading text-lg uppercase tracking-wider mb-4">
-          Kategori
-        </h3>
-        <div className="space-y-2 p-4">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="cat-all"
-              checked={filters.category === 'all'}
-              onCheckedChange={() => handleCategoryFilter('all')}
-            />
-            <Label htmlFor="cat-all" className="cursor-pointer h-8">
-              Semua Produk
-            </Label>
-          </div>
-          {categories.map((category) => (
-            <div key={category.id} className="flex items-center h-8 space-x-2">
-              <Checkbox
-                id={`cat-${category.slug}`}
-                checked={filters.category === category.slug}
-                onCheckedChange={() => handleCategoryFilter(category.slug)}
-              />
-              <Label htmlFor={`cat-${category.slug}`} className="cursor-pointer">
-                {category.name}
-              </Label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <Separator />
-
-      <div>
-        <h3 className="font-subheading text-lg p-2 uppercase tracking-wider mb-4">
-          Filter
-        </h3>
-        <div className="space-y-2 p-4">
-          {[
-            { value: 'New', label: 'Produk Baru' },
-            { value: 'Best Seller', label: 'Best Seller' },
-            { value: 'Sale', label: 'Sedang Promo' },
-          ].map((badge) => (
-            <div key={badge.value} className="flex items-center h-8 space-x-2">
-              <Checkbox
-                id={`badge-${badge.value}`}
-                checked={filters.badges.includes(badge.value)}
-                onCheckedChange={(checked) => handleBadgeFilter(badge.value, checked)}
-              />
-              <Label htmlFor={`badge-${badge.value}`} className="cursor-pointer">
-                {badge.label}
-              </Label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <Separator />
-
-      <Button onClick={resetFilters} variant="outline" className="w-full">
-        Reset Filter
-      </Button>
-    </div>
-  );
+  const badgeOptions = [
+    { value: 'New', label: 'New Arrivals' },
+    { value: 'Best Seller', label: 'Best Seller' },
+    { value: 'Sale', label: 'On Sale' },
+  ];
 
   return (
-    <div className="min-h-screen pt-32 pb-20">
-      <div className="container mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="font-display text-4xl md:text-5xl tracking-[0.1em] mb-2">
-            SEMUA PRODUK
-          </h1>
-          <p className="text-muted-foreground">
-            {loading ? 'Memuat produk...' : `${filteredAndSortedProducts.length} produk ditemukan`}
-          </p>
-        </div>
+    <div className="min-h-screen bg-white text-black pt-16 pb-24">
 
-        <div className="flex gap-8">
-          <aside className="hidden lg:block w-64 flex-shrink-0">
-            <div className="sticky top-32 bg-card border border-border rounded-lg p-4 max-h-[calc(100vh-160px)] overflow-y-auto">
-              <FilterPanel />
-            </div>
-          </aside>
-
-          <div className="flex-1">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <div className="flex gap-2">
-                <Sheet>
-                  <SheetTrigger asChild className="lg:hidden">
-                    <Button variant="outline">
-                      <Filter className="w-4 h-4 mr-2" />
-                      Filter
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="left" className="w-[300px] [&>div]:!overflow-y-auto">
-                    <SheetHeader className="sticky top-0 bg-background z-10">
-                      <SheetTitle className="font-display tracking-wider">
-                        FILTER PRODUK
-                      </SheetTitle>
-                    </SheetHeader>
-                    <div className="mt-6 overflow-y-auto h-[calc(100vh-100px)]">
-                      <FilterPanel />
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              </div>
-
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Urutkan" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Terbaru</SelectItem>
-                  <SelectItem value="price-low">Harga Terendah</SelectItem>
-                  <SelectItem value="price-high">Harga Tertinggi</SelectItem>
-                  <SelectItem value="popular">Terpopuler</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="aspect-[3/4] bg-muted animate-pulse rounded-lg" />
-                ))}
-              </div>
-            ) : (
-              <ProductGrid products={filteredAndSortedProducts} />
-            )}
-          </div>
+      {/* Breadcrumb */}
+      <div className="border-b border-gray-200">
+        <div className="max-w-[1400px] mx-auto px-6 py-2 text-[10px] tracking-widest uppercase text-gray-400 flex gap-2">
+          <span>Top</span>
+          <span>/</span>
+          <span className="text-black font-semibold">Online Store</span>
         </div>
       </div>
+
+      {/* Filter Bar — 3 kolom bordered, persis Neighborhood */}
+      <div className="border-b border-gray-200">
+        <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr] divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
+
+          {/* Kolom 1: Categories */}
+          <div className="px-6 py-5 flex flex-col gap-2">
+            <button
+              onClick={() => handleCategoryFilter('all')}
+              className={`text-left text-[11px] tracking-widest uppercase transition-colors ${
+                filters.category === 'all' ? 'text-black font-bold' : 'text-gray-400 hover:text-black'
+              }`}
+            >
+              All Categories
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => handleCategoryFilter(cat.slug)}
+                className={`text-left text-[11px] tracking-widest uppercase transition-colors ${
+                  filters.category === cat.slug ? 'text-black font-boldtext-gray-400 hover:text-black' : 'text-gray-400 hover:text-black'
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Kolom 2: Sort */}
+          <div className="px-6 py-5 flex flex-col gap-2">
+            {[
+              { value: 'newest', label: 'New Arrivals' },
+              { value: 'price-low', label: 'Low - Price' },
+              { value: 'price-high', label: 'High - Price' },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setSortBy(opt.value)}
+                className={`text-left text-[11px] tracking-widest uppercase transition-colors ${
+                  sortBy === opt.value ? 'text-black font-bold' : 'text-gray-400 hover:text-black'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Kolom 3: Badges + Hide Sold Out + Clear */}
+          <div className="px-6 py-5 flex flex-col gap-2 relative">
+            {badgeOptions.map((badge) => (
+              <button
+                key={badge.value}
+                onClick={() => handleBadgeFilter(badge.value, !filters.badges.includes(badge.value))}
+                className={`text-left text-[11px] tracking-widest uppercase transition-colors ${
+                  filters.badges.includes(badge.value) ? 'text-black font-bold' : 'text-gray-400 hover:text-black'
+                }`}
+              >
+                {badge.label}
+              </button>
+            ))}
+
+            {/* Separator kecil */}
+            <div className="border-t border-gray-200 my-1" />
+
+            {/* Hide Sold Out toggle */}
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <span className="text-[11px] tracking-widest uppercase text-gray-400 group-hover:text-black transition-colors">
+                Hide Sold Out
+              </span>
+              <input
+                type="checkbox"
+                className="w-3 h-3 border border-gray-300 accent-black cursor-pointer"
+                onChange={(e) => handleBadgeFilter('InStock', e.target.checked)}
+                checked={filters.badges.includes('InStock')}
+              />
+            </label>
+
+            {/* Clear — pojok kanan bawah */}
+            <button
+              onClick={resetFilters}
+              className="absolute bottom-5 right-6 text-[11px] tracking-widest uppercase text-gray-400 hover:text-black transition-colors"
+            >
+              Clear
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Product Count */}
+      <div className="max-w-[1400px] mx-auto px-6 pt-4 pb-3">
+        <p className="text-[10px] tracking-widest uppercase text-gray-400">
+          {loading ? 'Loading...' : `${filteredAndSortedProducts.length} Products`}
+        </p>
+      </div>
+
+      {/* Product Grid */}
+      <div className="max-w-[1400px] mx-auto px-6">
+        {loading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[2px]">
+            {[...Array(12)].map((_, i) => (
+              <div key={i} className="aspect-[3/4] bg-gray-100 animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <ProductGrid products={filteredAndSortedProducts} />
+        )}
+      </div>
+
     </div>
   );
 };

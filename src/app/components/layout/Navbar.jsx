@@ -46,7 +46,7 @@ export const Navbar = () => {
       )}
     >
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-12">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
             <img 
@@ -54,13 +54,10 @@ export const Navbar = () => {
               alt="Highest World" 
               className="h-10 md:h-12 w-auto"
             />
-            <div className="flex flex-col">
-              <span className="text-xl md:text-2xl font-display tracking-[0.15em] text-foreground group-hover:text-accent-gold transition-colors">
+            <div className="">
+              <h2 className="font-display md:text-lg text-accent-gold group-hover:text-accent-gold-light transition-colors">
                 HIGHEST WORLD
-              </span>
-              <span className="text-[8px] md:text-[10px] tracking-[0.25em] text-muted-foreground font-subheading uppercase">
-                Big Size. Real Style.
-              </span>
+              </h2>
             </div>
           </Link>
 
@@ -145,12 +142,9 @@ export const Navbar = () => {
               <SheetContent side="left" className="w-[300px] sm:w-[400px]">
                 <div className="flex flex-col m-5 h-full">
                   <div className="mb-8">
-                    <h2 className="font-display text-2xl tracking-[0.15em] text-accent-gold">
+                    <h2 className="font-display text-2xl text-accent-gold">
                       HIGHEST WORLD
                     </h2>
-                    <p className="text-xs text-muted-foreground font-subheading uppercase tracking-wider">
-                      Big Size. Real Style.
-                    </p>
                   </div>
 
                   <nav className="flex-1">

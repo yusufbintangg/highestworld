@@ -271,13 +271,13 @@ export const AdminProducts = () => {
                     <Input type="number" placeholder="Berat (gram) *" value={form.weight} onChange={(e) => setForm(p => ({ ...p, weight: e.target.value }))} required />
                   </div>
                   <textarea
-                    className="w-full border border-border rounded-md px-3 py-2 bg-background text-sm min-h-[150px]"
+                    className="w-full border border-border rounded-md px-3 py-2 bg-background text-sm min-h-[180px]"
                     placeholder="URL Gambar (satu per baris)"
                     value={form.images}
                     onChange={(e) => setForm(p => ({ ...p, images: e.target.value }))}
                   />
                   <textarea
-                    className="w-full border border-border rounded-md px-3 py-2 bg-background text-sm min-h-[60px]"
+                    className="w-full border border-border rounded-md px-3 py-2 bg-background text-sm min-h-[220px]"
                     placeholder="Deskripsi produk"
                     value={form.description}
                     onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))}

@@ -70,7 +70,7 @@ export const HomePage = () => {
     <div className="min-h-screen">
       {/* Hero Section - Clean & Bold */}
       <section className="relative">
-        <div className="w-full mt-20 aspect-[4/2] md:aspect-[16/9] overflow-hidden">
+        <div className="w-full mt-12 aspect-[4/2] md:aspect-[16/9] overflow-hidden">
           <img
             src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1773074885/CONTOH_BANNER_omzplm.jpg"
             alt="Highest World Collection"

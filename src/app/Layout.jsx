@@ -14,7 +14,7 @@ export const Layout = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex bg-[#ffffff] flex-col">
       <Navbar />
       <main className="flex-1">
         <Outlet />

@@ -1,86 +1,134 @@
-import React from 'react';
-import { Link } from 'react-router';
-import { ShoppingCart } from 'lucide-react';
-import { Badge } from '../ui/badge';
-import { Button } from '../ui/button';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { formatPrice, calculateDiscount } from '../../../lib/utils';
 
+/**
+ * ProductCard — Neighborhood style
+ * - Hover: swap ke gambar ke-2 (jika ada)
+ * - Clean minimal typography di bawah card
+ * - Sold out overlay jika stok 0
+ */
 export const ProductCard = ({ product }) => {
+  const navigate = useNavigate();
+  const [hovered, setHovered] = useState(false);
+
+  const images = product.images || [];
+  const firstImage = images[0] || null;
+  const secondImage = images[1] || null; // gambar yang muncul saat hover
+
   const discount = calculateDiscount(product.original_price, product.price);
   const badges = product.badges || [];
-  const images = product.images || [];
+
+  // Cek sold out: kalau ga ada field stock di products, skip
+  // Bisa disesuaikan jika ada field is_sold_out atau total_stock
+  const isSoldOut = product.total_stock === 0;
 
   return (
-    <Link to={`/produk/${product.slug}`} className="group">
-      <div className="bg-card border border-border rounded-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-accent-gold/50">
-        {/* Image Container */}
-        <div className="relative aspect-[3/4] overflow-hidden bg-muted">
-          {images[0] ? (
-            <img
-              src={images[0]}
-              alt={product.name}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-              loading="lazy"
-            />
-          ) : (
-            <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-sm">
-              No Image
-            </div>
-          )}
+    <div
+      className="group cursor-pointer"
+onClick={() => navigate(`/produk/${product.slug}`)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Image Container */}
+      <div className="relative aspect-[4/4] overflow-hidden bg-gray-100">
+        {/* Main Image */}
+        {firstImage && (
+          <img
+            src={firstImage}
+            alt={product.name}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+              hovered && secondImage ? 'opacity-0' : 'opacity-100'
+            }`}
+          />
+        )}
 
-          {/* Badges */}
-          <div className="absolute top-3 left-3 flex flex-col gap-2">
+        {/* Hover Image (gambar ke-2) */}
+        {secondImage && (
+          <img
+            src={secondImage}
+            alt={`${product.name} - 2`}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+              hovered ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
+        )}
+
+        {/* Sold Out Overlay */}
+        {isSoldOut && (
+          <div className="absolute inset-0 bg-white/60 flex items-end justify-start p-2">
+            <span className="text-[10px] tracking-widest uppercase text-gray-500 font-medium">
+              Sold Out
+            </span>
+          </div>
+        )}
+
+        {/* Badge — pojok kiri atas */}
+        {!isSoldOut && (
+          <div className="absolute top-2 left-2 flex flex-col gap-1">
             {badges.includes('New') && (
-              <Badge className="bg-accent-gold text-background font-subheading uppercase">
-                NEW
-              </Badge>
+              <span className="bg-black text-white text-[8px] tracking-widest px-1.5 py-0.5 uppercase">
+                New
+              </span>
             )}
             {badges.includes('Best Seller') && (
-              <Badge className="bg-destructive text-white font-subheading uppercase">
-                BEST SELLER
-              </Badge>
+              <span className="bg-red-600 text-white text-[8px] tracking-widest px-1.5 py-0.5 uppercase">
+                Best
+              </span>
             )}
             {badges.includes('Sale') && discount > 0 && (
-              <Badge className="bg-accent-red text-white font-subheading uppercase">
-                SALE -{discount}%
-              </Badge>
-            )}
-          </div>
-
-          {/* Hover Button */}
-          <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-            <Button className="w-full bg-accent-gold hover:bg-accent-gold-light text-background font-subheading uppercase">
-              LIHAT DETAIL
-            </Button>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-4">
-          <h3 className="font-body font-medium text-foreground mb-2 line-clamp-2 group-hover:text-accent-gold transition-colors">
-            {product.name}
-          </h3>
-
-          {/* Category */}
-          {product.categories?.name && (
-            <p className="text-xs text-muted-foreground mb-3 uppercase tracking-wider">
-              {product.categories.name}
-            </p>
-          )}
-
-          {/* Price */}
-          <div className="flex flex-col md:flex-row md:items-baseline gap-0.5 md:gap-2">
-            <span className="font-mono text-lg font-bold text-accent-gold">
-              {formatPrice(product.price)}
-            </span>
-            {product.original_price && (
-              <span className="font-mono text-sm text-muted-foreground line-through">
-                {formatPrice(product.original_price)}
+              <span className="bg-gray-700 text-white text-[8px] tracking-widest px-1.5 py-0.5 uppercase">
+                Sale
               </span>
             )}
           </div>
-        </div>
+        )}
+
+        {/* Rotating label (opsional, kayak "INFINITE ARCHIVES" di Neighborhood) */}
+        {badges.includes('New') && (
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div
+              className="text-[7px] tracking-[0.25em] uppercase text-gray-400 font-medium"
+              style={{
+                writingMode: 'vertical-rl',
+                textOrientation: 'mixed',
+              }}
+            >
+              New Arrivals
+            </div>
+          </div>
+        )}
       </div>
-    </Link>
+
+      {/* Info */}
+      <div className="pt-2 pb-1 space-y-0.5">
+        {/* Brand / Category */}
+        <p className="text-[9px] tracking-widest uppercase text-gray-400">
+          {product.categories?.name || 'HIGHEST WORLD'}
+        </p>
+
+        {/* Product Name */}
+        <p className="text-[11px] tracking-wide uppercase leading-snug text-black line-clamp-2">
+          {product.name}
+        </p>
+
+        {/* Price */}
+        <div className="flex items-baseline gap-2 pt-0.5">
+          <span className="text-[11px] font-medium text-black">
+            {formatPrice(product.price)}
+          </span>
+          {product.original_price && product.original_price !== product.price && (
+            <span className="text-[10px] text-gray-400 line-through">
+              {formatPrice(product.original_price)}
+            </span>
+          )}
+        </div>
+
+        {/* Sold Out text */}
+        {isSoldOut && (
+          <p className="text-[10px] tracking-widest uppercase text-gray-400">Sold Out</p>
+        )}
+      </div>
+    </div>
   );
 };
