@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router';
 import { Menu, Search, ShoppingCart, X } from 'lucide-react';
-import { ThemeToggle } from './ThemeToggle';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 import { Button } from '../ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
@@ -115,11 +114,10 @@ export const Navbar = () => {
 
           {/* Right Icons */}
           <div className="flex items-center gap-2">
-            <ThemeToggle />
-            
             <Button variant="ghost" size="icon" className="hidden md:flex w-9 h-9">
               <Search className="h-5 w-5" />
             </Button>
+
 
             <CartDrawer>
               <Button variant="ghost" size="icon" className="w-9 h-9 relative">
