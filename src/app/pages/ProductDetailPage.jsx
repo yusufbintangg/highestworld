@@ -90,6 +90,17 @@ export const ProductDetailPage = () => {
     fetchProduct();
   }, [slug]);
 
+  useEffect(() => {
+    if (!carouselApi) return;
+
+    const handleSelect = () => {
+      setSelectedImage(carouselApi.selectedScrollSnap());
+    };
+
+    carouselApi.on('select', handleSelect);
+    return () => carouselApi.off('select', handleSelect);
+  }, [carouselApi]);
+
   if (loading) {
     return (
       <div className="min-h-screen pt-24 pb-20">
@@ -208,10 +219,18 @@ export const ProductDetailPage = () => {
 
           {/* LEFT: Image Grid */}
           {isMobile ? (
-            /* Mobile: Swipeable carousel + thumbnails */
+            /* Mobile: Snappable carousel + counter */
             <div className="w-full space-y-2">
               <div className="relative aspect-[4/4] bg-gray-50 overflow-hidden">
-                <Carousel className="w-full h-full" opts={{ loop: false, dragFree: true }} setApi={setCarouselApi}>
+                <Carousel 
+                  className="w-full h-full" 
+                  opts={{ 
+                    loop: false, 
+                    dragFree: false,
+                    align: "center"
+                  }} 
+                  setApi={setCarouselApi}
+                >
                   <CarouselContent className="-ml-4 h-full">
                     {images.map((img, i) => (
                       <CarouselItem key={i} className="pl-4 basis-full">
@@ -247,7 +266,7 @@ export const ProductDetailPage = () => {
                   <CarouselNext className="absolute -right-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-white/90 backdrop-blur-sm rounded-full opacity-80 hover:opacity-100 -z-10" />
                 </Carousel>
               </div>
-              {/* Image counter 1/5 - no thumbnails */}
+              {/* Counter */}
               <div className="flex gap-1 pb-1 justify-center">
                 <span className="text-[11px] font-mono text-gray-500">
                   {selectedImage + 1} / {images.length}
