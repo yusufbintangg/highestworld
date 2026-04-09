@@ -19,28 +19,24 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Ambil data order + items + variant SKU dari DB
+    // Ambil data order + items dari DB
     const { data: order, error } = await supabase
       .from("orders")
-      .select("*, order_items(*, product_variants(sku))")
+      .select("*, order_items(*)")
       .eq("id", order_id)
       .single();
 
-    if (error || !order) throw new Error("Order tidak ditemukan");
+    if (error || !order) throw error;
 
-    // Format items untuk Biteship
+    // Format items untuk Biteship dengan SKU.SIZE di description
     const items = order.order_items.map(item => {
-      const variantSku = item.product_variants?.sku || item.size;
-      // SKU base: ambil bagian sebelum tanda "-" terakhir (misal HQS19-2XL → HQS19)
-      const skuBase = variantSku.includes('-')
-        ? variantSku.split('-').slice(0, -1).join('-')
-        : variantSku;
-
+      const skuSize = `${item.sku_variant || 'N/A'}.${item.size}`;
+      
       return {
         name: item.product_name,
-        description: `${skuBase}, ${item.size}`,
+        description: skuSize,  // ← SKU.SIZE tampil di sini
         value: item.price,
-        weight: 500,
+        weight: 500, // Berat default per item
         quantity: item.qty,
       };
     });

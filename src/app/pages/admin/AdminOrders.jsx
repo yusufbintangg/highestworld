@@ -212,14 +212,14 @@ export const AdminOrders = () => {
   };
 
   const handlePrintInvoice = (order) => {
-  const items = order.order_items?.map(i =>
-    `<tr style="font-size:12px">
-      <td style="padding:1px;border:1px solid #ddd">${i.product_name}</td>
-      <td style="padding:1px;border:1px solid #ddd;text-align:center">${i.color} / ${i.size}</td>
-      <td style="padding:1px;border:1px solid #ddd;text-align:center">${i.qty}</td>
-      <td style="padding:1px;border:1px solid #ddd;text-align:right">Rp ${i.price?.toLocaleString('id-ID')}</td>
-    </tr>`
-  ).join('');
+const items = order.order_items?.map(i =>
+  `<tr style="font-size:12px">
+    <td style="padding:1px;border:1px solid #ddd">${i.product_name}</td>
+    <td style="padding:1px;border:1px solid #ddd;text-align:center">${(i.sku_variant || i.sku || i.color)} / ${i.size}</td>
+    <td style="padding:1px;border:1px solid #ddd;text-align:center">${i.qty}</td>
+    <td style="padding:1px;border:1px solid #ddd;text-align:right">Rp ${i.price?.toLocaleString('id-ID')}</td>
+  </tr>`
+).join('');
 
   const html = `<html>
   <head>
@@ -398,7 +398,7 @@ export const AdminOrders = () => {
     
     selectedOrdersData.forEach(order => {
       const items = order.order_items?.map(i =>
-        `<tr><td style="padding:4px;border:1px solid #eee">${i.product_name}</td><td style="padding:4px;border:1px solid #eee;text-align:center">${i.color}/${i.size}</td><td style="padding:4px;border:1px solid #eee;text-align:center">${i.qty}</td><td style="padding:4px;border:1px solid #eee;text-align:right">Rp ${i.price?.toLocaleString('id-ID')}</td><td style="padding:4px;border:1px solid #eee;text-align:right">Rp ${i.subtotal?.toLocaleString('id-ID')}</td></tr>`
+`<tr><td style="padding:4px;border:1px solid #eee">${i.product_name}</td><td style="padding:4px;border:1px solid #eee;text-align:center">${(i.sku_variant || i.sku || i.color)}/${i.size}</td><td style="padding:4px;border:1px solid #eee;text-align:center">${i.qty}</td><td style="padding:4px;border:1px solid #eee;text-align:right">Rp ${i.price?.toLocaleString('id-ID')}</td><td style="padding:4px;border:1px solid #eee;text-align:right">Rp ${i.subtotal?.toLocaleString('id-ID')}</td></tr>`
       ).join('');
 
       allHTML += `
@@ -775,7 +775,7 @@ export const AdminOrders = () => {
                         <div className="flex-1">
                           <p className="font-semibold text-sm">{item.product_name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {item.color} • {item.size} • {item.qty}x
+{item.sku_variant || item.sku || item.color} • {item.size} • {item.qty}x
                           </p>
                         </div>
                         <p className="font-bold text-accent-gold">{formatPrice(item.subtotal)}</p>

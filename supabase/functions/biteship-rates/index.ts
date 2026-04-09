@@ -11,9 +11,21 @@ serve(async (req) => {
   }
 
   try {
-    const { origin_postal_code, destination_postal_code, weight, item_value } = await req.json();
+    const { 
+      origin_postal_code, 
+      destination_postal_code, 
+      weight,  // ← Terima dari frontend
+      item_value,
+      items    // ← Optional: array items untuk kalkulasi berat lebih akurat
+    } = await req.json();
 
     const apiKey = Deno.env.get("BITESHIP_API_KEY");
+
+    // Hitung total berat dari items jika ada
+    let totalWeight = weight || 500;
+    if (items && Array.isArray(items)) {
+      totalWeight = items.reduce((sum, item) => sum + (item.weight * item.qty), 0);
+    }
 
     const response = await fetch("https://api.biteship.com/v1/rates/couriers", {
       method: "POST",
@@ -24,7 +36,8 @@ serve(async (req) => {
       body: JSON.stringify({
         origin_postal_code: parseInt(origin_postal_code),
         destination_postal_code: parseInt(destination_postal_code),
-        couriers: "jne,jnt,sicepat,ide",        items: [
+        couriers: "jne,jnt,sicepat,ide",
+        items: [
           {
             name: "Produk Highest World",
             description: "Pakaian",
@@ -32,7 +45,7 @@ serve(async (req) => {
             length: 30,
             width: 20,
             height: 5,
-            weight: weight || 500,
+            weight: totalWeight,  // ← Pakai berat yang dihitung
           }
         ]
       }),

@@ -1,4 +1,3 @@
-
 // CART PAGES 
 
 import React from 'react';
@@ -51,51 +50,30 @@ export const CartDrawer = ({ children }) => {
               {/* Cart Items */}
               <div className="flex-1 overflow-y-auto m-3 pr-2 pb-40 space-y-1">
                 {cartItems.map((item) => (
-                  <div key={item.id} className="flex gap-2 bg-secondary p-2 rounded-lg">
-                    <img
-                      src={item.variantImages?.length > 0 
-                          ? item.variantImages[0] 
-                          : item.product.images?.[0]
-                      }
-                      alt={item.product.name}
-                      className="w-20 h-20 object-cover rounded-lg"
-                    />
+                  <div key={item.id} className="flex gap-3 py-3 border-b last:border-b-0">
+                    <div className="relative shrink-0">
+                      <img
+                        src={item.variantImages?.length > 0 ? item.variantImages[0] : item.product.images?.[0]}
+                        alt={item.product.name}
+                        className="w-16 h-16 object-cover rounded border border-gray-100"
+                      />
+                      <span className="absolute -top-2 -right-2 w-5 h-5 bg-black text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                        {item.quantity}
+                      </span>
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-sm mb-1 line-clamp-2">
-                        {item.product.name}
-                      </h3>
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        <p>Warna: {item.color}</p>
-                        <p>Ukuran: {item.size}</p>
-                      </div>
-                      <p className="font-mono text-accent-gold font-semibold mt-2">
-                        {formatPrice(item.product.price)}
+                      <h3 className="text-sm font-medium text-gray-900 line-clamp-2">{item.product.name}</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {item.sku || 'N/A'} {item.color !== 'default' && `• ${item.color}`} • {item.size}
                       </p>
+                      <p className="text-sm font-semibold text-gray-900 mt-1">{formatPrice(item.product.price * item.quantity)}</p>
                     </div>
-                    <div className="flex flex-col items-end justify-between">
-                      <button
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-muted-foreground hover:text-destructive transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                      <div className="flex items-center gap-2 border border-border rounded-lg">
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="p-1 hover:bg-secondary transition-colors"
-                        >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <span className="w-8 text-center font-mono text-sm">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          disabled={item.quantity >= item.maxStock}
-                          className="p-1 hover:bg-secondary transition-colors"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
+                    <button
+                      onClick={() => removeFromCart(item.id)}
+                      className="text-gray-400 hover:text-red-600 self-start pt-1"
+                    >
+                      ✕
+                    </button>
                   </div>
                 ))}
               </div>

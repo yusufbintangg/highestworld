@@ -149,15 +149,19 @@ export const CheckoutPage = () => {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const totalWeight = cartItems.reduce((sum, item) => sum + ((item.product.weight || 500) * item.quantity), 0);
+      const totalWeight = cartItems.reduce((sum, item) => {
+        const itemWeight = item.product?.weight || 500; // Ambil dari product.weight
+        return sum + (itemWeight * item.quantity);
+      }, 0);
       const response = await fetch(`${supabaseUrl}/functions/v1/biteship-rates`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseKey}` },
         body: JSON.stringify({
           origin_postal_code: '50265',
           destination_postal_code: String(kodePos),
-          weight: totalWeight,
+          weight: totalWeight, // ← Berat total (qty × weight)
           item_value: cartTotal,
+          items: cartItems
         }),
       });
       const data = await response.json();
@@ -215,7 +219,7 @@ export const CheckoutPage = () => {
           postal_code: formData.postalCode,
           courier: selectedRate?.courier_code || 'jne',
           service: selectedRate?.courier_service_code || 'REG',
-          cost: shippingCost,
+          cost: selectedRate.price,  // ← GUNAKAN HARGA DARI BITESHIP RESPONSE
           etd: selectedRate?.duration || '2-3 hari',
         },
         items: cartItems.map(item => ({
@@ -259,15 +263,20 @@ export const CheckoutPage = () => {
   const handleBankTransferPayment = () => {
     setIsProcessing(true);
     const orderId = generateOrderId();
+    
+    // Gunakan harga dari selectedRate
+    const actualShippingCost = selectedRate?.price || 0;
+    const actualGrandTotal = cartTotal + actualShippingCost;
+    
     let message = `📦 PESANAN BARU - ${orderId}\n\n`;
     message += `👤 DATA PEMBELI:\nNama: ${formData.firstName} ${formData.lastName}\nEmail: ${formData.email}\nTelepon: ${formData.phone}\n\n`;
     message += `📍 ALAMAT:\n${formData.address}\n${formData.city}, ${formData.province} ${formData.postalCode}\n\n`;
     if (formData.notes) message += `📝 Catatan: ${formData.notes}\n\n`;
     message += `🛍️ PESANAN:\n`;
     cartItems.forEach((item, i) => {
-      message += `${i + 1}. ${item.product.name} • ${item.sku || item.color || ''} • ${item.size} • ${item.quantity}x • ${formatPrice(item.product.price)}\n`;
+      message += `${i + 1}. ${item.product.name} (${item.sku || 'N/A'}.${item.size}) • ${item.quantity}x • ${formatPrice(item.product.price)}\n`;
     });
-    message += `\n💰 Subtotal: ${formatPrice(cartTotal)}\nOngkir: ${formatPrice(shippingCost)}\nTotal: ${formatPrice(grandTotal)}\n\nMohon kirimkan detail rekening. Terima kasih!`;
+    message += `\n💰 Subtotal: ${formatPrice(cartTotal)}\nOngkir: ${formatPrice(actualShippingCost)}\nTotal: ${formatPrice(actualGrandTotal)}\n\nMohon kirimkan detail rekening. Terima kasih!`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
     setTimeout(() => { clearCart(); navigate('/konfirmasi-pembayaran'); }, 1000);
   };

@@ -31,9 +31,8 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem('highestworld_cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  const addToCart = (product, color, size, quantity = 1) => {
+  const addToCart = (product, color, size, quantity = 1, variantId = null, variantSku = null, variantImages = []) => {
     setCartItems(prev => {
-      // Check if item already exists
       const existingIndex = prev.findIndex(
         item => 
           item.product.id === product.id && 
@@ -42,24 +41,23 @@ export const CartProvider = ({ children }) => {
       );
 
       if (existingIndex > -1) {
-        // Update quantity
         const updated = [...prev];
         updated[existingIndex].quantity += quantity;
         toast.success('Jumlah produk di keranjang diperbarui');
         return updated;
       } else {
-        // Add new item
         return [...prev, {
-        id: `${product.id}-${color}-${size}`,
-        product,
-        color,
-        size,
-        quantity,
-        variantId: product.variantId || null,
-        variantImages: product.variantImages || [],
-        maxStock: product.maxStock || 99,
-        sku: product.sku || `${color.toUpperCase()}-${size}`,
-      }];
+          id: `${product.id}-${color}-${size}`,
+          product,
+          color,
+          size,
+          quantity,
+          variantId: variantId,  // ← Simpan variant ID
+          variantSku: variantSku,
+          variantImages: variantImages || [],
+          maxStock: product.maxStock || 99,
+          sku: variantSku || product.sku || null,
+        }];
       }
     });
   };

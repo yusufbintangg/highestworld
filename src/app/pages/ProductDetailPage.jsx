@@ -90,17 +90,6 @@ export const ProductDetailPage = () => {
     fetchProduct();
   }, [slug]);
 
-  useEffect(() => {
-    if (!carouselApi) return;
-
-    const handleSelect = () => {
-      setSelectedImage(carouselApi.selectedScrollSnap());
-    };
-
-    carouselApi.on('select', handleSelect);
-    return () => carouselApi.off('select', handleSelect);
-  }, [carouselApi]);
-
   if (loading) {
     return (
       <div className="min-h-screen pt-24 pb-20">
@@ -153,13 +142,25 @@ export const ProductDetailPage = () => {
     if (!selectedSize) { toast.error('Pilih ukuran terlebih dahulu'); return; }
     if (currentStock === 0) { toast.error('Stok habis untuk pilihan ini'); return; }
 
-    addToCart({
-      ...product,
-      price: activePrice,
-      variantId: selectedVariant?.id || null,
-      variantImages: selectedVariant?.images || [],
-      maxStock: currentStock,
-    }, selectedColor, selectedSize, 1);
+    // Hitung berat total
+    const itemWeight = product.weight || 500;
+
+    addToCart(
+      {
+        ...product,
+        price: activePrice,
+        weight: itemWeight,
+        variantId: selectedVariant?.id || null,
+        variantImages: selectedVariant?.images || [],
+        maxStock: currentStock,
+      }, 
+      selectedColor, 
+      selectedSize, 
+      1,
+      selectedVariant?.id,      // ← TAMBAH variant ID
+      selectedVariant?.sku || product.sku,  // ← TAMBAH SKU
+      selectedVariant?.images || []  // ← TAMBAH images
+    );
     toast.success('Produk ditambahkan ke keranjang!');
   };
 
@@ -176,13 +177,24 @@ export const ProductDetailPage = () => {
     if (!selectedSize) { toast.error('Pilih ukuran terlebih dahulu'); return; }
     if (currentStock === 0) { toast.error('Stok habis untuk pilihan ini'); return; }
 
-    addToCart({
-      ...product,
-      price: activePrice,
-      variantId: selectedVariant?.id || null,
-      variantImages: selectedVariant?.images || [],
-      maxStock: currentStock,
-    }, selectedColor, selectedSize, 1);
+    const itemWeight = product.weight || 500;
+
+    addToCart(
+      {
+        ...product,
+        price: activePrice,
+        weight: itemWeight,
+        variantId: selectedVariant?.id || null,
+        variantImages: selectedVariant?.images || [],
+        maxStock: currentStock,
+      }, 
+      selectedColor, 
+      selectedSize, 
+      1,
+      selectedVariant?.id,      // ← TAMBAH variant ID
+      selectedVariant?.sku || product.sku,
+      selectedVariant?.images || []
+    );
 
     toast.success('Redirecting ke checkout...');
     setTimeout(() => { navigate('/checkout'); }, 500);
@@ -219,18 +231,10 @@ export const ProductDetailPage = () => {
 
           {/* LEFT: Image Grid */}
           {isMobile ? (
-            /* Mobile: Snappable carousel + counter */
+            /* Mobile: Swipeable carousel + thumbnails */
             <div className="w-full space-y-2">
               <div className="relative aspect-[4/4] bg-gray-50 overflow-hidden">
-                <Carousel 
-                  className="w-full h-full" 
-                  opts={{ 
-                    loop: false, 
-                    dragFree: false,
-                    align: "center"
-                  }} 
-                  setApi={setCarouselApi}
-                >
+                <Carousel className="w-full h-full" opts={{ loop: false, dragFree: true }} setApi={setCarouselApi}>
                   <CarouselContent className="-ml-4 h-full">
                     {images.map((img, i) => (
                       <CarouselItem key={i} className="pl-4 basis-full">
@@ -266,7 +270,7 @@ export const ProductDetailPage = () => {
                   <CarouselNext className="absolute -right-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-white/90 backdrop-blur-sm rounded-full opacity-80 hover:opacity-100 -z-10" />
                 </Carousel>
               </div>
-              {/* Counter */}
+              {/* Image counter 1/5 - no thumbnails */}
               <div className="flex gap-1 pb-1 justify-center">
                 <span className="text-[11px] font-mono text-gray-500">
                   {selectedImage + 1} / {images.length}
