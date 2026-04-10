@@ -62,6 +62,8 @@ serve(async (req) => {
       price: i.price,
       subtotal: i.price * i.qty,
       variant_images: i.variant_images || [],
+      product_weight: i.weight || 100, // ← tambah ini
+
     }));
 
     console.log('Inserting order items:', orderItems);

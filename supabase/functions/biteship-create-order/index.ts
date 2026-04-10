@@ -22,7 +22,7 @@ serve(async (req) => {
     // Ambil data order + items dari DB
     const { data: order, error } = await supabase
       .from("orders")
-      .select("*, order_items(*)")
+      .select("*, order_items(*, products(weight))")
       .eq("id", order_id)
       .single();
 
@@ -36,7 +36,8 @@ serve(async (req) => {
         name: item.product_name,
         description: skuSize,  // ← SKU.SIZE tampil di sini
         value: item.price,
-        weight: 500, // Berat default per item
+
+        weight: item.products?.weight || item.product_weight || 500,
         quantity: item.qty,
       };
     });

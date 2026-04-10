@@ -115,6 +115,19 @@ export const CheckoutPage = () => {
     }
   };
 
+  const totalWeight = cartItems.reduce(
+  (sum, item) => sum + ((item.product.weight || 500) * item.quantity), 0
+);
+
+// Tambahin ini
+console.log('Cart items:', cartItems.map(i => ({
+  name: i.product.name,
+  weight: i.product.weight,
+  qty: i.quantity,
+  subtotal_weight: (i.product.weight || 500) * i.quantity
+})));
+console.log('Total weight dikirim ke edge function:', totalWeight);
+
   const handleAreaInput = (e) => {
     const value = e.target.value;
     setAreaSearch(value);
@@ -225,12 +238,15 @@ export const CheckoutPage = () => {
         items: cartItems.map(item => ({
           product_id: item.product.id,
           variant_id: item.variantId || null,
+          product_weight: parseInt(item.product?.weight || 500),
           name: item.product.name,
           price: item.product.price,
           qty: item.quantity,
           size: item.size,
           sku: item.sku || null,
           variant_images: item.variantImages || [],
+          weight: item.product.weight || 100, // ← tambah ini
+
         })),
       };
 

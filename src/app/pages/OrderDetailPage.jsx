@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { CheckCircle, Clock, Package, Truck, XCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { CheckCircle, Clock, Package, Truck, XCircle, Loader2, AlertTriangle, ArrowLeft, MapPin, CreditCard, ChevronRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { formatPrice } from '../../lib/utils';
 import { loadMidtransScript } from '../../lib/midtrans';
 import { toast } from 'sonner';
 
 const STATUS_CONFIG = {
-  waiting_payment: { label: 'Menunggu Pembayaran', icon: Clock, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
-  payment_confirmed: { label: 'Pembayaran Berhasil', icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-500/10' },
-  processing: { label: 'Sedang Diproses', icon: Package, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-  shipped: { label: 'Dalam Pengiriman', icon: Truck, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-  completed: { label: 'Pesanan Selesai', icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-600/10' },
-  cancelled: { label: 'Pesanan Dibatalkan', icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/10' },
+  waiting_payment: { label: 'Menunggu Pembayaran', icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-100', dot: 'bg-amber-400' },
+  payment_confirmed: { label: 'Pembayaran Berhasil', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', dot: 'bg-emerald-500' },
+  processing: { label: 'Sedang Diproses', icon: Package, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', dot: 'bg-blue-500' },
+  shipped: { label: 'Dalam Pengiriman', icon: Truck, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100', dot: 'bg-violet-500' },
+  completed: { label: 'Pesanan Selesai', icon: CheckCircle, color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-100', dot: 'bg-emerald-600' },
+  cancelled: { label: 'Pesanan Dibatalkan', icon: XCircle, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-100', dot: 'bg-red-400' },
 };
+
+const STEP_ORDER = ['waiting_payment', 'payment_confirmed', 'processing', 'shipped', 'completed'];
 
 export const OrderDetailPage = () => {
   const { orderNumber } = useParams();
@@ -73,8 +75,8 @@ export const OrderDetailPage = () => {
   };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-accent-gold" />
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
     </div>
   );
 
@@ -87,37 +89,82 @@ export const OrderDetailPage = () => {
   const hoursLeft = expiredAt ? Math.max(0, Math.ceil((expiredAt - now) / (1000 * 60 * 60))) : 0;
   const minutesLeft = expiredAt ? Math.max(0, Math.ceil((expiredAt - now) / (1000 * 60))) : 0;
 
+  const currentStepIndex = STEP_ORDER.indexOf(order.status);
+
   return (
-    <div className="min-h-screen mt-20 bg-background py-8 px-4">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <div className="min-h-screen bg-white pt-20 pb-16">
+      <div className="max-w-xl mx-auto px-4">
 
-        <div className="text-center">
-          <h1 className="font-display text-2xl tracking-wider mb-1">Detail Pesanan</h1>
-          <p className="text-muted-foreground text-sm">{order.order_number}</p>
+        {/* Back */}
+        <button
+          onClick={() => navigate('/produk')}
+          className="flex items-center gap-1.5 text-xs tracking-widest uppercase text-gray-400 hover:text-gray-900 transition-colors mt-4 mb-8"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Lanjut Belanja
+        </button>
+
+        {/* Header */}
+        <div className="mb-8">
+          <p className="text-[10px] tracking-[0.25em] uppercase text-gray-400 mb-1">Order Detail</p>
+          <h1 className="text-xl font-semibold tracking-wide text-gray-900">{order.order_number}</h1>
         </div>
 
-        {/* Status Card */}
-        <div className={`rounded-xl p-6 ${statusInfo.bg} border border-border text-center`}>
-          <StatusIcon className={`w-12 h-12 mx-auto mb-3 ${statusInfo.color}`} />
-          <h2 className={`text-xl font-bold ${statusInfo.color}`}>{statusInfo.label}</h2>
-          {order.awb_number && (
-            <div className="mt-3">
-              <p className="text-xs text-muted-foreground">Nomor Resi</p>
-              <p className="font-mono font-bold text-lg tracking-widest">{order.awb_number}</p>
-              <p className="text-xs text-muted-foreground">{order.courier?.toUpperCase()} {order.courier_service}</p>
+        {/* Status Banner */}
+        <div className={`rounded-2xl p-5 ${statusInfo.bg} ${statusInfo.border} border mb-6 flex items-center gap-4`}>
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${statusInfo.bg} border ${statusInfo.border}`}>
+            <StatusIcon className={`w-5 h-5 ${statusInfo.color}`} />
+          </div>
+          <div className="flex-1">
+            <p className={`font-semibold text-sm ${statusInfo.color}`}>{statusInfo.label}</p>
+            {order.awb_number && (
+              <div className="mt-1">
+                <p className="text-xs text-gray-500">{order.courier?.toUpperCase()} {order.courier_service}</p>
+                <p className="font-mono font-bold text-gray-900 text-sm tracking-widest">{order.awb_number}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Progress Steps */}
+        {order.status !== 'cancelled' && (
+          <div className="mb-6 px-1">
+            <div className="flex items-center justify-between relative">
+              {/* line */}
+              <div className="absolute left-0 right-0 top-[10px] h-[1px] bg-gray-200 z-0" />
+              <div
+                className="absolute left-0 top-[10px] h-[1px] bg-gray-900 z-0 transition-all duration-500"
+                style={{ width: `${Math.min(100, (currentStepIndex / (STEP_ORDER.length - 1)) * 100)}%` }}
+              />
+              {STEP_ORDER.map((step, i) => {
+                const done = i <= currentStepIndex;
+                return (
+                  <div key={step} className="flex flex-col items-center z-10 gap-1.5">
+                    <div className={`w-5 h-5 rounded-full border-2 transition-all duration-300 ${
+                      done ? 'bg-gray-900 border-gray-900' : 'bg-white border-gray-300'
+                    }`} />
+                    <p className={`text-[9px] tracking-wider uppercase text-center max-w-[50px] leading-tight ${
+                      done ? 'text-gray-900 font-medium' : 'text-gray-400'
+                    }`}>
+                      {STATUS_CONFIG[step]?.label.split(' ').slice(-1)[0]}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Alert deadline bayar */}
+        {/* Alert deadline */}
         {isUnpaid && !isExpired && expiredAt && (
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+          <div className="mb-4 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 flex items-start gap-3">
+            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-yellow-500 text-sm">Segera Selesaikan Pembayaran</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Bayar sebelum {expiredAt.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} pukul {expiredAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                {minutesLeft < 60 ? ` (${minutesLeft} menit lagi)` : ` (${hoursLeft} jam lagi)`}
+              <p className="text-xs font-semibold text-amber-700">Segera selesaikan pembayaran</p>
+              <p className="text-[11px] text-amber-600 mt-0.5">
+                Berakhir {expiredAt.toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })} pukul {expiredAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                {' '}·{' '}
+                {minutesLeft < 60 ? `${minutesLeft} menit lagi` : `${hoursLeft} jam lagi`}
               </p>
             </div>
           </div>
@@ -125,11 +172,11 @@ export const OrderDetailPage = () => {
 
         {/* Alert expired */}
         {isUnpaid && isExpired && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-start gap-3">
-            <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div className="mb-4 bg-red-50 border border-red-100 rounded-xl px-4 py-3 flex items-start gap-3">
+            <XCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-red-500 text-sm">Waktu Pembayaran Habis</p>
-              <p className="text-xs text-muted-foreground mt-1">Pesanan ini sudah expired. Silakan buat pesanan baru.</p>
+              <p className="text-xs font-semibold text-red-600">Waktu pembayaran habis</p>
+              <p className="text-[11px] text-red-500 mt-0.5">Pesanan ini sudah expired. Silakan buat pesanan baru.</p>
             </div>
           </div>
         )}
@@ -139,57 +186,89 @@ export const OrderDetailPage = () => {
           <button
             onClick={handleBayarSekarang}
             disabled={paying}
-            className="w-full py-4 bg-accent-gold hover:bg-accent-gold/90 text-accent-gold font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3.5 bg-black text-white text-xs tracking-[0.15em] uppercase font-semibold rounded-xl hover:bg-gray-900 transition-colors flex items-center justify-center gap-2 mb-6 disabled:opacity-60"
           >
-            {paying ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
+            {paying ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
             {paying ? 'Memproses...' : 'Bayar Sekarang'}
           </button>
         )}
 
-        {/* Order Items */}
-        <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-          <h3 className="font-semibold text-sm">Produk Dipesan</h3>
-          {order.order_items?.map((item, i) => (
-            <div key={i} className="flex items-center gap-3">
-              {item.variant_images?.[0] && (
-                <img src={item.variant_images[0]} alt={item.product_name} className="w-14 h-14 object-cover rounded-lg flex-shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm line-clamp-1">{item.product_name}</p>
-                <p className="text-xs text-muted-foreground">{item.sku_variant || item.size} × {item.qty}</p>
+        {/* Products */}
+        <div className="border border-gray-100 rounded-2xl overflow-hidden mb-4">
+          <div className="px-5 py-3.5 border-b border-gray-100">
+            <p className="text-[10px] tracking-[0.2em] uppercase text-gray-400 font-medium">Produk Dipesan</p>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {order.order_items?.map((item, i) => (
+              <div key={i} className="flex items-center gap-3.5 px-5 py-4">
+                {item.variant_images?.[0] ? (
+                  <img
+                    src={item.variant_images[0]}
+                    alt={item.product_name}
+                    className="w-14 h-14 object-cover rounded-lg shrink-0 bg-gray-50"
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-lg bg-gray-100 shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 line-clamp-1">{item.product_name}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {[item.sku_variant, item.size].filter(Boolean).join(' · ')} · {item.qty} pcs
+                  </p>
+                </div>
+                <p className="text-sm font-semibold text-gray-900 shrink-0">{formatPrice(item.subtotal)}</p>
               </div>
-              <p className="font-mono text-sm font-bold">{formatPrice(item.subtotal)}</p>
+            ))}
+          </div>
+        </div>
+
+        {/* Shipping Info */}
+        <div className="border border-gray-100 rounded-2xl overflow-hidden mb-4">
+          <div className="px-5 py-3.5 border-b border-gray-100 flex items-center gap-2">
+            <MapPin className="w-3.5 h-3.5 text-gray-400" />
+            <p className="text-[10px] tracking-[0.2em] uppercase text-gray-400 font-medium">Informasi Pengiriman</p>
+          </div>
+          <div className="px-5 py-4 space-y-1">
+            <p className="text-sm font-semibold text-gray-900">{order.customer_name}</p>
+            <p className="text-xs text-gray-500">{order.customer_phone}</p>
+            <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
+              {order.shipping_address}, {order.shipping_city}, {order.shipping_province} {order.shipping_postal_code}
+            </p>
+            <div className="pt-2 mt-2 border-t border-gray-50">
+              <p className="text-[11px] text-gray-400">
+                Kurir: <span className="font-medium text-gray-700">{order.courier?.toUpperCase()} {order.courier_service}</span>
+              </p>
             </div>
-          ))}
-        </div>
-
-        {/* Info Customer */}
-        <div className="bg-card border border-border rounded-xl p-4 space-y-2 text-sm">
-          <h3 className="font-semibold">Informasi Pengiriman</h3>
-          <p className="font-medium">{order.customer_name}</p>
-          <p className="text-muted-foreground">{order.customer_phone}</p>
-          <p className="text-muted-foreground">{order.shipping_address}, {order.shipping_city}, {order.shipping_province}</p>
-          <p className="text-muted-foreground">Kode Pos: {order.shipping_postal_code}</p>
-        </div>
-
-        {/* Ringkasan Bayar */}
-        <div className="bg-card border border-border rounded-xl p-4 space-y-2 text-sm">
-          <h3 className="font-semibold mb-3">Ringkasan Pembayaran</h3>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Subtotal</span>
-            <span>{formatPrice(order.subtotal)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Ongkir ({order.courier?.toUpperCase()} {order.courier_service})</span>
-            <span>{formatPrice(order.shipping_cost)}</span>
-          </div>
-          <div className="flex justify-between font-bold border-t border-border pt-2 mt-2">
-            <span>Total</span>
-            <span className="text-accent-gold text-base">{formatPrice(order.total)}</span>
           </div>
         </div>
 
-        <button onClick={() => navigate('/produk')} className="w-full py-3 border border-border rounded-xl text-sm hover:border-accent-gold transition-colors">
+        {/* Payment Summary */}
+        <div className="border border-gray-100 rounded-2xl overflow-hidden mb-6">
+          <div className="px-5 py-3.5 border-b border-gray-100 flex items-center gap-2">
+            <CreditCard className="w-3.5 h-3.5 text-gray-400" />
+            <p className="text-[10px] tracking-[0.2em] uppercase text-gray-400 font-medium">Ringkasan Pembayaran</p>
+          </div>
+          <div className="px-5 py-4 space-y-2.5">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Subtotal</span>
+              <span className="text-gray-900">{formatPrice(order.subtotal)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Ongkir ({order.courier?.toUpperCase()} {order.courier_service})</span>
+              <span className="text-gray-900">{formatPrice(order.shipping_cost)}</span>
+            </div>
+            <div className="flex justify-between font-bold border-t border-gray-100 pt-3 mt-1">
+              <span className="text-sm text-gray-900">Total</span>
+              <span className="text-base text-gray-900">{formatPrice(order.total)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <button
+          onClick={() => navigate('/produk')}
+          className="w-full py-3.5 border border-gray-200 rounded-xl text-xs tracking-[0.15em] uppercase text-gray-600 hover:border-gray-900 hover:text-gray-900 transition-colors font-medium"
+        >
           Lanjut Belanja
         </button>
 

@@ -22,10 +22,12 @@ serve(async (req) => {
     const apiKey = Deno.env.get("BITESHIP_API_KEY");
 
     // Hitung total berat dari items jika ada
-    let totalWeight = weight || 500;
-    if (items && Array.isArray(items)) {
-      totalWeight = items.reduce((sum, item) => sum + (item.weight * item.qty), 0);
-    }
+    let totalWeight = weight || 500; // Default 500 gram jika tidak ada input berat 
+
+    console.error('=== BITESHIP RATES ===');
+console.error('Weight diterima:', weight);
+console.error('Total weight:', totalWeight);
+console.error('======================');
 
     const response = await fetch("https://api.biteship.com/v1/rates/couriers", {
       method: "POST",

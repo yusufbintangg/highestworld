@@ -23,6 +23,22 @@ export const CartDrawer = ({ children }) => {
     window.open(waUrl, '_blank');
   };
 
+  const handleDecrease = (item) => {
+    if (item.quantity <= 1) {
+      removeFromCart(item.id);
+    } else {
+      updateQuantity(item.id, item.quantity - 1);
+    }
+  };
+
+  const handleIncrease = (item) => {
+    const maxStock = item.maxStock ?? 99;
+    if (item.quantity >= maxStock) {
+      return; // sudah mencapai batas stock
+    }
+    updateQuantity(item.id, item.quantity + 1);
+  };
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -57,9 +73,6 @@ export const CartDrawer = ({ children }) => {
                         alt={item.product.name}
                         className="w-16 h-16 object-cover rounded border border-gray-100"
                       />
-                      <span className="absolute -top-2 -right-2 w-5 h-5 bg-black text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                        {item.quantity}
-                      </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-medium text-gray-900 line-clamp-2">{item.product.name}</h3>
@@ -67,6 +80,27 @@ export const CartDrawer = ({ children }) => {
                         {item.sku || 'N/A'} {item.color !== 'default' && `• ${item.color}`} • {item.size}
                       </p>
                       <p className="text-sm font-semibold text-gray-900 mt-1">{formatPrice(item.product.price * item.quantity)}</p>
+
+                      {/* Quantity Controls */}
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          onClick={() => handleDecrease(item)}
+                          className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:border-black hover:bg-black hover:text-white transition-all"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="text-sm font-medium w-5 text-center">{item.quantity}</span>
+                        <button
+                          onClick={() => handleIncrease(item)}
+                          disabled={item.quantity >= (item.maxStock ?? 99)}
+                          className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:border-black hover:bg-black hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:bg-white disabled:hover:text-black"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                        {item.quantity >= (item.maxStock ?? 99) && (
+                          <span className="text-[10px] text-red-500">Maks. stok</span>
+                        )}
+                      </div>
                     </div>
                     <button
                       onClick={() => removeFromCart(item.id)}

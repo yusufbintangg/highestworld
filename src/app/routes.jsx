@@ -9,8 +9,6 @@ import { ContactPage } from './pages/ContactPage';
 import { PaymentConfirmationPage } from './pages/PaymentConfirmationPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { OrderDetailPage } from './pages/OrderDetailPage';
-import { CheckoutSuccessPage } from './pages/CheckoutSuccessPage';
-import { CheckoutPendingPage } from './pages/CheckoutPendingPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { Layout } from './Layout';
 import { AdminLogin } from './pages/admin/AdminLogin';
@@ -36,8 +34,6 @@ export const router = createBrowserRouter([
       { path: 'kontak', element: <ContactPage /> },
       { path: 'checkout', element: <CheckoutPage /> },
       { path: '/pesanan/:orderNumber', element: <OrderDetailPage /> },
-      { path: 'checkout/success', element: <CheckoutSuccessPage /> },
-      { path: 'checkout/pending', element: <CheckoutPendingPage /> },
       { path: 'konfirmasi-pembayaran', element: <PaymentConfirmationPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],

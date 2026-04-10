@@ -40,22 +40,39 @@ export const CartProvider = ({ children }) => {
           item.size === size
       );
 
+      const maxStock = product.maxStock ?? 99;
+
       if (existingIndex > -1) {
+        const existing = prev[existingIndex];
+        const newQty = existing.quantity + quantity;
+
+        // Cek apakah melebihi stock
+        if (newQty > maxStock) {
+          toast.error(`Stok tersedia hanya ${maxStock} pcs`);
+          return prev;
+        }
+
         const updated = [...prev];
-        updated[existingIndex].quantity += quantity;
+        updated[existingIndex] = { ...existing, quantity: newQty };
         toast.success('Jumlah produk di keranjang diperbarui');
         return updated;
       } else {
+        // Cek stock saat pertama add
+        if (quantity > maxStock) {
+          toast.error(`Stok tersedia hanya ${maxStock} pcs`);
+          return prev;
+        }
+
         return [...prev, {
           id: `${product.id}-${color}-${size}`,
           product,
           color,
           size,
           quantity,
-          variantId: variantId,  // ← Simpan variant ID
+          variantId: variantId,
           variantSku: variantSku,
           variantImages: variantImages || [],
-          maxStock: product.maxStock || 99,
+          maxStock,
           sku: variantSku || product.sku || null,
         }];
       }
@@ -74,9 +91,15 @@ export const CartProvider = ({ children }) => {
     }
 
     setCartItems(prev =>
-      prev.map(item =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
-      )
+      prev.map(item => {
+        if (item.id !== itemId) return item;
+        const maxStock = item.maxStock ?? 99;
+        if (newQuantity > maxStock) {
+          toast.error(`Stok tersedia hanya ${maxStock} pcs`);
+          return item; // tidak diupdate
+        }
+        return { ...item, quantity: newQuantity };
+      })
     );
   };
 

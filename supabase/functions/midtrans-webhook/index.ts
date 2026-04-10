@@ -15,16 +15,6 @@ serve(async (req) => {
 
     // Verifikasi signature Midtrans
     const { order_id, status_code, gross_amount, signature_key, transaction_status, payment_type } = body;
-    
-    const encoder = new TextEncoder();
-    const data = encoder.encode(order_id + status_code + gross_amount + serverKey);
-    const hashBuffer = await crypto.subtle.digest("SHA-512", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const expectedSignature = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-
-  //  if (expectedSignature !== signature_key) {
-  //    return new Response("Invalid signature", { status: 401 });
-  //  }
 
     // Cari order di DB
     const { data: payment } = await supabase
