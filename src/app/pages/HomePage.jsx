@@ -97,7 +97,7 @@ export const HomePage = () => {
     <div className="min-h-screen bg-white text-black">
 
       {/* ===================== HERO BANNER ===================== */}
-      <section className="w-full mt-12 border-b border-gray-200">
+      <section className="w-full border-b border-gray-200">
 
         {/* === DESKTOP: square kiri + kolom kanan === */}
         <div className="hidden lg:flex">
