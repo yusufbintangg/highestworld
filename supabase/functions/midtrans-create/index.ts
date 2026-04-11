@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { order, items, customer, shipping } = await req.json();
+    const { order, items, customer, shipping, user_id } = await req.json();
 
     const serverKey = Deno.env.get("MIDTRANS_SERVER_KEY");
     const frontendUrl = Deno.env.get("FRONTEND_URL") || "http://localhost:5173";
@@ -45,6 +45,7 @@ serve(async (req) => {
         payment_method: "midtrans",
         status: "waiting_payment",
         notes: order.notes || null,
+        user_id: user_id || null,  // ← tambah ini
       })
       .select()
       .single();

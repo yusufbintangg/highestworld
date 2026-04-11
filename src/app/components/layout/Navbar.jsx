@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router';
-import { Menu, Search, ShoppingCart, X } from 'lucide-react';
+import { Search, ShoppingCart, Menu, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
-import { Button } from '../ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { useCart } from '../../../context/CartContext';
 import { categories } from '../../../data/categories';
@@ -16,95 +15,73 @@ export const Navbar = () => {
   const location = useLocation();
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const navLinks = [
-    { name: 'Beranda', path: '/' },
-    { name: 'Produk', path: '/produk' },
-    { name: 'Koleksi', path: '/koleksi', hasDropdown: true },
-    { name: 'Tentang', path: '/tentang' },
-    { name: 'Kontak', path: '/kontak' },
-    { name: 'Konfirmasi Pembayaran', path: '/konfirmasi-pembayaran' },
+    { name: 'Brands', path: '/brands' },
+    { name: 'Categories', path: '/produk' },
+    { name: 'Collection', path: '/koleksi', hasDropdown: true },
+    { name: 'Look', path: '/tentang' },
+    { name: 'Dealers', path: '/kontak' },
   ];
 
   const cartCount = getCartCount();
 
   return (
-    <nav
-      className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-        isScrolled
-          ? 'bg-background/80 backdrop-blur-xl border-b border-border-accent shadow-lg'
-          : 'bg-transparent'
-      )}
-    >
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-12">
+    <>
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+        <div className="flex items-center h-[52px] px-0">
+
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <img 
-              src="/logo-hw-kuning.png" 
-              alt="Highest World" 
-              className="h-10 md:h-12 w-auto"
-            />
-            <div className="">
-              <h2 className="font-display md:text-lg text-accent-gold group-hover:text-accent-gold-light transition-colors">
-                HIGHEST WORLD
-              </h2>
-            </div>
+          <Link to="/" className="flex items-center pl-4 pr-6 h-full border-r border-gray-200 shrink-0">
+            <img src="/logo-hw-kuning.png" alt="Highest World" className="h-7 w-auto" />
+            <span className="block text-[13px] font-bold tracking-[0.2em] uppercase text-gray-900 ml-2">Highest World</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-8">
+          {/* Search bar — DESKTOP ONLY */}
+          <div className="hidden lg:flex items-center flex-1 h-full border-r border-gray-200 px-4 gap-2">
+            <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+            <input
+              type="text"
+              placeholder="SEARCH"
+              className="w-full text-[11px] tracking-[0.2em] uppercase placeholder:text-gray-400 text-gray-800 bg-transparent outline-none font-medium"
+            />
+          </div>
+
+          {/* Mobile spacer */}
+          <div className="flex-1 lg:hidden" />
+
+          {/* Desktop Nav Links */}
+          <div className="hidden lg:flex items-center h-full">
             {navLinks.map((link) => (
-              <div key={link.path} className="relative group">
+              <div key={link.path} className="relative group h-full flex items-center">
                 <Link
                   to={link.path}
                   className={cn(
-                    'text-sm font-subheading uppercase tracking-wider transition-colors relative',
-                    location.pathname === link.path
-                      ? 'text-accent-gold'
-                      : 'text-foreground hover:text-accent-gold'
+                    'flex items-center px-5 h-full text-[11px] tracking-[0.18em] uppercase font-medium transition-colors border-r border-gray-200',
+                    location.pathname === link.path ? 'text-gray-900' : 'text-gray-500 hover:text-gray-900'
                   )}
                 >
                   {link.name}
-                  {location.pathname === link.path && (
-                    <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-accent-gold"></span>
-                  )}
                 </Link>
-
-                {/* Koleksi Dropdown */}
                 {link.hasDropdown && (
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
-                    <div className="bg-card border border-border-accent rounded-lg shadow-2xl p-6 w-[600px]">
-                      <div className="grid grid-cols-2 gap-4">
-                        {categories.map((category) => (
-                          <Link
-                            key={category.id}
-                            to={`/koleksi/${category.slug}`}
-                            className="flex items-start gap-3 p-3 rounded-lg hover:bg-secondary transition-colors group/item"
-                          >
-                            <div className="text-accent-gold mt-1">
-                              {/* Icon placeholder */}
-                              <div className="w-5 h-5 bg-accent-gold/20 rounded" />
-                            </div>
-                            <div>
-                              <h4 className="font-subheading font-semibold text-foreground group-hover/item:text-accent-gold transition-colors">
-                                {category.name}
-                              </h4>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {category.description}
-                              </p>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
+                  <div className="absolute top-full left-0 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="bg-white border border-gray-200 shadow-sm w-64">
+                      {categories.map((category, i) => (
+                        <Link
+                          key={category.id}
+                          to={`/koleksi/${category.slug}`}
+                          className={cn(
+                            'flex items-center px-5 py-3 text-[11px] tracking-[0.15em] uppercase font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors',
+                            i !== categories.length - 1 && 'border-b border-gray-100'
+                          )}
+                        >
+                          {category.name}
+                        </Link>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -112,94 +89,119 @@ export const Navbar = () => {
             ))}
           </div>
 
-          {/* Right Icons */}
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="hidden md:flex w-9 h-9">
-              <Search className="h-5 w-5" />
-            </Button>
+          {/* Login — desktop */}
+          <Link
+            to="/login"
+            className="hidden lg:flex items-center px-5 h-full text-[11px] tracking-[0.18em] uppercase font-medium text-gray-500 hover:text-gray-900 transition-colors border-l border-r border-gray-200"
+          >
+            Login
+          </Link>
 
-
+          {/* Cart — desktop text style */}
+          <div className="hidden lg:block">
             <CartDrawer>
-              <Button variant="ghost" size="icon" className="w-9 h-9 relative">
-                <ShoppingCart className="h-5 w-5" />
+              <button className="flex items-center gap-1.5 px-5 h-[52px] text-[11px] tracking-[0.18em] uppercase font-medium text-gray-500 hover:text-gray-900 transition-colors border-r border-gray-200">
+                <span>Cart</span>
+                <span className="text-gray-900">({cartCount})</span>
+              </button>
+            </CartDrawer>
+          </div>
+
+          {/* Cart — mobile icon + badge */}
+          <div className="lg:hidden">
+            <CartDrawer>
+              <button className="flex items-center justify-center w-11 h-[52px] relative">
+                <ShoppingCart className="w-[18px] h-[18px] text-gray-800" strokeWidth={1.5} />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-accent-red text-accent-gold text-xs w-5 h-5 rounded-full flex items-center justify-center font-mono">
+                  <span className="absolute top-2.5 right-1 min-w-[16px] h-4 bg-gray-900 text-white text-[9px] font-bold rounded-sm flex items-center justify-center px-0.5">
                     {cartCount}
                   </span>
                 )}
-              </Button>
+              </button>
             </CartDrawer>
-
-            {/* Mobile Menu Button */}
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild className="lg:hidden">
-                <Button variant="ghost" size="icon" className="w-9 h-9">
-                  <Menu className="h-6 w-6" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-                <div className="flex flex-col m-5 h-full">
-                  <div className="mb-8">
-                    <h2 className="font-display text-2xl text-accent-gold">
-                      HIGHEST WORLD
-                    </h2>
-                  </div>
-
-                  <nav className="flex-1">
-                    <div className="space-y-2">
-                      {navLinks.map((link) =>
-                        link.hasDropdown ? (
-                          <Accordion key={link.path} type="single" collapsible>
-                            <AccordionItem value="koleksi" className="border-none">
-                              <AccordionTrigger className="text-foreground hover:text-accent-gold font-subheading uppercase tracking-wider py-3">
-                                {link.name}
-                              </AccordionTrigger>
-                              <AccordionContent>
-                                <div className="space-y-2 pl-4">
-                                  {categories.map((category) => (
-                                    <Link
-                                      key={category.id}
-                                      to={`/koleksi/${category.slug}`}
-                                      onClick={() => setMobileMenuOpen(false)}
-                                      className="block py-2 text-sm text-muted-foreground hover:text-accent-gold transition-colors"
-                                    >
-                                      {category.name}
-                                    </Link>
-                                  ))}
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                          </Accordion>
-                        ) : (
-                          <Link
-                            key={link.path}
-                            to={link.path}
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={cn(
-                              'block py-3 font-subheading uppercase tracking-wider transition-colors',
-                              location.pathname === link.path
-                                ? 'text-accent-gold'
-                                : 'text-foreground hover:text-accent-gold'
-                            )}
-                          >
-                            {link.name}
-                          </Link>
-                        )
-                      )}
-                    </div>
-                  </nav>
-
-                  <div className="border-t border-border pt-4">
-                    <p className="text-xs text-muted-foreground">
-                      © 2026 Highest World
-                    </p>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
           </div>
+
+          {/* Mobile Burger */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild className="lg:hidden">
+              <button className="flex items-center justify-center w-11 h-[52px] border-l border-gray-200">
+                <Menu className="w-[18px] h-[18px] text-gray-800" strokeWidth={1.5} />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[280px] p-0 bg-white border-l border-gray-200">
+              <div className="flex flex-col h-full">
+
+                <div className="flex items-center px-5 h-[52px] border-b border-gray-200 gap-2">
+                  <img src="/logo-hw-kuning.png" alt="Highest World" className="h-6 w-auto" />
+                  <span className="text-[12px] font-bold tracking-[0.2em] uppercase text-gray-900">Highest World</span>
+                </div>
+
+                {/* Search inside burger */}
+                <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-gray-100">
+                  <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="SEARCH"
+                    className="w-full text-[11px] tracking-[0.2em] uppercase placeholder:text-gray-400 text-gray-800 bg-transparent outline-none font-medium"
+                  />
+                </div>
+
+                <nav className="flex-1 overflow-y-auto">
+                  {navLinks.map((link, i) =>
+                    link.hasDropdown ? (
+                      <Accordion key={link.path} type="single" collapsible>
+                        <AccordionItem value="koleksi" className="border-none">
+                          <AccordionTrigger className="px-5 py-4 text-[11px] tracking-[0.2em] uppercase font-medium text-gray-500 hover:text-gray-900 hover:no-underline border-t border-gray-100">
+                            {link.name}
+                          </AccordionTrigger>
+                          <AccordionContent className="pb-0">
+                            {categories.map((category) => (
+                              <Link
+                                key={category.id}
+                                to={`/koleksi/${category.slug}`}
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="block px-8 py-3 text-[11px] tracking-[0.15em] uppercase text-gray-400 hover:text-gray-900 transition-colors border-t border-gray-100"
+                              >
+                                {category.name}
+                              </Link>
+                            ))}
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    ) : (
+                      <Link
+                        key={link.path}
+                        to={link.path}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={cn(
+                          'flex items-center px-5 py-4 text-[11px] tracking-[0.2em] uppercase font-medium transition-colors border-t border-gray-100',
+                          location.pathname === link.path ? 'text-gray-900' : 'text-gray-500 hover:text-gray-900'
+                        )}
+                      >
+                        {link.name}
+                      </Link>
+                    )
+                  )}
+                </nav>
+
+                <div className="border-t border-gray-200 px-5 py-4 space-y-3">
+                  <Link
+                    to="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block text-[11px] tracking-[0.2em] uppercase font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                  >
+                    Login
+                  </Link>
+                  <p className="text-[10px] text-gray-300 tracking-widest uppercase">© 2026 Highest World</p>
+                </div>
+
+              </div>
+            </SheetContent>
+          </Sheet>
+
         </div>
-      </div>
-    </nav>
+      </nav>
+      <div className="h-[52px]" />
+    </>
   );
 };

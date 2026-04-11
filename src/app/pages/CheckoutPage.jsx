@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
-import { ShoppingBag, CreditCard, Truck, MapPin, User, Building2, ArrowLeft, Loader2, Search, CheckCircle2, Tag, ChevronRight, Lock } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
+import { ArrowLeft, Loader2, Search, CheckCircle2, Tag, ChevronRight, Lock } from 'lucide-react';
 import { Separator } from '../components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
-import { Textarea } from '../components/ui/textarea';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 import { formatPrice } from '../../lib/utils';
 import { WHATSAPP_NUMBER } from '../../lib/config';
 import { openMidtransPayment, generateOrderId } from '../../lib/midtrans';
@@ -16,9 +14,7 @@ import { toast } from 'sonner';
 const CourierCard = ({ rate, selected, onClick }) => (
   <div
     onClick={onClick}
-    className={`px-4 py-3 border-b last:border-b-0 cursor-pointer transition-all flex items-center justify-between gap-3 hover:bg-gray-50 ${
-      selected ? 'bg-gray-50' : ''
-    }`}
+    className={`px-4 py-3 border-b last:border-b-0 cursor-pointer transition-all flex items-center justify-between gap-3 hover:bg-gray-50 ${selected ? 'bg-gray-50' : ''}`}
   >
     <div className="flex items-center gap-3 min-w-0">
       {selected
@@ -37,19 +33,18 @@ const CourierCard = ({ rate, selected, onClick }) => (
 export const CheckoutPage = () => {
   const navigate = useNavigate();
   const { cartItems, getCartTotal, clearCart } = useCart();
+  const { user } = useAuth();
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('midtrans');
-
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '',
     address: '', city: '', province: '', postalCode: '', notes: '',
   });
-
   const [errors, setErrors] = useState({});
   const [shippingRates, setShippingRates] = useState([]);
   const [selectedRate, setSelectedRate] = useState(null);
   const [loadingRates, setLoadingRates] = useState(false);
-
   const [areaSearch, setAreaSearch] = useState('');
   const [areaResults, setAreaResults] = useState([]);
   const [loadingArea, setLoadingArea] = useState(false);
@@ -57,6 +52,19 @@ export const CheckoutPage = () => {
   const [selectedArea, setSelectedArea] = useState(null);
   const areaRef = useRef(null);
   const searchTimeout = useRef(null);
+
+  // Auto-fill dari data user yang login
+  // Ganti useEffect yang ada dengan ini
+useEffect(() => {
+  if (!user) return;
+  setFormData(prev => ({
+    ...prev,
+    firstName: prev.firstName || user.name?.split(' ')[0] || '',
+    lastName: prev.lastName || user.name?.split(' ').slice(1).join(' ') || '',
+    email: prev.email || user.email || '',
+    phone: prev.phone || user.phone || '',
+  }));
+}, [user?.id, user?.name, user?.phone, user?.email]); // depend on spesifik field, bukan object
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -115,19 +123,6 @@ export const CheckoutPage = () => {
     }
   };
 
-  const totalWeight = cartItems.reduce(
-  (sum, item) => sum + ((item.product.weight || 500) * item.quantity), 0
-);
-
-// Tambahin ini
-console.log('Cart items:', cartItems.map(i => ({
-  name: i.product.name,
-  weight: i.product.weight,
-  qty: i.quantity,
-  subtotal_weight: (i.product.weight || 500) * i.quantity
-})));
-console.log('Total weight dikirim ke edge function:', totalWeight);
-
   const handleAreaInput = (e) => {
     const value = e.target.value;
     setAreaSearch(value);
@@ -162,19 +157,16 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const totalWeight = cartItems.reduce((sum, item) => {
-        const itemWeight = item.product?.weight || 500; // Ambil dari product.weight
-        return sum + (itemWeight * item.quantity);
-      }, 0);
+      const totalWeight = cartItems.reduce((sum, item) => sum + ((item.product?.weight || 500) * item.quantity), 0);
       const response = await fetch(`${supabaseUrl}/functions/v1/biteship-rates`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseKey}` },
         body: JSON.stringify({
           origin_postal_code: '50265',
           destination_postal_code: String(kodePos),
-          weight: totalWeight, // ← Berat total (qty × weight)
+          weight: totalWeight,
           item_value: cartTotal,
-          items: cartItems
+          items: cartItems,
         }),
       });
       const data = await response.json();
@@ -189,6 +181,7 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
       setLoadingRates(false);
     }
   };
+  
 
   const validateForm = () => {
     const newErrors = {};
@@ -204,10 +197,103 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
       newErrors.phone = 'Nomor telepon harus 10-13 digit';
     }
     if (!formData.address.trim()) newErrors.address = 'Alamat wajib diisi';
-    if (!selectedArea) newErrors.area = 'Pilih kota/kecamatan dari dropdown';
+    if (!selectedArea && !savedAddress) newErrors.area = 'Pilih kota/kecamatan dari dropdown';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  const saveProfileIfNeeded = async () => {
+  if (!user) return;
+
+  await supabase.from('user_profiles').update({
+    full_name: `${formData.firstName} ${formData.lastName}`.trim(),
+    phone: formData.phone,
+  }).eq('id', user.id);
+
+  // Cek apakah sudah ada default address
+  const { data: existing } = await supabase
+    .from('user_addresses')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('is_default', true)
+    .single();
+
+  if (existing) {
+  await supabase.from('user_addresses').update({
+    recipient_name: `${formData.firstName} ${formData.lastName}`.trim(),
+    phone: formData.phone,
+    address: formData.address,
+    city: selectedArea
+      ? `${selectedArea.administrative_division_level_3_name}, ${selectedArea.administrative_division_level_2_name}`
+      : formData.city,
+    province: selectedArea
+      ? selectedArea.administrative_division_level_1_name
+      : formData.province,
+    postal_code: formData.postalCode,
+  }).eq('id', existing.id);
+  } else {
+  await supabase.from('user_addresses').insert({
+    user_id: user.id,
+    label: 'Rumah',
+    recipient_name: `${formData.firstName} ${formData.lastName}`.trim(),
+    phone: formData.phone,
+    address: formData.address,
+    city: selectedArea
+      ? `${selectedArea.administrative_division_level_3_name}, ${selectedArea.administrative_division_level_2_name}`
+      : formData.city,
+    province: selectedArea
+      ? selectedArea.administrative_division_level_1_name
+      : formData.province,
+    postal_code: formData.postalCode,
+    is_default: true,
+  });
+}
+};
+
+const [savedAddress, setSavedAddress] = useState(null);
+
+useEffect(() => {
+  if (!user) return;
+  supabase
+    .from('user_addresses')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('is_default', true)
+    .single()
+    .then(({ data }) => {
+      if (data) {
+        setSavedAddress(data);
+        setFormData(prev => ({
+          ...prev,
+          firstName: data.recipient_name?.split(' ')[0] || '',
+          lastName: data.recipient_name?.split(' ').slice(1).join(' ') || '',
+          phone: data.phone || '',
+          address: data.address || '',
+          city: data.city || '',
+          province: data.province || '',
+          postalCode: data.postal_code || '',
+        }));
+        // Tampilkan kota + provinsi di field area search
+setAreaSearch(data.city || ''); 
+
+// Set selectedArea dummy biar validasi tidak gagal
+const cityParts = data.city?.split(', ') || [];
+setSelectedArea({ 
+  id: data.area_id,
+  postal_code: data.postal_code,
+  administrative_division_level_1_name: data.province,
+  administrative_division_level_2_name: cityParts[1] || data.city,
+  administrative_division_level_3_name: cityParts[0] || '',
+});
+setAreaSearch(data.city || '');
+setShowAreaDropdown(false); // ← tambah ini
+        // trigger fetch ongkir otomatis
+        if (data.postal_code) {
+          fetchShippingRates(data.postal_code);
+        }
+      }
+    });
+}, [user?.id]);
 
   const handleMidtransPayment = async () => {
     setIsProcessing(true);
@@ -218,6 +304,7 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
     }
     try {
       const orderPayload = {
+        user_id: user?.id || null, // ← di root level, bukan di dalam order
         order: { notes: formData.notes || null },
         customer: {
           name: `${formData.firstName} ${formData.lastName || ''}`.trim(),
@@ -232,30 +319,34 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
           postal_code: formData.postalCode,
           courier: selectedRate?.courier_code || 'jne',
           service: selectedRate?.courier_service_code || 'REG',
-          cost: selectedRate.price,  // ← GUNAKAN HARGA DARI BITESHIP RESPONSE
+          cost: selectedRate.price,
           etd: selectedRate?.duration || '2-3 hari',
         },
         items: cartItems.map(item => ({
           product_id: item.product.id,
           variant_id: item.variantId || null,
-          product_weight: parseInt(item.product?.weight || 500),
           name: item.product.name,
           price: item.product.price,
           qty: item.quantity,
           size: item.size,
           sku: item.sku || null,
           variant_images: item.variantImages || [],
-          weight: item.product.weight || 100, // ← tambah ini
-
+          weight: item.product.weight || 100,
         })),
       };
 
       await openMidtransPayment(orderPayload, {
-        onSuccess: (result) => {
-          clearCart();
-          window.location.href = '/pesanan/' + result.order_number;
-        },
-        onPending: (result) => {
+        onSuccess: async (result) => {
+  try {
+    await saveProfileIfNeeded();
+  } catch (e) {
+    console.error('save profile error:', e);
+  }
+  clearCart();
+  window.location.href = '/pesanan/' + result.order_number;
+},
+        onPending: async (result) => {
+          await saveProfileIfNeeded();
           clearCart();
           window.location.href = '/pesanan/' + result.order_number;
         },
@@ -279,11 +370,9 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
   const handleBankTransferPayment = () => {
     setIsProcessing(true);
     const orderId = generateOrderId();
-    
-    // Gunakan harga dari selectedRate
     const actualShippingCost = selectedRate?.price || 0;
     const actualGrandTotal = cartTotal + actualShippingCost;
-    
+
     let message = `📦 PESANAN BARU - ${orderId}\n\n`;
     message += `👤 DATA PEMBELI:\nNama: ${formData.firstName} ${formData.lastName}\nEmail: ${formData.email}\nTelepon: ${formData.phone}\n\n`;
     message += `📍 ALAMAT:\n${formData.address}\n${formData.city}, ${formData.province} ${formData.postalCode}\n\n`;
@@ -313,10 +402,9 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
   if (cartItems.length === 0) return null;
 
   return (
-    <div className="min-h-screen bg-white pt-20 pb-20">
+    <div className="min-h-screen bg-white pt-2 pb-20">
       <div className="container mx-auto px-4 max-w-6xl">
 
-        {/* Back button */}
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors mb-8 mt-4"
@@ -329,8 +417,6 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
 
           {/* ─── LEFT: Form ─── */}
           <div className="lg:col-span-3 space-y-8">
-
-            {/* Detail Alamat header */}
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Detail Alamat</h1>
             </div>
@@ -343,10 +429,9 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
                 type="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                placeholder="Alamat Email (opsional)"
-                className={`w-full px-4 py-3 rounded-xl border text-sm placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-gray-200 transition ${
-                  errors.email ? 'border-red-400' : 'border-gray-200'
-                }`}
+                disabled={!!user}
+                placeholder="Alamat Email"
+                className={`w-full px-4 py-3 rounded-xl border text-sm placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-gray-200 transition ${!!user ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''} ${errors.email ? 'border-red-400' : 'border-gray-200'}`}
               />
               {errors.email
                 ? <p className="text-xs text-red-500">{errors.email}</p>
@@ -354,7 +439,7 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
               }
             </div>
 
-            {/* Nama Lengkap */}
+            {/* Nama */}
             <div className="space-y-3">
               <input
                 id="firstName"
@@ -362,14 +447,12 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
                 value={formData.firstName}
                 onChange={handleInputChange}
                 placeholder="Nama Lengkap Penerima"
-                className={`w-full px-4 py-3 rounded-xl border text-sm placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-gray-200 transition ${
-                  errors.firstName ? 'border-red-400' : 'border-gray-200'
-                }`}
+                className={`w-full px-4 py-3 rounded-xl border text-sm placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-gray-200 transition ${errors.firstName ? 'border-red-400' : 'border-gray-200'}`}
               />
               {errors.firstName && <p className="text-xs text-red-500">{errors.firstName}</p>}
             </div>
 
-            {/* Nomor HP */}
+            {/* Phone */}
             <div className="space-y-3">
               <input
                 id="phone"
@@ -378,9 +461,7 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
                 value={formData.phone}
                 onChange={handleInputChange}
                 placeholder="Nomor HP Penerima"
-                className={`w-full px-4 py-3 rounded-xl border text-sm placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-gray-200 transition ${
-                  errors.phone ? 'border-red-400' : 'border-gray-200'
-                }`}
+                className={`w-full px-4 py-3 rounded-xl border text-sm placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-gray-200 transition ${errors.phone ? 'border-red-400' : 'border-gray-200'}`}
               />
               {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
             </div>
@@ -401,7 +482,7 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
               <label className="absolute left-4 top-2 text-[10px] text-gray-400 font-medium tracking-wide">Negara</label>
             </div>
 
-            {/* Kota / Kecamatan (Area Search) */}
+            {/* Area Search */}
             <div ref={areaRef} className="relative">
               <div className="relative">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -409,9 +490,7 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
                   value={areaSearch}
                   onChange={handleAreaInput}
                   placeholder="Kota dan Kecamatan"
-                  className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-gray-200 transition ${
-                    errors.area ? 'border-red-400' : selectedArea ? 'border-gray-400' : 'border-gray-200'
-                  }`}
+                  className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-gray-200 transition ${errors.area ? 'border-red-400' : selectedArea ? 'border-gray-400' : 'border-gray-200'}`}
                 />
                 {loadingArea && (
                   <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
@@ -419,7 +498,6 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
               </div>
               {errors.area && <p className="text-xs text-red-500 mt-1">{errors.area}</p>}
 
-              {/* Dropdown results */}
               {showAreaDropdown && areaResults.length > 0 && (
                 <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                   {areaResults.map((area, i) => (
@@ -459,9 +537,7 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
                 placeholder="Detail Alamat"
                 rows={4}
                 maxLength={250}
-                className={`w-full px-4 py-3 rounded-xl border text-sm placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-gray-200 transition resize-none ${
-                  errors.address ? 'border-red-400' : 'border-gray-200'
-                }`}
+                className={`w-full px-4 py-3 rounded-xl border text-sm placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-gray-200 transition resize-none ${errors.address ? 'border-red-400' : 'border-gray-200'}`}
               />
               <div className="flex justify-between items-center">
                 {errors.address
@@ -472,7 +548,7 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
               </div>
             </div>
 
-            {/* Catatan pesanan */}
+            {/* Catatan */}
             <div>
               <textarea
                 id="notes"
@@ -485,7 +561,7 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
               />
             </div>
 
-            {/* ─── Metode Pengiriman ─── */}
+            {/* Metode Pengiriman */}
             <div>
               <h2 className="text-xl font-bold text-gray-900 mb-4">Metode Pengiriman</h2>
 
@@ -519,16 +595,12 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
               )}
             </div>
 
-            {/* ─── Metode Pembayaran ─── */}
+            {/* Metode Pembayaran */}
             <div>
               <h2 className="text-xl font-bold text-gray-900 mb-4">Metode Pembayaran</h2>
               <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
                 <div className="rounded-xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
-                  {/* Midtrans */}
-                  <label
-                    htmlFor="midtrans"
-                    className="flex items-center justify-between px-4 py-3.5 cursor-pointer hover:bg-gray-50 transition-colors"
-                  >
+                  <label htmlFor="midtrans" className="flex items-center justify-between px-4 py-3.5 cursor-pointer hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-3">
                       <RadioGroupItem value="midtrans" id="midtrans" />
                       <div>
@@ -538,12 +610,7 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
                     </div>
                     <ChevronRight className="w-4 h-4 text-gray-400" />
                   </label>
-
-                  {/* Bank Transfer */}
-                  <label
-                    htmlFor="bank_transfer"
-                    className="flex items-center justify-between px-4 py-3.5 cursor-pointer hover:bg-gray-50 transition-colors"
-                  >
+                  <label htmlFor="bank_transfer" className="flex items-center justify-between px-4 py-3.5 cursor-pointer hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-3">
                       <RadioGroupItem value="bank_transfer" id="bank_transfer" />
                       <div>
@@ -556,14 +623,12 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
                 </div>
               </RadioGroup>
             </div>
-
           </div>
 
           {/* ─── RIGHT: Order Summary ─── */}
           <div className="lg:col-span-2">
             <div className="sticky top-24 rounded-2xl border border-gray-200 overflow-hidden">
 
-              {/* Cart items */}
               <div className="p-5 space-y-4 max-h-64 overflow-y-auto">
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex gap-3">
@@ -590,7 +655,6 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
 
               <Separator />
 
-              {/* Pesan pengiriman */}
               <button className="w-full flex items-center justify-between px-5 py-3.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                 <span className="text-gray-500">Tinggalkan pesan pengiriman (opsional)</span>
                 <ChevronRight className="w-4 h-4 text-gray-400" />
@@ -598,7 +662,6 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
 
               <Separator />
 
-              {/* Voucher */}
               <button className="w-full flex items-center justify-between px-5 py-3.5 text-sm hover:bg-gray-50 transition-colors">
                 <div className="flex items-center gap-2 text-gray-700">
                   <Tag className="w-4 h-4 text-gray-400" />
@@ -609,7 +672,6 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
 
               <Separator />
 
-              {/* Pricing breakdown */}
               <div className="px-5 py-4 space-y-2.5">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Subtotal • {cartItems.reduce((s, i) => s + i.quantity, 0)} barang</span>
@@ -631,26 +693,22 @@ console.log('Total weight dikirim ke edge function:', totalWeight);
 
               <Separator />
 
-              {/* Total */}
               <div className="px-5 py-4 flex justify-between items-center">
                 <span className="text-base font-bold text-gray-900">Total Pembayaran</span>
                 <span className="text-lg font-bold text-gray-900">{formatPrice(grandTotal)}</span>
               </div>
 
-              {/* Secure badge */}
               <div className="px-5 pb-3 flex items-center justify-center gap-1.5 text-xs text-gray-400">
                 <Lock className="w-3 h-3" />
                 <span>Transaksi Aman | Pembayaran telah terenkripsi.</span>
               </div>
 
-              {/* Import warning */}
               <div className="mx-5 mb-4 px-4 py-3 bg-blue-50 rounded-xl">
                 <p className="text-xs text-blue-600 leading-relaxed">
                   Bea atau pajak impor mungkin dikenakan tergantung negara tujuan pengiriman.
                 </p>
               </div>
 
-              {/* CTA */}
               <div className="px-5 pb-5">
                 <button
                   onClick={handleSubmit}

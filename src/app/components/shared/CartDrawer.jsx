@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router';
 import { Button } from '../ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
 import { useCart } from '../../../context/CartContext';
+import { useAuth } from '../../../context/AuthContext';
 import { formatPrice, generateCartWAMessage } from '../../../lib/utils';
 
 export const CartDrawer = ({ children }) => {
@@ -13,10 +14,16 @@ export const CartDrawer = ({ children }) => {
   const { cartItems, removeFromCart, updateQuantity, getCartTotal } = useCart();
   const [ open, setOpen ] = React.useState(false);
 
-  const handleCheckout = () => {
-    setOpen(false);
+  const { isAuthenticated } = useAuth();
+
+const handleCheckout = () => {
+  setOpen(false);
+  if (!isAuthenticated) {
+    navigate('/login', { state: { from: { pathname: '/checkout' } } });
+  } else {
     navigate('/checkout');
-  };
+  }
+};
   
   const handleWhatsAppCheckout = () => {
     const waUrl = generateCartWAMessage(cartItems, getCartTotal());

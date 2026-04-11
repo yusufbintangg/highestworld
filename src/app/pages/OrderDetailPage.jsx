@@ -92,7 +92,7 @@ export const OrderDetailPage = () => {
   const currentStepIndex = STEP_ORDER.indexOf(order.status);
 
   return (
-    <div className="min-h-screen bg-white pt-20 pb-16">
+    <div className="min-h-screen bg-white pt-2 pb-16">
       <div className="max-w-xl mx-auto px-4">
 
         {/* Back */}

@@ -17,9 +17,20 @@ import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminProducts } from './pages/admin/AdminProducts';
 import { AdminOrders } from './pages/admin/AdminOrders';
 import { AdminStock } from './pages/admin/AdminStock';
-
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
+import { AccountDashboardPage } from './pages/AccountDashboardPage';
+import { AccountOrdersPage } from './pages/AccountOrdersPage';
+import { AccountAddressesPage } from './pages/AccountAddressesPage';
+import { AccountSettingsPage } from './pages/AccountSettingsPage';
+import { AccountSecurityPage } from './pages/AccountSecurityPage';
 
 export const router = createBrowserRouter([
+  // Auth routes
+  { path: '/login', element: <LoginPage /> },
+  { path: '/register', element: <RegisterPage /> },
+
   // Customer routes
   {
     path: '/',
@@ -32,13 +43,40 @@ export const router = createBrowserRouter([
       { path: 'koleksi/:slug', element: <CollectionDetailPage /> },
       { path: 'tentang', element: <AboutPage /> },
       { path: 'kontak', element: <ContactPage /> },
-      { path: 'checkout', element: <CheckoutPage /> },
-      { path: '/pesanan/:orderNumber', element: <OrderDetailPage /> },
       { path: 'konfirmasi-pembayaran', element: <PaymentConfirmationPage /> },
+      { path: 'pesanan/:orderNumber', element: <OrderDetailPage /> },
+
+      // Protected routes
+      {
+        path: 'checkout',
+        element: <ProtectedRoute><CheckoutPage /></ProtectedRoute>,
+      },
+      {
+        path: 'account',
+        element: <ProtectedRoute><AccountDashboardPage /></ProtectedRoute>,
+      },
+      {
+        path: 'account/orders',
+        element: <ProtectedRoute><AccountOrdersPage /></ProtectedRoute>,
+      },
+      {
+        path: 'account/addresses',
+        element: <ProtectedRoute><AccountAddressesPage /></ProtectedRoute>,
+      },
+      {
+        path: 'account/settings',
+        element: <ProtectedRoute><AccountSettingsPage /></ProtectedRoute>,
+      },
+      {
+        path: 'account/security',
+        element: <ProtectedRoute><AccountSecurityPage /></ProtectedRoute>,
+      },
+
       { path: '*', element: <NotFoundPage /> },
     ],
   },
-  // Admin routes (terpisah dari Layout customer)
+
+  // Admin routes
   {
     path: '/admin',
     element: <AdminLayout />,
@@ -49,7 +87,7 @@ export const router = createBrowserRouter([
       { path: 'stock', element: <AdminStock /> },
     ],
   },
-{
+  {
     path: '/admin/login',
     element: <AdminLogin />,
   },
