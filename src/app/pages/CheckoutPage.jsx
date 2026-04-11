@@ -465,23 +465,7 @@ setShowAreaDropdown(false); // ← tambah ini
               />
               {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
             </div>
-
-            {/* Negara */}
-            <div className="relative">
-              <select
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-700 bg-white outline-none focus:ring-2 focus:ring-gray-200 transition appearance-none"
-                defaultValue="ID"
-              >
-                <option value="ID">Indonesia</option>
-              </select>
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </span>
-              <label className="absolute left-4 top-2 text-[10px] text-gray-400 font-medium tracking-wide">Negara</label>
-            </div>
-
+            
             {/* Area Search */}
             <div ref={areaRef} className="relative">
               <div className="relative">

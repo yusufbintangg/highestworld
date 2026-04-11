@@ -156,7 +156,7 @@ export const ProductsPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-white text-black pt-16 pb-24">
+    <div className="min-h-screen bg-white text-black pb-24">
 
       {/* Breadcrumb */}
       <div className="border-b border-gray-200">

@@ -95,7 +95,6 @@ export const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-white text-black">
-
       {/* ===================== HERO BANNER ===================== */}
       <section className="w-full border-b border-gray-200">
 
