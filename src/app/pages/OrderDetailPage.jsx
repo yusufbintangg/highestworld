@@ -111,8 +111,8 @@ export const OrderDetailPage = () => {
         </div>
 
         {/* Status Banner */}
-        <div className={`rounded-2xl p-5 ${statusInfo.bg} ${statusInfo.border} border mb-6 flex items-center gap-4`}>
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${statusInfo.bg} border ${statusInfo.border}`}>
+        <div className={` p-5 ${statusInfo.bg} ${statusInfo.border} border mb-6 flex items-center gap-4`}>
+          <div className={`w-10 h-10 flex items-center justify-center ${statusInfo.bg} border ${statusInfo.border}`}>
             <StatusIcon className={`w-5 h-5 ${statusInfo.color}`} />
           </div>
           <div className="flex-1">
@@ -157,7 +157,7 @@ export const OrderDetailPage = () => {
 
         {/* Alert deadline */}
         {isUnpaid && !isExpired && expiredAt && (
-          <div className="mb-4 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 flex items-start gap-3">
+          <div className="mb-4 bg-amber-50 border border-amber-100 px-4 py-3 flex items-start gap-3">
             <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
             <div>
               <p className="text-xs font-semibold text-amber-700">Segera selesaikan pembayaran</p>
@@ -172,7 +172,7 @@ export const OrderDetailPage = () => {
 
         {/* Alert expired */}
         {isUnpaid && isExpired && (
-          <div className="mb-4 bg-red-50 border border-red-100 rounded-xl px-4 py-3 flex items-start gap-3">
+          <div className="mb-4 bg-red-50 border border-red-100 px-4 py-3 flex items-start gap-3">
             <XCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
             <div>
               <p className="text-xs font-semibold text-red-600">Waktu pembayaran habis</p>
@@ -186,7 +186,7 @@ export const OrderDetailPage = () => {
           <button
             onClick={handleBayarSekarang}
             disabled={paying}
-            className="w-full py-3.5 bg-black text-white text-xs tracking-[0.15em] uppercase font-semibold rounded-xl hover:bg-gray-900 transition-colors flex items-center justify-center gap-2 mb-6 disabled:opacity-60"
+            className="w-full py-3.5 bg-black text-white text-xs tracking-[0.15em] uppercase font-semibold hover:bg-gray-900 transition-colors flex items-center justify-center gap-2 mb-6 disabled:opacity-60"
           >
             {paying ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
             {paying ? 'Memproses...' : 'Bayar Sekarang'}
@@ -194,7 +194,7 @@ export const OrderDetailPage = () => {
         )}
 
         {/* Products */}
-        <div className="border border-gray-100 rounded-2xl overflow-hidden mb-4">
+        <div className="border border-gray-100  overflow-hidden mb-4">
           <div className="px-5 py-3.5 border-b border-gray-100">
             <p className="text-[10px] tracking-[0.2em] uppercase text-gray-400 font-medium">Produk Dipesan</p>
           </div>
@@ -205,10 +205,10 @@ export const OrderDetailPage = () => {
                   <img
                     src={item.variant_images[0]}
                     alt={item.product_name}
-                    className="w-14 h-14 object-cover rounded-lg shrink-0 bg-gray-50"
+                    className="w-14 h-14 object-cover shrink-0 bg-gray-50"
                   />
                 ) : (
-                  <div className="w-14 h-14 rounded-lg bg-gray-100 shrink-0" />
+                  <div className="w-14 h-14 bg-gray-100 shrink-0" />
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 line-clamp-1">{item.product_name}</p>
@@ -223,7 +223,7 @@ export const OrderDetailPage = () => {
         </div>
 
         {/* Shipping Info */}
-        <div className="border border-gray-100 rounded-2xl overflow-hidden mb-4">
+        <div className="border border-gray-100 overflow-hidden mb-4">
           <div className="px-5 py-3.5 border-b border-gray-100 flex items-center gap-2">
             <MapPin className="w-3.5 h-3.5 text-gray-400" />
             <p className="text-[10px] tracking-[0.2em] uppercase text-gray-400 font-medium">Informasi Pengiriman</p>
@@ -243,7 +243,7 @@ export const OrderDetailPage = () => {
         </div>
 
         {/* Payment Summary */}
-        <div className="border border-gray-100 rounded-2xl overflow-hidden mb-6">
+        <div className="border border-gray-100 overflow-hidden mb-6">
           <div className="px-5 py-3.5 border-b border-gray-100 flex items-center gap-2">
             <CreditCard className="w-3.5 h-3.5 text-gray-400" />
             <p className="text-[10px] tracking-[0.2em] uppercase text-gray-400 font-medium">Ringkasan Pembayaran</p>
@@ -267,7 +267,7 @@ export const OrderDetailPage = () => {
         {/* CTA */}
         <button
           onClick={() => navigate('/produk')}
-          className="w-full py-3.5 border border-gray-200 rounded-xl text-xs tracking-[0.15em] uppercase text-gray-600 hover:border-gray-900 hover:text-gray-900 transition-colors font-medium"
+          className="w-full py-3.5 border border-gray-200 text-xs tracking-[0.15em] uppercase text-gray-600 hover:border-gray-900 hover:text-gray-900 transition-colors font-medium"
         >
           Lanjut Belanja
         </button>

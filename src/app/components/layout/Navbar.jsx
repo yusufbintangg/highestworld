@@ -93,10 +93,9 @@ export const Navbar = () => {
 
           {/* Login — desktop */}
           <Link
-to={user ? "/account" : "/login"}
-                    className="hidden lg:flex items-center px-5 h-full text-[11px] tracking-[0.18em] uppercase font-medium text-gray-500 hover:text-gray-900 transition-colors border-l border-r border-gray-200"
-                  >
-             {user ? 'Akun' : 'Login'}
+              to={user ? "/account" : "/login"}
+              className="hidden lg:flex items-center px-5 h-full text-[11px] tracking-[0.18em] uppercase font-medium text-gray-500 hover:text-gray-900 transition-colors border-l border-r border-gray-200">
+              {user ? 'Akun' : 'Login'}
           </Link>
 
           {/* Cart — desktop text style */}
