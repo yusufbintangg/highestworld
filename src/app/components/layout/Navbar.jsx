@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../../context/AuthContext';
 import { Link, useLocation } from 'react-router';
 import { Search, ShoppingCart, Menu, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
@@ -12,6 +13,7 @@ export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { getCartCount } = useCart();
+  const { user } = useAuth();
   const location = useLocation();
 
   useEffect(() => {
@@ -91,10 +93,10 @@ export const Navbar = () => {
 
           {/* Login — desktop */}
           <Link
-            to="/login"
-            className="hidden lg:flex items-center px-5 h-full text-[11px] tracking-[0.18em] uppercase font-medium text-gray-500 hover:text-gray-900 transition-colors border-l border-r border-gray-200"
-          >
-            Login
+to={user ? "/account" : "/login"}
+                    className="hidden lg:flex items-center px-5 h-full text-[11px] tracking-[0.18em] uppercase font-medium text-gray-500 hover:text-gray-900 transition-colors border-l border-r border-gray-200"
+                  >
+             {user ? 'Akun' : 'Login'}
           </Link>
 
           {/* Cart — desktop text style */}
@@ -186,10 +188,11 @@ export const Navbar = () => {
 
                 <div className="border-t border-gray-200 px-5 py-4 space-y-3">
                   <Link
-                    to="/login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block text-[11px] tracking-[0.2em] uppercase font-medium text-gray-500 hover:text-gray-900 transition-colors"
-                  >
+to={user ? "/account" : "/login"}
+                     onClick={() => setMobileMenuOpen(false)}
+                     className="block text-[11px] tracking-[0.2em] uppercase font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                   >
+             {user ? 'Akun' : 'Login'}
                     Login
                   </Link>
                   <p className="text-[10px] text-gray-300 tracking-widest uppercase">© 2026 Highest World</p>
