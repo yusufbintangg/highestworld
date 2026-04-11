@@ -12,9 +12,18 @@ import { CartDrawer } from '../shared/CartDrawer';
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { getCartCount } = useCart();
+  const { search } = useLocation();
   const { user } = useAuth();
   const location = useLocation();
+
+  useEffect(() => {
+    const query = new URLSearchParams(search).get('q');
+    if (query) {
+      setSearchQuery(decodeURIComponent(query));
+    }
+  }, [search]);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -49,6 +58,13 @@ export const Navbar = () => {
             <input
               type="text"
               placeholder="SEARCH"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchQuery.trim()) {
+                  window.location.href = `/produk?q=${encodeURIComponent(searchQuery)}`;
+                }
+              }}
               className="w-full text-[11px] tracking-[0.2em] uppercase placeholder:text-gray-400 text-gray-800 bg-transparent outline-none font-medium"
             />
           </div>
@@ -131,18 +147,20 @@ export const Navbar = () => {
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] p-0 bg-white border-l border-gray-200">
               <div className="flex flex-col h-full">
-
-                <div className="flex items-center px-5 h-[52px] border-b border-gray-200 gap-2">
-                  <img src="/logo-hw-kuning.png" alt="Highest World" className="h-6 w-auto" />
-                  <span className="text-[12px] font-bold tracking-[0.2em] uppercase text-gray-900">Highest World</span>
-                </div>
-
                 {/* Search inside burger */}
                 <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-gray-100">
                   <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                  <input
+                    <input
                     type="text"
                     placeholder="SEARCH"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && searchQuery.trim()) {
+                        window.location.href = `/produk?q=${encodeURIComponent(searchQuery)}`;
+                        setMobileMenuOpen(false);
+                      }
+                    }}
                     className="w-full text-[11px] tracking-[0.2em] uppercase placeholder:text-gray-400 text-gray-800 bg-transparent outline-none font-medium"
                   />
                 </div>
