@@ -43,52 +43,64 @@ export const ProductDetailPage = () => {
   const [selectedSize, setSelectedSize] = useState('');
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      setLoading(true);
+    fetchProduct();
+  }, [slug]);
 
-      const { data: prod } = await supabase
+  useEffect(() => {
+    if (!carouselApi) return;
+
+    const handleSelect = () => {
+      setSelectedImage(carouselApi.selectedScrollSnap());
+    };
+
+    carouselApi.on('select', handleSelect);
+    return () => carouselApi.off('select', handleSelect);
+  }, [carouselApi]);
+
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      
+      // Get product by slug
+      const { data: productData, error: productError } = await supabase
         .from('products')
-        .select('*, categories(name, slug)')
+        .select('*, categories(id, name)')
         .eq('slug', slug)
-        .eq('is_active', true)
         .single();
 
-      if (!prod) {
+      if (productError || !productData) {
         setNotFound(true);
-        setLoading(false);
         return;
       }
 
-      setProduct(prod);
+      setProduct(productData);
 
-      const { data: vars } = await supabase
+      // Get variants
+      const { data: variantsData } = await supabase
         .from('product_variants')
         .select('*')
-        .eq('product_id', prod.id);
+        .eq('product_id', productData.id)
+        .order('color', { ascending: true });
 
-      if (vars) {
-        setVariants(vars);
-        const firstVariant = vars[0];
-        if (firstVariant) {
-          setSelectedColor(firstVariant.color);
-          setSelectedSize(firstVariant.size);
-        }
-      }
+      setVariants(variantsData || []);
 
-      const { data: related } = await supabase
+      // Get related products (same category)
+      const { data: relatedData } = await supabase
         .from('products')
-        .select('*, categories(name, slug)')
-        .eq('category_id', prod.category_id)
-        .eq('is_active', true)
-        .neq('id', prod.id)
-        .limit(6);
+        .select('*, categories(name)')
+        .eq('category_id', productData.category_id)
+        .neq('id', productData.id)
+        .limit(4);
 
-      if (related) setRelatedProducts(related);
+      setRelatedProducts(relatedData || []);
+      
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      setNotFound(true);
+    } finally {
       setLoading(false);
-    };
-
-    fetchProduct();
-  }, [slug]);
+    }
+  };
 
   if (loading) {
     return (
@@ -210,7 +222,7 @@ export const ProductDetailPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black pt-12 pb-24">
+    <div className="min-h-screen bg-white text-black pt-0 pb-24">
       <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
 
         {/* Breadcrumb - hide on mobile */}
@@ -231,21 +243,29 @@ export const ProductDetailPage = () => {
 
           {/* LEFT: Image Grid */}
           {isMobile ? (
-            /* Mobile: Swipeable carousel + thumbnails */
-            <div className="w-full space-y-2">
-              <div className="relative aspect-[4/4] bg-gray-50 overflow-hidden">
-                <Carousel className="w-full h-full" opts={{ loop: false, dragFree: true }} setApi={setCarouselApi}>
-                  <CarouselContent className="-ml-4 h-full">
+            /* Mobile: Full width carousel */
+            <div className="w-screen relative left-[calc(-50vw+50%)] space-y-2">
+              <div className="relative aspect-square overflow-hidden">
+                <Carousel 
+                  className="w-full h-full" 
+                  opts={{ 
+                    loop: false, 
+                    dragFree: false,
+                    align: "center"
+                  }} 
+                  setApi={setCarouselApi}
+                >
+                  <CarouselContent className="h-full">
                     {images.map((img, i) => (
-                      <CarouselItem key={i} className="pl-4 basis-full">
-                        <div className="relative w-full aspect-[4/4]">
+                      <CarouselItem key={i} className="basis-full">
+                        <div className="relative w-full aspect-square">
                           <img
                             src={img}
                             alt={product.name}
                             className="w-full h-full object-cover"
                           />
                           {/* Badges */}
-                          <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                          <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
                             {badges.includes('New') && (
                               <span className="bg-black text-white text-[9px] tracking-widest px-1.5 py-0.5 uppercase">New</span>
                             )}
@@ -258,7 +278,7 @@ export const ProductDetailPage = () => {
                           </div>
                           <button
                             onClick={handleShare}
-                            className="absolute top-2 right-2 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white z-10"
+                            className="absolute top-3 right-3 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white z-10"
                           >
                             <Share2 className="w-3.5 h-3.5" />
                           </button>
@@ -266,12 +286,12 @@ export const ProductDetailPage = () => {
                       </CarouselItem>
                     ))}
                   </CarouselContent>
-                  <CarouselPrevious className="absolute -left-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-white/90 backdrop-blur-sm rounded-full opacity-80 hover:opacity-100 -z-10" />
-                  <CarouselNext className="absolute -right-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-white/90 backdrop-blur-sm rounded-full opacity-80 hover:opacity-100 -z-10" />
+                  <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-white/90 backdrop-blur-sm rounded-full opacity-80 hover:opacity-100 z-20" />
+                  <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-white/90 backdrop-blur-sm rounded-full opacity-80 hover:opacity-100 z-20" />
                 </Carousel>
               </div>
-              {/* Image counter 1/5 - no thumbnails */}
-              <div className="flex gap-1 pb-1 justify-center">
+              {/* Counter - dalam container normal */}
+              <div className="px-4 flex gap-1 pb-1 justify-center">
                 <span className="text-[11px] font-mono text-gray-500">
                   {selectedImage + 1} / {images.length}
                 </span>
