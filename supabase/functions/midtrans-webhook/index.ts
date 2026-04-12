@@ -110,8 +110,6 @@ serve(async (req) => {
           await supabase.from("orders").update({
             points_earned: points,
           }).eq("id", payment.order_id);
-
-          console.log(`Added ${points} points to user ${order.user_id}`);
         }
       }
 

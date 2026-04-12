@@ -1,11 +1,8 @@
 import { useParams, Navigate, useNavigate } from 'react-router';
 import { useIsMobile } from '../components/ui/use-mobile';
 
-import React, { useState, useEffect } from 'react';
-import { Share2, ShoppingCart, MessageCircle, Package, Truck, ShieldCheck } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Separator } from '../components/ui/separator';
+import { useState, useEffect } from 'react';
+import { Share2, MessageCircle } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion';
 import {
   Carousel,
@@ -93,9 +90,7 @@ export const ProductDetailPage = () => {
         .limit(4);
 
       setRelatedProducts(relatedData || []);
-      
-    } catch (error) {
-      console.error('Error fetching product:', error);
+    } catch {
       setNotFound(true);
     } finally {
       setLoading(false);

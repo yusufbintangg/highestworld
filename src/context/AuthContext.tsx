@@ -20,7 +20,13 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const buildProfile = (supabaseUser: User, profileData?: any): UserProfile => ({
+interface UserProfileData {
+  full_name?: string;
+  phone?: string | null;
+  avatar_url?: string | null;
+}
+
+const buildProfile = (supabaseUser: User, profileData?: UserProfileData): UserProfile => ({
   id: supabaseUser.id,
   email: supabaseUser.email ?? '',
   name:

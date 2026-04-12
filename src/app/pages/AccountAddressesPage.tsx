@@ -6,9 +6,23 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 
+interface UserAddress {
+  id: string;
+  user_id: string;
+  label: string;
+  recipient_name: string;
+  phone: string;
+  address: string;
+  city: string;
+  province: string;
+  postal_code: string;
+  is_default: boolean;
+  created_at?: string;
+}
+
 export const AccountAddressesPage = () => {
   const { user } = useAuth();
-  const [addresses, setAddresses] = useState<any[]>([]);
+  const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -64,7 +78,7 @@ export const AccountAddressesPage = () => {
     toast.success('Alamat dihapus');
   };
 
-  const handleEdit = (address: any) => {
+  const handleEdit = (address: UserAddress) => {
     setEditingId(address.id);
     setFormData({
       label: address.label,

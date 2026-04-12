@@ -116,9 +116,8 @@ useEffect(() => {
         setAreaResults([]);
         setShowAreaDropdown(false);
       }
-    } catch (error) {
-      console.error('Area search error:', error);
-    } finally {
+    } catch {}
+    finally {
       setLoadingArea(false);
     }
   };
@@ -339,9 +338,7 @@ setShowAreaDropdown(false); // ← tambah ini
         onSuccess: async (result) => {
   try {
     await saveProfileIfNeeded();
-  } catch (e) {
-    console.error('save profile error:', e);
-  }
+  } catch {}
   clearCart();
   window.location.href = '/pesanan/' + result.order_number;
 },
@@ -465,7 +462,7 @@ setShowAreaDropdown(false); // ← tambah ini
               />
               {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
             </div>
-            
+
             {/* Area Search */}
             <div ref={areaRef} className="relative">
               <div className="relative">

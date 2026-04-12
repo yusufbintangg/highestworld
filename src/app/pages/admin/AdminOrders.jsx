@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Search, Download, Truck, CheckCircle, Printer, MessageCircle, X, Check , Loader2 } from 'lucide-react';
+import { Search, Download, Truck, CheckCircle, Printer, MessageCircle, X, Check, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';

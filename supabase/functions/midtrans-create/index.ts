@@ -67,19 +67,14 @@ serve(async (req) => {
 
     }));
 
-    console.log('Inserting order items:', orderItems);
-
     const { data: insertedItems, error: orderItemsError } = await supabase
       .from("order_items")
       .insert(orderItems)
       .select();
 
     if (orderItemsError) {
-      console.error('Error inserting order_items:', orderItemsError);
       throw new Error('Gagal simpan order items: ' + orderItemsError.message);
     }
-
-    console.log('Order items inserted successfully:', insertedItems);
 
     const midtransOrderId = `HW-${newOrder.id}`;
 

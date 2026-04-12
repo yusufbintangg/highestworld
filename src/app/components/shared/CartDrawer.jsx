@@ -1,4 +1,4 @@
-// CART PAGES 
+// CART PAGES
 
 import React from 'react';
 import { X, Minus, Plus, ShoppingCart as CartIcon } from 'lucide-react';
@@ -12,19 +12,19 @@ import { formatPrice, generateCartWAMessage } from '../../../lib/utils';
 export const CartDrawer = ({ children }) => {
   const navigate = useNavigate();
   const { cartItems, removeFromCart, updateQuantity, getCartTotal } = useCart();
-  const [ open, setOpen ] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
 
   const { isAuthenticated } = useAuth();
 
-const handleCheckout = () => {
-  setOpen(false);
-  if (!isAuthenticated) {
-    navigate('/login', { state: { from: { pathname: '/checkout' } } });
-  } else {
-    navigate('/checkout');
-  }
-};
-  
+  const handleCheckout = () => {
+    setOpen(false);
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: { pathname: '/checkout' } } });
+    } else {
+      navigate('/checkout');
+    }
+  };
+
   const handleWhatsAppCheckout = () => {
     const waUrl = generateCartWAMessage(cartItems, getCartTotal());
     window.open(waUrl, '_blank');

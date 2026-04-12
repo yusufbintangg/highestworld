@@ -20,9 +20,7 @@ export const CartProvider = ({ children }) => {
     if (savedCart) {
       try {
         setCartItems(JSON.parse(savedCart));
-      } catch (error) {
-        console.error('Error loading cart:', error);
-      }
+      } catch {}
     }
   }, []);
 
