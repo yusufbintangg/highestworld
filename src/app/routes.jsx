@@ -25,13 +25,15 @@ import { AccountOrdersPage } from './pages/AccountOrdersPage';
 import { AccountAddressesPage } from './pages/AccountAddressesPage';
 import { AccountSettingsPage } from './pages/AccountSettingsPage';
 import { AccountSecurityPage } from './pages/AccountSecurityPage';
+import LoyaltyDashboardPage from './pages/LoyaltyDashboardPage';
+import LoyaltyHistoryPage from './pages/LoyaltyHistoryPage';
+import LoyaltyRewardsPage from './pages/LoyaltyRewardsPage';
+import LoyaltyReferralPage from './pages/LoyaltyReferralPage';
 
 export const router = createBrowserRouter([
-  // Auth routes
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },
 
-  // Customer routes
   {
     path: '/',
     element: <Layout />,
@@ -46,37 +48,22 @@ export const router = createBrowserRouter([
       { path: 'konfirmasi-pembayaran', element: <PaymentConfirmationPage /> },
       { path: 'pesanan/:orderNumber', element: <OrderDetailPage /> },
 
-      // Protected routes
-      {
-        path: 'checkout',
-        element: <ProtectedRoute><CheckoutPage /></ProtectedRoute>,
-      },
-      {
-        path: 'account',
-        element: <ProtectedRoute><AccountDashboardPage /></ProtectedRoute>,
-      },
-      {
-        path: 'account/orders',
-        element: <ProtectedRoute><AccountOrdersPage /></ProtectedRoute>,
-      },
-      {
-        path: 'account/addresses',
-        element: <ProtectedRoute><AccountAddressesPage /></ProtectedRoute>,
-      },
-      {
-        path: 'account/settings',
-        element: <ProtectedRoute><AccountSettingsPage /></ProtectedRoute>,
-      },
-      {
-        path: 'account/security',
-        element: <ProtectedRoute><AccountSecurityPage /></ProtectedRoute>,
-      },
+      { path: 'checkout', element: <ProtectedRoute><CheckoutPage /></ProtectedRoute> },
+      { path: 'account', element: <ProtectedRoute><AccountDashboardPage /></ProtectedRoute> },
+      { path: 'account/orders', element: <ProtectedRoute><AccountOrdersPage /></ProtectedRoute> },
+      { path: 'account/addresses', element: <ProtectedRoute><AccountAddressesPage /></ProtectedRoute> },
+      { path: 'account/settings', element: <ProtectedRoute><AccountSettingsPage /></ProtectedRoute> },
+      { path: 'account/security', element: <ProtectedRoute><AccountSecurityPage /></ProtectedRoute> },
+
+      { path: 'loyalty', element: <ProtectedRoute><LoyaltyDashboardPage /></ProtectedRoute> },
+      { path: 'loyalty/history', element: <ProtectedRoute><LoyaltyHistoryPage /></ProtectedRoute> },
+      { path: 'loyalty/rewards', element: <ProtectedRoute><LoyaltyRewardsPage /></ProtectedRoute> },
+      { path: 'loyalty/referral', element: <ProtectedRoute><LoyaltyReferralPage /></ProtectedRoute> },
 
       { path: '*', element: <NotFoundPage /> },
     ],
   },
 
-  // Admin routes
   {
     path: '/admin',
     element: <AdminLayout />,
@@ -87,8 +74,5 @@ export const router = createBrowserRouter([
       { path: 'stock', element: <AdminStock /> },
     ],
   },
-  {
-    path: '/admin/login',
-    element: <AdminLogin />,
-  },
+  { path: '/admin/login', element: <AdminLogin /> },
 ]);

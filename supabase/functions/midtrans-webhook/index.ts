@@ -13,10 +13,8 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Verifikasi signature Midtrans
-    const { order_id, status_code, gross_amount, signature_key, transaction_status, payment_type } = body;
+    const { order_id, transaction_status, payment_type } = body;
 
-    // Cari order di DB
     const { data: payment } = await supabase
       .from("payments")
       .select("*, orders(*)")
@@ -25,7 +23,6 @@ serve(async (req) => {
 
     if (!payment) return new Response("Order not found", { status: 404 });
 
-    // Update status payment
     let newOrderStatus = payment.orders.status;
     let newPaymentStatus = "pending";
 
@@ -40,7 +37,6 @@ serve(async (req) => {
       newOrderStatus = "payment_failed";
     }
 
-    // Update payments table
     await supabase.from("payments").update({
       status: newPaymentStatus,
       midtrans_payment_type: payment_type,
@@ -49,13 +45,11 @@ serve(async (req) => {
       updated_at: new Date().toISOString(),
     }).eq("id", payment.id);
 
-    // Update orders table
     await supabase.from("orders").update({
       status: newOrderStatus,
       updated_at: new Date().toISOString(),
     }).eq("id", payment.order_id);
 
-    // Insert status history
     await supabase.from("order_status_history").insert({
       order_id: payment.order_id,
       status: newOrderStatus,
@@ -63,8 +57,9 @@ serve(async (req) => {
       changed_by: "system",
     });
 
-    // Kurangi stok kalau payment confirmed
     if (newOrderStatus === "payment_confirmed") {
+
+      // 1. Kurangi stok
       const { data: orderItems } = await supabase
         .from("order_items")
         .select("*")
@@ -77,21 +72,61 @@ serve(async (req) => {
         });
       }
 
-      // Kirim WA notif ke admin via Fonnte
+      // 2. Add points
+      const { data: order } = await supabase
+        .from("orders")
+        .select("user_id, total, points_earned")
+        .eq("id", payment.order_id)
+        .single();
+
+      if (order?.user_id && order.points_earned === 0) {
+        const points = Math.floor(order.total / 100000) * 10;
+
+        if (points > 0) {
+          const expiredAt = new Date();
+          expiredAt.setFullYear(expiredAt.getFullYear() + 1);
+
+          await supabase.from("points_ledger").insert({
+            user_id: order.user_id,
+            type: "earn",
+            amount: points,
+            source: "purchase",
+            order_id: payment.order_id,
+            description: `Poin dari order ${payment.orders.order_number}`,
+            expired_at: expiredAt.toISOString(),
+          });
+
+          const { data: profile } = await supabase
+            .from("user_profiles")
+            .select("points_balance, total_points")
+            .eq("id", order.user_id)
+            .single();
+
+          await supabase.from("user_profiles").update({
+            points_balance: (profile?.points_balance || 0) + points,
+            total_points: (profile?.total_points || 0) + points,
+          }).eq("id", order.user_id);
+
+          await supabase.from("orders").update({
+            points_earned: points,
+          }).eq("id", payment.order_id);
+
+          console.log(`Added ${points} points to user ${order.user_id}`);
+        }
+      }
+
+      // 3. WA notif ke admin
       if (fonnteToken && adminWa) {
-        const order = payment.orders;
-        const msg = `🛍️ ORDER BARU MASUK!\n\nNo: ${order.order_number}\nCustomer: ${order.customer_name}\nHP: ${order.customer_phone}\nTotal: Rp ${order.total?.toLocaleString("id-ID")}\nKurir: ${order.courier?.toUpperCase()} ${order.courier_service}\n\nSegera proses pesanan! 🚀`;
-        
+        const o = payment.orders;
+        const msg = `🛍️ ORDER BARU MASUK!\n\nNo: ${o.order_number}\nCustomer: ${o.customer_name}\nHP: ${o.customer_phone}\nTotal: Rp ${o.total?.toLocaleString("id-ID")}\nKurir: ${o.courier?.toUpperCase()} ${o.courier_service}\n\nSegera proses pesanan! 🚀`;
+
         await fetch("https://api.fonnte.com/send", {
           method: "POST",
           headers: {
             "Authorization": fonnteToken,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            target: adminWa,
-            message: msg,
-          }),
+          body: JSON.stringify({ target: adminWa, message: msg }),
         });
       }
     }
@@ -102,5 +137,4 @@ serve(async (req) => {
     console.error(error);
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
-
 });
