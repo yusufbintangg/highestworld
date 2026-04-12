@@ -1,4 +1,3 @@
-import React from 'react';
 import { MessageCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { generateGeneralWAMessage } from '../../../lib/utils';

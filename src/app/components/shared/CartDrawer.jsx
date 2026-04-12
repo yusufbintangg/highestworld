@@ -1,7 +1,7 @@
 // CART PAGES
 
 import React from 'react';
-import { X, Minus, Plus, ShoppingCart as CartIcon } from 'lucide-react';
+import { Minus, Plus, ShoppingCart as CartIcon } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Button } from '../ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';

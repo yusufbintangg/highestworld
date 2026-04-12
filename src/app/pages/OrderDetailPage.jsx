@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { CheckCircle, Clock, Package, Truck, XCircle, Loader2, AlertTriangle, ArrowLeft, MapPin, CreditCard, ChevronRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase';

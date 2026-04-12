@@ -3,7 +3,6 @@ import { Link } from 'react-router';
 import { Instagram, MessageCircle, ShoppingBag, Music } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { SITE_CONFIG } from '../../../lib/config';
-import { categories } from '../../../data/categories';
 import { generateGeneralWAMessage } from '../../../lib/utils';
 import { supabase } from '../../../lib/supabase';
 

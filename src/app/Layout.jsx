@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';

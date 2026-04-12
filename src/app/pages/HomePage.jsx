@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import { Package, ShieldCheck, Zap, Truck } from 'lucide-react';
 import { ProductGrid } from '../components/product/ProductGrid';

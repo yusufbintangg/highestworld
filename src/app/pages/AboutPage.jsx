@@ -1,7 +1,5 @@
-import React from 'react';
 import { motion } from 'motion/react';
 import { Button } from '../components/ui/button';
-import { SITE_CONFIG } from '../../lib/config';
 import { generateGeneralWAMessage } from '../../lib/utils';
 
 export const AboutPage = () => {

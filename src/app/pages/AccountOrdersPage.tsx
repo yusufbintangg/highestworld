@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { motion } from 'motion/react';
 import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck, Loader2, CreditCard } from 'lucide-react';

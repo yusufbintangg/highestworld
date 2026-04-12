@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Navigate, Link } from 'react-router';
 import { ProductGrid } from '../components/product/ProductGrid';
 import { supabase } from '../../lib/supabase';

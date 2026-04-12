@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { ArrowLeft, Loader2, Search, CheckCircle2, Tag, ChevronRight, Lock } from 'lucide-react';
 import { Separator } from '../components/ui/separator';

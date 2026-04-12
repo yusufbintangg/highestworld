@@ -1,6 +1,5 @@
 import { useParams, Navigate, useNavigate } from 'react-router';
 import { useIsMobile } from '../components/ui/use-mobile';
-
 import { useState, useEffect } from 'react';
 import { Share2, MessageCircle } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion';
