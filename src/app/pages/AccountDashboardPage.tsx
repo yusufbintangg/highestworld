@@ -21,7 +21,6 @@ export const AccountDashboardPage = () => {
       setStats({
         totalOrders: ordersRes.count || 0,
         activeOrders: activeRes.count || 0,
-        savedAddresses: addressRes.count || 0,
         points: profileRes.data?.points_balance || 0,
       });
     };
@@ -54,25 +53,21 @@ export const AccountDashboardPage = () => {
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="grid grid-cols-4 gap-8 py-12 border-b border-[var(--border)]">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="grid grid-cols-3 gap-8 py-12 border-b border-[var(--border)]">
           <div>
-            <p className="text-sm uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">Total Orders</p>
+            <p className="text-sm uppercase h-8 text-[var(--text-muted)] mb-2">Total Orders</p>
             <p className="text-4xl font-light text-[var(--text-primary)] tabular-nums">{stats.totalOrders}</p>
           </div>
           <div>
-            <p className="text-sm uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">Active</p>
+            <p className="text-sm uppercase h-8 tracking-[0.15em] text-[var(--text-muted)] mb-2">Active</p>
             <p className="text-4xl font-light text-[var(--accent-gold)] tabular-nums">{stats.activeOrders}</p>
           </div>
           <div>
-            <p className="text-sm uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">Addresses</p>
-            <p className="text-4xl font-light text-[var(--text-primary)] tabular-nums">{stats.savedAddresses}</p>
-          </div>
-          <div>
-            <p className="text-sm uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">Poin</p>
+            <p className="text-sm uppercase h-8 tracking-[0.15em] text-[var(--text-muted)] mb-2">Poin</p>
             <p className="text-4xl font-light text-[var(--accent-gold)] tabular-nums">{stats.points}</p>
           </div>
         </motion.div>
-        
+
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="py-12">
           <div className="space-y-6">
             {menuItems.map((item, index) => (

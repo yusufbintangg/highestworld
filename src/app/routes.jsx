@@ -29,10 +29,16 @@ import LoyaltyDashboardPage from './pages/LoyaltyDashboardPage';
 import LoyaltyHistoryPage from './pages/LoyaltyHistoryPage';
 import LoyaltyRewardsPage from './pages/LoyaltyRewardsPage';
 import LoyaltyReferralPage from './pages/LoyaltyReferralPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },
+  { path: '/forgot-password', element: <ForgotPasswordPage /> },
+  { path: '/reset-password', element: <ResetPasswordPage /> },
+
 
   {
     path: '/',
