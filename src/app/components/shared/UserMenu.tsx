@@ -1,17 +1,27 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { User, LogOut, Package, MapPin, Settings } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuth } from '../../../context/AuthContext';
+import { useCart } from '../../../context/CartContext';
 
 export const UserMenu = () => {
   const { isAuthenticated, user, logout } = useAuth();
+  const { clearCart } = useCart();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    setIsOpen(false);
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      clearCart();
+      await logout();
+      toast.success('Berhasil logout!');
+      setIsOpen(false);
+      navigate('/');
+    } catch (error) {
+      toast.error('Gagal logout. Coba lagi.');
+      console.error('Logout error:', error);
+    }
   };
 
   if (!isAuthenticated) {
@@ -67,9 +77,9 @@ export const UserMenu = () => {
             </div>
 
             <div className="border-t border-[var(--border)] p-2">
-              <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[var(--bg-secondary)] transition-colors text-left">
-                <LogOut className="w-4 h-4 text-[var(--text-muted)]" />
-                <span className="text-sm text-[var(--text-primary)]">Logout</span>
+              <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-destructive/10 transition-colors text-left">
+                <LogOut className="w-4 h-4 text-destructive" />
+                <span className="text-sm text-destructive">Logout</span>
               </button>
             </div>
           </div>

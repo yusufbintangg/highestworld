@@ -1,13 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router';
 import { motion } from 'motion/react';
-import { User, Package, MapPin, Lock, ArrowRight, Award } from 'lucide-react';
+import { User, Package, MapPin, Lock, ArrowRight, Award, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import { supabase } from '../../lib/supabase';
+import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Button } from '../components/ui/button';
 
 export const AccountDashboardPage = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const { clearCart } = useCart();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({ totalOrders: 0, activeOrders: 0, savedAddresses: 0, points: 0 });
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -27,6 +35,22 @@ export const AccountDashboardPage = () => {
     fetchStats();
   }, [user?.id]);
 
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      clearCart();
+      await logout();
+      toast.success('Berhasil logout!');
+      navigate('/');
+    } catch (error) {
+      toast.error('Gagal logout. Coba lagi.');
+      console.error('Logout error:', error);
+    } finally {
+      setIsLoggingOut(false);
+      setShowLogoutDialog(false);
+    }
+  };
+
   const menuItems = [
     { icon: Package, title: 'Order History', description: 'Lihat semua pesanan kamu', link: '/account/orders', count: stats.totalOrders },
     { icon: Award, title: 'Loyalty Program', description: 'Lihat poin dan reward kamu', link: '/loyalty', count: stats.points, highlight: true },
@@ -34,6 +58,14 @@ export const AccountDashboardPage = () => {
     { icon: User, title: 'Profile Settings', description: 'Edit informasi profil', link: '/account/settings' },
     { icon: Lock, title: 'Keamanan', description: 'Ganti password & keamanan', link: '/account/security' },
   ];
+
+  const logoutItem = {
+    icon: LogOut,
+    title: 'Logout',
+    description: 'Keluar dari akun kamu',
+    isLogout: true,
+    destructive: true,
+  };
 
   return (
     <div className="min-h-screen mt-2 pb-2">
@@ -97,9 +129,51 @@ export const AccountDashboardPage = () => {
                 </Link>
               </motion.div>
             ))}
+
+            {/* Logout Card */}
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.3 + (menuItems.length * 0.05) }}>
+              <button
+                onClick={() => setShowLogoutDialog(true)}
+                className="w-full text-left group block border border-destructive/30 hover:border-destructive/60 bg-destructive/5 hover:bg-destructive/10 transition-all"
+              >
+                <div className="p-8 flex items-center justify-between">
+                  <div className="flex items-center gap-6">
+                    <div className="p-4 border border-destructive/30 bg-destructive/5">
+                      <LogOut className="w-6 h-6 text-destructive" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg mb-1 text-destructive group-hover:text-destructive transition-colors">
+                        {logoutItem.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">{logoutItem.description}</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-destructive/60 group-hover:text-destructive group-hover:translate-x-1 transition-all" />
+                </div>
+              </button>
+            </motion.div>
           </div>
         </motion.div>
 
+        {/* Logout Confirmation Dialog */}
+        <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Logout Akun?</DialogTitle>
+              <DialogDescription>
+                Kamu akan keluar dari akun. Kamu perlu login lagi untuk akses akun kamu.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowLogoutDialog(false)} disabled={isLoggingOut}>
+                Batal
+              </Button>
+              <Button variant="destructive" onClick={handleLogout} disabled={isLoggingOut}>
+                {isLoggingOut ? 'Logout...' : 'Logout'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
