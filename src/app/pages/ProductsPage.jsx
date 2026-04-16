@@ -30,6 +30,15 @@ export const ProductsPage = () => {
     fetchData();
   }, []);
 
+  // ✅ NEW: Baca URL params saat component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const categorySlug = urlParams.get('category');
+    if (categorySlug && categorySlug !== 'all') {
+      setFilters(prev => ({ ...prev, category: categorySlug }));
+    }
+  }, []);
+
   const filteredAndSortedProducts = useMemo(() => {
     let result = [...products];
     if (filters.category !== 'all')
@@ -49,12 +58,27 @@ export const ProductsPage = () => {
   const handleCategoryFilter = (slug) => {
     setFilters(prev => ({ ...prev, category: slug }));
     setShowFilterModal(false);
+    // ✅ UPDATE URL tanpa reload
+    const url = new URL(window.location);
+    if (slug === 'all') {
+      url.searchParams.delete('category');
+    } else {
+      url.searchParams.set('category', slug);
+    }
+    window.history.replaceState({}, '', url);
   };
   const handleBadgeFilter = (badge, checked) => setFilters(prev => ({
     ...prev,
     badges: checked ? [...prev.badges, badge] : prev.badges.filter(b => b !== badge)
   }));
-  const resetFilters = () => { setFilters({ category: 'all', badges: [] }); setHideSoldOut(false); };
+  const resetFilters = () => { 
+    setFilters({ category: 'all', badges: [] }); 
+    setHideSoldOut(false);
+    // ✅ Hapus URL params
+    const url = new URL(window.location);
+    url.searchParams.delete('category');
+    window.history.replaceState({}, '', url);
+  };
 
   const sortOptions = [
     { value: 'newest',     label: 'New Arrivals' },

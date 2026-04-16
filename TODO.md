@@ -1,24 +1,65 @@
-# ONGKIR FIX - Biteship Weight Consistency
+# CATEGORY FILTERING FIX - Home → ProductsPage
 
-**Status:** [IN PROGRESS]
+**Status:** [PLANNING] ⏳
 
-## Information Gathered:
-- **CheckoutPage.jsx**: `item.product?.weight || 500` → `totalWeight = 500g × qty` → Biteship rates **1 item total weight** = 210k ✅
-- **biteship-rates**: `items[0].weight = totalWeight` (1 item, total berat semua cart) ✅
-- **biteship-create-order**: `weight: 500` **HARDCODE** per item → 10 items = 5kg → 1.4jt ❌
-- **products.js**: `weight: "300g"` string → `parseFloat(null)` → default 500
-- **DB**: `products.weight` & `order_items.product_weight` ada tapi string format
+## 🔍 Information Gathered:
+- **HomePage.jsx**: Categories link ke `/produk?category=${cat.slug}` ✅
+  ```
+  <Link to={`/produk?category=${cat.slug}`}>
+  ```
+- **ProductsPage.jsx**: `useEffect` **TIDAK** read URL params → filter state `filters.category = 'all'` default ❌
+- **Categories data**: `src/data/categories.js` + Supabase `categories.slug`
+- **Filter logic**: `result.filter(p => p.categories?.slug === filters.category)`
 
-## Plan:
-1. **biteship-create-order**: `weight: parseInt(item.product_weight || '500')` (per item)
-2. **CheckoutPage**: Pass `product_weight: parseInt(item.product?.weight || 500)` ke order_items
-3. Deploy: `supabase functions deploy biteship-create-order biteship-rates`
+## 🛠️ Plan:
 
-## Dependent Files:
-- `/Users/macbook/Documents/E-Commerce Bigsize Fashion/src/app/pages/CheckoutPage.jsx`
-- `/Users/macbook/Documents/E-Commerce Bigsize Fashion/supabase/functions/biteship-create-order/index.ts`
+### 1. **ProductsPage.jsx** - Read URL params on mount
+```jsx
+useEffect(() => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const categorySlug = urlParams.get('category');
+  if (categorySlug && categorySlug !== 'all') {
+    setFilters(prev => ({ ...prev, category: categorySlug }));
+  }
+}, []);
+```
 
-## Followup:
-- `pnpm dev` → Test Fakfak 10pcs → ongkir konsisten 210k
-- Push ke Biteship → verify weight per item di Biteship dashboard
+### 2. **Update URL** saat user pilih category lain (desktop/mobile filter)
+```jsx
+const handleCategoryFilter = (slug) => {
+  setFilters(prev => ({ ...prev, category: slug }));
+  // Update URL tanpa reload
+  const url = new URL(window.location);
+  if (slug === 'all') {
+    url.searchParams.delete('category');
+  } else {
+    url.searchParams.set('category', slug);
+  }
+  window.history.replaceState({}, '', url);
+};
+```
+
+### 3. **Breadcrumb** show active category
+```
+Online Store > Atasan (kalo category=atasan)
+```
+
+### 4. **SEO**: `<title>` + meta description sesuai category
+
+## 📁 Dependent Files:
+```
+✅ src/app/pages/HomePage.jsx (sudah pass category slug)
+🔄 src/app/pages/ProductsPage.jsx (add URL params logic)
+🔄 src/app/pages/CollectionsPage.jsx (kalau ada link dari situ)
+```
+
+## ✅ Followup Steps:
+```
+1. pnpm dev
+2. Home → klik "Atasan" → ProductsPage filter Atasan only  
+3. Test mobile + desktop
+4. Clear filter → back to all products
+```
+
+**Approve plan ini bro? Siap edit files! 💪**
 

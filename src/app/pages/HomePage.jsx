@@ -171,7 +171,7 @@ export const HomePage = () => {
             {categories.slice(0, 3).map((cat) => (
               <Link
                 key={cat.id}
-                to={`/produk?category=${cat.slug}`}
+                to={`/produk?category=${encodeURIComponent(cat.slug)}`}
                 className="flex-1 px-8 py-6 flex items-center hover:bg-gray-50 transition-colors group"
               >
                 <span className="text-[12px] tracking-widest uppercase font-semibold text-gray-400 group-hover:text-black transition-colors">
@@ -233,23 +233,19 @@ export const HomePage = () => {
           </div>
 
           {/* List kategori di bawah banner */}
-          <div className="flex flex-col divide-y divide-gray-200 border-t border-gray-200">
+          <div className="flex flex-col divide-y divide-gray-200 border-t border-gray-200 max-h-96 overflow-y-auto">
             <div className="px-5 py-4">
               <p className="text-[12px] tracking-widest uppercase font-bold text-black">Highest World</p>
             </div>
             {categories.map((cat) => (
               <Link
                 key={cat.id}
-                to={`/produk?category=${cat.slug}`}
+                to={`/produk?category=${encodeURIComponent(cat.slug)}`}
                 className="px-5 py-4 text-[11px] tracking-widest uppercase text-gray-400 hover:text-black transition-colors"
               >
                 {cat.name}
               </Link>
             ))}
-            {/* Scroll indicator */}
-            <div className="px-5 py-4 text-center">
-              <p className="text-[10px] tracking-widest uppercase text-gray-400">Scroll</p>
-            </div>
           </div>
         </div>
 
