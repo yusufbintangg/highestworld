@@ -39,8 +39,26 @@ export const ProductDetailPage = () => {
   const [selectedSize, setSelectedSize] = useState('');
   const [zoomedIndex, setZoomedIndex] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 80, y: 80 });
-  const [showSizeChart, setShowSizeChart] = useState(false);
+const [showSizeChart, setShowSizeChart] = useState(false);
 
+  // SIZE SORTING - Pure Supabase + No Duplicates + Bigsize focus
+  const SIZE_ORDER = {
+    '2XL': 1, 
+    '3XL': 2, 
+    '4XL': 3, 
+    '5XL': 4, 
+    '6XL': 5, 
+    '7XL': 6, 
+    '8XL': 7, 
+    '9XL': 8, 
+    '10XL': 9
+  };
+
+  const sortSizes = (sizesArray) => {
+    return [...sizesArray].sort((a, b) => {
+      return (SIZE_ORDER[a.size] || 999) - (SIZE_ORDER[b.size] || 999);
+    });
+  };
 
   useEffect(() => {
     fetchProduct();
@@ -119,9 +137,10 @@ export const ProductDetailPage = () => {
   if (notFound) return <Navigate to="/404" replace />;
 
   const uniqueColors = [...new Map(variants.map(v => [v.color, { name: v.color, hex: v.color_hex }])).values()];
-  const sizesForSelectedColor = variants
-    .filter(v => v.color === selectedColor)
-    .map(v => ({ size: v.size, stock: v.stock }));
+  const sizesForSelectedColor = sortSizes(
+    variants.filter(v => v.color === selectedColor).map(v => ({ size: v.size, stock: v.stock }))
+  );
+
 
   const selectedVariant = variants.find(v => v.color === selectedColor && v.size === selectedSize);
   const currentStock = selectedVariant?.stock ?? 0;
@@ -399,7 +418,7 @@ export const ProductDetailPage = () => {
                   ))
                   : (
                     /* Fallback: show all sizes from product before color is selected */
-                    [...new Set(variants.map(v => v.size))].map(size => (
+                    sortSizes([...new Set(variants.map(v => v.size))].map(size => ({size, stock: 99}))).map(({size}) => (
                       <button
                         key={size}
                         className="min-w-[38px] h-8 px-2 border border-gray-300 text-[11px] tracking-widest uppercase text-black hover:border-black transition-all"
@@ -408,6 +427,7 @@ export const ProductDetailPage = () => {
                         {size}
                       </button>
                     ))
+
                   )
                 }
               </div>
@@ -493,12 +513,12 @@ export const ProductDetailPage = () => {
               </p>
             )}
             {product.size_chart_image && (
-  <img
-    src={product.size_chart_image}
-    alt="Size Chart"
-    className="w-full object-contain mb-5"
-  />
-)}
+            <img
+              src={product.size_chart_image}
+              alt="Size Chart"
+              className="w-full object-contain mb-5"
+            />
+          )}
             <div className="border-t border-gray-200 mb-4" />
 
             {/* Shipping info accordion */}
