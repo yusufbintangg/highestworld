@@ -47,8 +47,7 @@ export const Navbar = () => {
 
           {/* Logo */}
           <Link to="/" className="flex items-center pl-4 pr-6 h-full border-r border-gray-200 shrink-0">
-            <img src="/logo-hw-kuning.png" alt="Highest World" className="h-7 w-auto" />
-            <span className="font-bold uppercase text-gray-900 ml-2">Highest World</span>
+            <img src="/logo hw web 2.jpg" alt="Highest World" className="h-12 w-auto" />
           </Link>
 
           {/* Search bar — DESKTOP ONLY */}

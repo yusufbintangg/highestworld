@@ -38,9 +38,7 @@ export const ProductDetailPage = () => {
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [zoomedIndex, setZoomedIndex] = useState(null);
-  const [mousePos, setMousePos] = useState({ x: 80, y: 80 });
-  const [showSizeChart, setShowSizeChart] = useState(false);
-
+  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
 
   useEffect(() => {
     fetchProduct();
@@ -63,7 +61,7 @@ export const ProductDetailPage = () => {
       
       const { data: productData, error: productError } = await supabase
         .from('products')
-        .select('*, categories(id, name), size_chart_image')
+        .select('*, categories(id, name)')
         .eq('slug', slug)
         .single();
 
@@ -305,8 +303,8 @@ export const ProductDetailPage = () => {
                   onMouseMove={(e) => {
                     if (zoomedIndex !== i) return;
                     const rect = e.currentTarget.getBoundingClientRect();
-                    const x = ((e.clientX - rect.left) / rect.width) * 150;
-                    const y = ((e.clientY - rect.top) / rect.height) * 150;
+                    const x = ((e.clientX - rect.left) / rect.width) * 100;
+                    const y = ((e.clientY - rect.top) / rect.height) * 100;
                     setMousePos({ x, y });
                   }}
                   onMouseLeave={() => setMousePos({ x: 50, y: 50 })}
@@ -357,8 +355,6 @@ export const ProductDetailPage = () => {
               </h1>
             </div>
 
-            {/* Size selector — styled like the screenshot: letter blocks */}
-
             {/* Price */}
             <div className="flex items-baseline gap-3 mb-5">
               <span className="text-sm font-medium text-[#7a6a00] tracking-wide">
@@ -373,12 +369,12 @@ export const ProductDetailPage = () => {
             </div>
 
             <div className="border-t border-gray-200 mb-5" />
+
             {/* Size selector — styled like the screenshot: letter blocks */}
             <div className="mb-5">
               <div className="flex items-center justify-between mb-2">
                 <Label className="text-gray-500 text-[10px]">Size</Label>
               </div>
-              {/* Size selector — styled like the screenshot: letter blocks */}
               <div className="flex gap-1.5 flex-wrap">
                 {sizesForSelectedColor.length > 0
                   ? sizesForSelectedColor.map(({ size, stock }) => (
@@ -440,6 +436,16 @@ export const ProductDetailPage = () => {
               </div>
             )}
 
+            {/* Quantity row (minus / number / plus) */}
+            <div className="flex items-center gap-3 mb-5">
+              <Label className="text-gray-500 text-[10px]">Qty</Label>
+              <div className="flex items-center border border-gray-300">
+                <button className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition text-sm">−</button>
+                <span className="w-8 h-8 flex items-center justify-center text-sm border-x border-gray-300">1</span>
+                <button className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition text-sm">+</button>
+              </div>
+            </div>
+
             {/* Stock info */}
             {selectedSize && (
               <div className="text-[11px] tracking-wide mb-4">
@@ -492,13 +498,38 @@ export const ProductDetailPage = () => {
                 <span className="block mt-2 text-gray-400">Berat: {product.weight}g</span>
               </p>
             )}
-            {product.size_chart_image && (
-  <img
-    src={product.size_chart_image}
-    alt="Size Chart"
-    className="w-full object-contain mb-5"
-  />
-)}
+
+            {/* Size chart table — shown inline like the reference screenshot */}
+            {variants.length > 0 && (
+              <div className="mb-5 overflow-x-auto">
+                <table className="w-full text-[10px] border-collapse text-center">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="py-1.5 px-2 text-left text-gray-500 uppercase tracking-widest font-medium">Size Guide</th>
+                      {[...new Set(variants.map(v => v.size))].map(s => (
+                        <th key={s} className="py-1.5 px-2 text-gray-500 uppercase tracking-widest font-medium">{s}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {['width', 'length'].map(dim => (
+                      <tr key={dim} className="border-b border-gray-100">
+                        <td className="py-1.5 px-2 text-left text-gray-500 uppercase tracking-widest capitalize">{dim}</td>
+                        {[...new Set(variants.map(v => v.size))].map(size => {
+                          const v = variants.find(vv => vv.size === size);
+                          return (
+                            <td key={size} className="py-1.5 px-2 text-gray-700">
+                              {v?.[dim] ? `${v[dim]} cm` : '—'}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
             <div className="border-t border-gray-200 mb-4" />
 
             {/* Shipping info accordion */}
