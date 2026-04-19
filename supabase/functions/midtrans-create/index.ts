@@ -91,7 +91,6 @@ serve(async (req) => {
 
     if (orderItemsError) throw new Error("Gagal simpan order items: " + orderItemsError.message);
 
-    const midtransOrderId = `HW-${newOrder.id}`;
 
     const midtransPayload = {
       transaction_details: { order_id: midtransOrderId, gross_amount: total },
