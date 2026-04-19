@@ -82,7 +82,7 @@ export const CheckoutForm = ({
           <input
             value={areaSearch}
             onChange={onAreaInput}
-            placeholder="Kota dan Kecamatan"
+            placeholder="Kecamatan dan Kota"
             className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-gray-200 transition ${errors.area ? 'border-red-400' : selectedArea ? 'border-gray-400' : 'border-gray-200'}`}
           />
           {loadingArea && (
