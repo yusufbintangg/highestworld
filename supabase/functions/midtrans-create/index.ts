@@ -1,9 +1,26 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildWaitingPaymentEmail } from "../_shared/email-templates.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const sendEmail = async (resendKey: string, to: string, subject: string, html: string) => {
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${resendKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: "Highest World <no-reply@highestworld.id>", // ganti domain
+      to: [to],
+      subject,
+      html,
+    }),
+  });
 };
 
 serve(async (req) => {
@@ -15,9 +32,10 @@ serve(async (req) => {
     const { order, items, customer, shipping, user_id } = await req.json();
 
     const serverKey = Deno.env.get("MIDTRANS_SERVER_KEY");
-    const frontendUrl = Deno.env.get("FRONTEND_URL") || "http://highestworld.id";
+    const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://highestworld.id";
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const resendKey = Deno.env.get("RESEND_API_KEY");
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const orderNumber = `HW-${Date.now()}`;
@@ -71,25 +89,18 @@ serve(async (req) => {
       .insert(orderItems)
       .select();
 
-    if (orderItemsError) {
-      throw new Error('Gagal simpan order items: ' + orderItemsError.message);
-    }
+    if (orderItemsError) throw new Error("Gagal simpan order items: " + orderItemsError.message);
 
     const midtransOrderId = `HW-${newOrder.id}`;
 
     const midtransPayload = {
-      transaction_details: {
-        order_id: midtransOrderId,
-        gross_amount: total,
-      },
+      transaction_details: { order_id: midtransOrderId, gross_amount: total },
       customer_details: {
         first_name: customer.name,
         phone: customer.phone,
         email: customer.email || "customer@highestworld.id",
       },
-      callbacks: {
-        finish: `${frontendUrl}/pesanan/${orderNumber}`,
-      },
+      callbacks: { finish: `${frontendUrl}/pesanan/${orderNumber}` },
       item_details: [
         ...items.map(i => ({
           id: i.product_id,
@@ -107,7 +118,7 @@ serve(async (req) => {
     };
 
     const midtransResponse = await fetch(
-      "https://app.midtrans.com/snap/v1/transactions",  // ✅ PRODUCTION
+      "https://app.midtrans.com/snap/v1/transactions",
       {
         method: "POST",
         headers: {
@@ -119,7 +130,6 @@ serve(async (req) => {
     );
 
     const midtransData = await midtransResponse.json();
-
     if (!midtransData.token) throw new Error("Gagal buat transaksi Midtrans");
 
     await supabase.from("payments").insert({
@@ -135,6 +145,25 @@ serve(async (req) => {
       snap_token: midtransData.token,
       payment_expired_at: expiredAt,
     }).eq("id", newOrder.id);
+
+    // Kirim email menunggu pembayaran
+    if (resendKey && customer.email) {
+      try {
+        const html = buildWaitingPaymentEmail(
+          { ...newOrder, subtotal, total },
+          insertedItems || orderItems,
+          frontendUrl
+        );
+        await sendEmail(
+          resendKey,
+          customer.email,
+          `Pesanan #${orderNumber} Diterima — Selesaikan Pembayaran`,
+          html
+        );
+      } catch (emailError) {
+        console.error("Email error:", emailError);
+      }
+    }
 
     return new Response(
       JSON.stringify({

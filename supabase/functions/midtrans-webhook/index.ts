@@ -1,15 +1,32 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildPaymentConfirmedEmail } from "../_shared/email-templates.ts";
+
+const sendEmail = async (resendKey: string, to: string, subject: string, html: string) => {
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${resendKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: "Highest World <no-reply@highestworld.id>", // ganti domain
+      to: [to],
+      subject,
+      html,
+    }),
+  });
+};
 
 serve(async (req) => {
   try {
     const body = await req.json();
-    
-    const serverKey = Deno.env.get("MIDTRANS_SERVER_KEY");
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const fonnteToken = Deno.env.get("FONNTE_TOKEN");
     const adminWa = Deno.env.get("ADMIN_WA_NUMBER");
+    const resendKey = Deno.env.get("RESEND_API_KEY");
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -75,14 +92,17 @@ serve(async (req) => {
       // 2. Add points
       const { data: order } = await supabase
         .from("orders")
-        .select("user_id, total, points_earned")
+        .select("*")
         .eq("id", payment.order_id)
         .single();
+
+      let pointsEarned = 0;
 
       if (order?.user_id && order.points_earned === 0) {
         const points = Math.floor(order.total / 100000) * 10;
 
         if (points > 0) {
+          pointsEarned = points;
           const expiredAt = new Date();
           expiredAt.setFullYear(expiredAt.getFullYear() + 1);
 
@@ -126,6 +146,21 @@ serve(async (req) => {
           },
           body: JSON.stringify({ target: adminWa, message: msg }),
         });
+      }
+
+      // 4. Email konfirmasi pembayaran
+      if (resendKey && order?.customer_email) {
+        try {
+          const html = buildPaymentConfirmedEmail(order, orderItems || [], pointsEarned);
+          await sendEmail(
+            resendKey,
+            order.customer_email,
+            `✅ Pembayaran #${order.order_number} Berhasil — Highest World`,
+            html
+          );
+        } catch (emailError) {
+          console.error("Email error:", emailError);
+        }
       }
     }
 
