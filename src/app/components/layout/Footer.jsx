@@ -48,7 +48,7 @@ export const Footer = () => {
           {/* Brand Column */}
           <div>
             <img 
-              src="/logo-hw-kuning.png" 
+              src="/favicon.png" 
               alt="Highest World" 
               className="h-10 md:h-12 w-auto"
             />

@@ -15,7 +15,7 @@ serve(async (req) => {
     const { order, items, customer, shipping, user_id } = await req.json();
 
     const serverKey = Deno.env.get("MIDTRANS_SERVER_KEY");
-    const frontendUrl = Deno.env.get("FRONTEND_URL") || "http://localhost:5173";
+    const frontendUrl = Deno.env.get("FRONTEND_URL") || "http://highestworld.id";
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -45,7 +45,7 @@ serve(async (req) => {
         payment_method: "midtrans",
         status: "waiting_payment",
         notes: order.notes || null,
-        user_id: user_id || null,  // ← tambah ini
+        user_id: user_id || null,
       })
       .select()
       .single();
@@ -63,8 +63,7 @@ serve(async (req) => {
       price: i.price,
       subtotal: i.price * i.qty,
       variant_images: i.variant_images || [],
-      product_weight: i.weight || 100, // ← tambah ini
-
+      product_weight: i.weight || 100,
     }));
 
     const { data: insertedItems, error: orderItemsError } = await supabase
@@ -108,7 +107,7 @@ serve(async (req) => {
     };
 
     const midtransResponse = await fetch(
-      "https://app.sandbox.midtrans.com/snap/v1/transactions",
+      "https://app.midtrans.com/snap/v1/transactions",  // ✅ PRODUCTION
       {
         method: "POST",
         headers: {

@@ -33,7 +33,7 @@ export const Navbar = () => {
 
   const navLinks = [
     { name: 'Categories', path: '/produk' },
-    { name: 'Collection', path: '/koleksi', hasDropdown: true },
+  //{ name: 'Collection', path: '/koleksi', hasDropdown: true },
     { name: 'Look', path: '/tentang' },
     { name: 'Dealers', path: '/kontak' },
   ];

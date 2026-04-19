@@ -1,6 +1,6 @@
 export const MIDTRANS_CONFIG = {
   clientKey: import.meta.env.VITE_MIDTRANS_CLIENT_KEY,
-  isProduction: false,
+  isProduction: true,
 };
 
 export function loadMidtransScript() {

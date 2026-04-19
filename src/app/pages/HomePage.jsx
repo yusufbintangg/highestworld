@@ -8,12 +8,6 @@ import { formatPrice } from '../../lib/utils';
 
 // Fallback banner URLs — akan dipakai kalau Supabase belum ada data
 const FALLBACK_BANNERS = [
-  { id: '1', image_url: 'https://res.cloudinary.com/dopr9tvnv/image/upload/v1774414633/ftwpfbbgdw8vujlib3lo.jpg', title: null, subtitle: null, link: '/produk' },
-  { id: '2', image_url: 'https://res.cloudinary.com/dopr9tvnv/image/upload/v1774414602/ietbm7anihjbzs2goabe.jpg', title: null, subtitle: null, link: '/produk' },
-  { id: '3', image_url: 'https://res.cloudinary.com/dopr9tvnv/image/upload/v1774414611/e6lc5nlams9qd2ho24gt.jpg', title: null, subtitle: null, link: '/produk' },
-  { id: '4', image_url: 'https://res.cloudinary.com/dopr9tvnv/image/upload/v1774414502/nds3xhknsigzzg64adap.jpg', title: null, subtitle: null, link: '/produk' },
-  { id: '5', image_url: 'https://res.cloudinary.com/dopr9tvnv/image/upload/v1774414713/o08j7eborleihio5ihsk.jpg', title: null, subtitle: null, link: '/produk' },
-  { id: '6', image_url: 'https://res.cloudinary.com/dopr9tvnv/image/upload/v1774414573/ewj604ywigir3ggwepsx.jpg', title: null, subtitle: null, link: '/produk' },
 ];
 
 const BANNER_INTERVAL = 10000; // 10 detik
@@ -131,10 +125,10 @@ export const HomePage = () => {
                 )}
                 <div className="absolute bottom-0 left-0 right-0 z-20 flex items-end justify-between px-5 pb-5">
                   {banner.subtitle && (
-                    <p className="text-[10px] tracking-widest uppercase text-white/70">{banner.subtitle}</p>
+                    <p className="text-[10px] tracking-widest uppercase text-black/70">{banner.subtitle}</p>
                   )}
                   {banner.link && (
-                    <Link to={banner.link} className="text-[10px] tracking-widest uppercase text-white/80 hover:text-white transition-colors">
+                    <Link to={banner.link} className="text-[10px] tracking-widest uppercase text-black/80 transition-colors">
                       View More
                     </Link>
                   )}
@@ -314,12 +308,12 @@ export const HomePage = () => {
       {/* ===================== WHY US ===================== */}
       <section className="border-t border-gray-200">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-gray-200">
+          <div className="grid grid-cols-2 md:grid-cols-3 divide-x divide-y md:divide-y-0 divide-gray-200">
             {[
               { icon: Package,    title: 'Big Size Ready', desc: '2XL sampai 10XL tersedia' },
               { icon: ShieldCheck, title: 'Premium Quality', desc: 'Material pilihan, QC ketat' },
               { icon: Zap,        title: 'Fast Shipping',   desc: `Estimasi ${SHIPPING_INFO.estimatedDays}` },
-              { icon: Truck,      title: 'Free Ongkir',     desc: `Belanja di atas ${formatPrice(SHIPPING_INFO.freeShippingMinimum)}` },
+          //  { icon: Truck,      title: 'Free Ongkir',     desc: `Belanja di atas ${formatPrice(SHIPPING_INFO.freeShippingMinimum)}` },
             ].map((item, i) => {
               const Icon = item.icon;
               return (
