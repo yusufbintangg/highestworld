@@ -42,10 +42,7 @@ export const CheckoutForm = ({
           placeholder="Alamat Email"
           className={`w-full px-4 py-3 rounded-xl border text-sm placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-gray-200 transition ${!!user ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''} ${errors.email ? 'border-red-400' : 'border-gray-200'}`}
         />
-        {errors.email
-          ? <p className="text-xs text-red-500">{errors.email}</p>
-          : <p className="text-xs text-gray-400">Detail pesanan akan dikirim ke email</p>
-        }
+
       </div>
 
       {/* Nama */}
