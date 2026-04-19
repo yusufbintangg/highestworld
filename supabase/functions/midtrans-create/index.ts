@@ -24,13 +24,16 @@ const sendEmail = async (resendKey: string, to: string, subject: string, html: s
 };
 
 serve(async (req) => {
+  // handling buat debugging, nanti bisa dihapus atau disesuaikan dengan logging yang lebih baik buat cek yang error apa
+  //console.log("Function hit:", req.method); // ← tambahin di sini
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
     const { order, items, customer, shipping, user_id } = await req.json();
-
+  // handling buat debugging, nanti bisa dihapus atau disesuaikan dengan logging yang lebih baik buat cek yang error apa
+  //console.log("Payload received:", JSON.stringify({ customer, user_id }));
     const serverKey = Deno.env.get("MIDTRANS_SERVER_KEY");
     const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://highestworld.id";
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -91,7 +94,7 @@ serve(async (req) => {
 
     if (orderItemsError) throw new Error("Gagal simpan order items: " + orderItemsError.message);
 
-
+    const midtransOrderId = `HW-${newOrder.id}`;
     const midtransPayload = {
       transaction_details: { order_id: midtransOrderId, gross_amount: total },
       customer_details: {
@@ -175,6 +178,8 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    // handling buat debugging, nanti bisa dihapus atau disesuaikan dengan logging yang lebih baik buat cek yang error apa
+    //console.error("CATCH ERROR:", error.message);
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
