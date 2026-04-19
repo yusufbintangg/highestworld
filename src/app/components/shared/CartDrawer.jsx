@@ -18,11 +18,7 @@ export const CartDrawer = ({ children }) => {
 
   const handleCheckout = () => {
     setOpen(false);
-    if (!isAuthenticated) {
-      navigate('/login', { state: { from: { pathname: '/checkout' } } });
-    } else {
-      navigate('/checkout');
-    }
+    navigate('/checkout');
   };
 
   const handleWhatsAppCheckout = () => {

@@ -54,7 +54,7 @@ export const router = createBrowserRouter([
       { path: 'konfirmasi-pembayaran', element: <PaymentConfirmationPage /> },
       { path: 'pesanan/:orderNumber', element: <OrderDetailPage /> },
 
-      { path: 'checkout', element: <ProtectedRoute><CheckoutPage /></ProtectedRoute> },
+      { path: 'checkout', element: <CheckoutPage /> },
       { path: 'account', element: <ProtectedRoute><AccountDashboardPage /></ProtectedRoute> },
       { path: 'account/orders', element: <ProtectedRoute><AccountOrdersPage /></ProtectedRoute> },
       { path: 'account/addresses', element: <ProtectedRoute><AccountAddressesPage /></ProtectedRoute> },
