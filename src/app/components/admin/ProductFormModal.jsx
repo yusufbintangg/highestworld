@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Trash2 } from 'lucide-react';
+import { Copy, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export const ProductFormModal = ({
   editProduct, form, setForm,
@@ -95,7 +96,7 @@ https://example.com/img2.jpg"
                     updatePreviewImages(e.target.value);
                   }}
                 />
-                {/* Images Preview Grid - Same as EditVariantModal */}
+                {/* Images Preview Grid */}
                 {previewImages.length > 0 && (
                   <div className="mt-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     {previewImages.map((img, i) => (
@@ -328,9 +329,12 @@ https://example.com/img2.jpg"
               </button>
             </section>
 
-            <div className="flex gap-3 pt-2">
-              <Button type="submit" className="flex-1">{editProduct ? 'Update' : 'Simpan'}</Button>
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose}>Batal</Button>
+            {/* Sticky buttons */}
+            <div className="sticky bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border p-4 z-10 -mb-20 mt-4">
+              <div className="flex gap-3">
+                <Button type="submit" className="flex-1">{editProduct ? 'Update' : 'Simpan'}</Button>
+                <Button type="button" variant="outline" className="flex-1" onClick={onClose}>Batal</Button>
+              </div>
             </div>
           </form>
         </div>
@@ -338,4 +342,5 @@ https://example.com/img2.jpg"
     </div>
   );
 };
+
 

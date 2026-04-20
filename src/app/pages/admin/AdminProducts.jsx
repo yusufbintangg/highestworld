@@ -122,6 +122,15 @@ export const AdminProducts = () => {
                       <Button size="icon" variant="ghost" onClick={() => handleOpenEdit(product)}>
                         ✏️
                       </Button>
+                      <Button size="icon" variant={product.is_active ? "ghost" : "default"} 
+                        onClick={() => handleToggleActive(product.id, product.is_active)}
+                        className="w-8 h-8">
+                        {product.is_active ? (
+                          <span className="text-destructive">🔴</span>
+                        ) : (
+                          <span className="text-emerald-600">🟢</span>
+                        )}
+                      </Button>
                       <Button size="icon" variant="ghost"
                         className="text-destructive hover:text-destructive"
                         onClick={() => handleDelete(product.id)}>
@@ -131,6 +140,7 @@ export const AdminProducts = () => {
                   </td>
                 </tr>
               ))}
+
             </tbody>
           </table>
           {filtered.length === 0 && (
