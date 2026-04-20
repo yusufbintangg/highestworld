@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router';
 import { useAuth } from '../../../context/AuthContext';
 import { Link, useLocation } from 'react-router';
 import { Search, ShoppingCart, Menu, X } from 'lucide-react';
@@ -7,12 +8,18 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '..
 import { useCart } from '../../../context/CartContext';
 import { categories } from '../../../data/categories';
 import { cn } from '../../../lib/utils';
+import { useProductSearch } from '../../hooks/useProductSearch';
 import { CartDrawer } from '../shared/CartDrawer';
 
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchTrigger, setSearchTrigger] = useState(false);
+  const [redirectTo, setRedirectTo] = useState(null);
+  
+  const navigate = useNavigate();
+  const { product, loading } = useProductSearch(searchQuery);
   const { getCartCount } = useCart();
   const { search } = useLocation();
   const { user } = useAuth();
@@ -24,6 +31,21 @@ export const Navbar = () => {
       setSearchQuery(decodeURIComponent(query));
     }
   }, [search]);
+
+  // Auto redirect logic after search
+  useEffect(() => {
+    if (searchTrigger && !loading && searchQuery.trim()) {
+      setSearchTrigger(false);
+      
+      if (product?.slug) {
+        // Direct to product detail 🎉
+        navigate(`/produk/${product.slug}`);
+      } else {
+        // Fallback to products list with query
+        navigate(`/produk?q=${encodeURIComponent(searchQuery)}`);
+      }
+    }
+  }, [searchTrigger, product, loading, searchQuery, navigate]);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -60,7 +82,8 @@ export const Navbar = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && searchQuery.trim()) {
-                  window.location.href = `/produk?q=${encodeURIComponent(searchQuery)}`;
+                  e.preventDefault();
+                  setSearchTrigger(true);
                 }
               }}
               className="w-full text-[11px] tracking-[0.2em] uppercase placeholder:text-gray-400 text-gray-800 bg-transparent outline-none font-medium"
@@ -155,7 +178,8 @@ export const Navbar = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && searchQuery.trim()) {
-                        window.location.href = `/produk?q=${encodeURIComponent(searchQuery)}`;
+                        e.preventDefault();
+                        setSearchTrigger(true);
                         setMobileMenuOpen(false);
                       }
                     }}
