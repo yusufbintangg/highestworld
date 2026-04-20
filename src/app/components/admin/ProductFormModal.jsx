@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Trash2, X } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
 export const ProductFormModal = ({
   editProduct, form, setForm,
@@ -15,15 +15,19 @@ export const ProductFormModal = ({
 }) => {
   const [previewImages, setPreviewImages] = useState([]);
 
-  // Sync preview with form.images textarea
-  useEffect(() => {
-    const urls = (form.images || '')
+  // Update preview function (like EditVariantModal)
+  const updatePreviewImages = useCallback((imagesText) => {
+    const urls = (imagesText || '')
       .split('\n')
       .map(url => url.trim())
       .filter(url => url);
-    
-    setPreviewImages(urls.slice(0, 8)); // Max 8 previews
-  }, [form.images]);
+    setPreviewImages(urls.slice(0, 8));
+  }, []);
+
+  // Initial load + watch form.images changes
+  useEffect(() => {
+    updatePreviewImages(form.images);
+  }, [form.images, updatePreviewImages]);
 
   const handleImageError = (index) => {
     setPreviewImages(prev => {
@@ -32,9 +36,10 @@ export const ProductFormModal = ({
       return newImages;
     });
   };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-lg w-full max-w-10xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-card border border-border rounded-lg w-full max-w-8xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <h2 className="text-lg font-semibold mb-4">
             {editProduct ? 'Edit Produk' : 'Tambah Produk'}
@@ -69,46 +74,59 @@ export const ProductFormModal = ({
 
               <div className="grid grid-cols-3 gap-3">
                 <Input type="number" placeholder="Harga Jual *" value={form.price}
-                  onChange={(e) => setForm(p => ({ ...p, price: e.target.value }))} required />
+                  onChange={(e) => setForm(p => ({ ...p, price: parseInt(e.target.value) || 0 }))} required />
                 <Input type="number" placeholder="Harga Coret" value={form.original_price}
-                  onChange={(e) => setForm(p => ({ ...p, original_price: e.target.value }))} />
+                  onChange={(e) => setForm(p => ({ ...p, original_price: parseInt(e.target.value) || 0 }))} />
                 <Input type="number" placeholder="Berat (gram) *" value={form.weight}
-                  onChange={(e) => setForm(p => ({ ...p, weight: e.target.value }))} required />
+                  onChange={(e) => setForm(p => ({ ...p, weight: parseInt(e.target.value) || 0 }))} required />
               </div>
 
-              <textarea
-                className="w-full border border-border rounded-md px-3 py-2 bg-background text-sm min-h-[180px]"
-                placeholder="URL Gambar Produk (satu per baris)"
-                value={form.images}
-                onChange={(e) => setForm(p => ({ ...p, images: e.target.value }))}
-              />
-              {/* Images Preview Grid */}
-              {previewImages.length > 0 && (
-                <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {previewImages.map((img, i) => (
-                    img && (
-                      <div key={i} className="relative group">
-                        <img 
-                          src={img} 
-                          alt={`Preview ${i + 1}`}
-                          className="w-full aspect-square object-cover rounded-lg border border-border shadow-sm"
-                          onError={() => handleImageError(i)}
-                        />
-                        <button
-                          type="button"
-                          className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-all"
-                          onClick={() => {
-                            const newUrls = form.images.split('\n').filter((_, idx) => idx !== i).join('\n');
-                            setForm(p => ({ ...p, images: newUrls }));
-                          }}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    )
-                  ))}
-                </div>
-              ))}
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block uppercase tracking-wider">
+                  URL Gambar Produk (satu per baris)
+                </label>
+                <textarea
+                  className="w-full border border-border rounded-md px-3 py-2 bg-background text-sm min-h-[100px]"
+                  placeholder="https://example.com/img1.jpg
+https://example.com/img2.jpg"
+                  value={form.images}
+                  onChange={(e) => {
+                    setForm(p => ({ ...p, images: e.target.value }));
+                    updatePreviewImages(e.target.value);
+                  }}
+                />
+                {/* Images Preview Grid - Same as EditVariantModal */}
+                {previewImages.length > 0 && (
+                  <div className="mt-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    {previewImages.map((img, i) => (
+                      img && (
+                        <div key={i} className="relative group">
+                          <img 
+                            src={img} 
+                            alt={`Preview ${i + 1}`}
+                            className="w-full aspect-square object-cover rounded-lg border border-border shadow-sm"
+                            onError={() => handleImageError(i)}
+                          />
+                          <button
+                            type="button"
+                            className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-all"
+                            onClick={() => {
+                              const lines = form.images.split('\n');
+                              lines.splice(i, 1);
+                              const newImages = lines.join('\n');
+                              setForm(p => ({ ...p, images: newImages }));
+                              updatePreviewImages(newImages);
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <textarea
                 className="w-full border border-border rounded-md px-3 py-2 bg-background text-sm min-h-[220px]"
                 placeholder="Deskripsi produk"
@@ -119,11 +137,11 @@ export const ProductFormModal = ({
               {/* Badges */}
               <div>
                 <p className="text-xs text-muted-foreground mb-2">Badges</p>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {['New', 'Best Seller', 'Sale'].map(badge => (
                     <button key={badge} type="button" onClick={() => toggleBadge(badge)}
                       className={`px-3 py-1 rounded-full text-xs border transition-colors ${
-                        form.badges.includes(badge)
+                        form.badges?.includes(badge)
                           ? 'bg-primary text-primary-foreground border-primary'
                           : 'border-border text-muted-foreground'
                       }`}>
@@ -134,7 +152,7 @@ export const ProductFormModal = ({
               </div>
 
               <div className="flex items-center gap-2">
-                <input type="checkbox" id="is_active" checked={form.is_active}
+                <input type="checkbox" id="is_active" checked={form.is_active || false}
                   onChange={(e) => setForm(p => ({ ...p, is_active: e.target.checked }))} />
                 <label htmlFor="is_active" className="text-sm">Produk aktif</label>
               </div>
@@ -167,56 +185,50 @@ export const ProductFormModal = ({
             </section>
 
             {/* ── Existing Variants (edit mode only) ──────────────── */}
-            {editProduct && (
+            {editProduct && existingVariants?.length > 0 && (
               <section className="space-y-3">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Varian Existing ({existingVariants.length})
                 </p>
-                {existingVariants.length === 0 ? (
-                  <p className="text-sm text-muted-foreground p-4 bg-muted/30 rounded-lg text-center">
-                    Tidak ada varian. Tambahkan di bawah.
-                  </p>
-                ) : (
-                  <div className="border border-border rounded-lg overflow-hidden">
-                    <div className="bg-muted/50 grid grid-cols-12 gap-2 p-3 text-xs font-medium text-muted-foreground border-b border-border">
-                      <div className="col-span-2">Warna</div>
-                      <div className="col-span-1 text-center">Size</div>
-                      <div className="col-span-1 text-center">SKU</div>
-                      <div className="col-span-1 text-center">MSKU</div>
-                      <div className="col-span-2 text-center">Harga</div>
-                      <div className="col-span-2 text-center">Coret</div>
-                      <div className="col-span-1 text-center">Stok</div>
-                      <div className="col-span-2 text-right">Aksi</div>
-                    </div>
-                    <div className="space-y-1 max-h-134 overflow-y-auto">
-                      {existingVariants.map((v) => (
-                        <div key={v.id} className="grid grid-cols-12 gap-2 p-3 items-center text-xs bg-background hover:bg-muted/50 border-b border-border last:border-b-0">
-                          <div className="col-span-2 flex items-center gap-2">
-                            {v.images?.length > 0
-                              ? <img src={v.images[0]} alt={v.color} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
-                              : <div className="w-6 h-6 rounded-full border flex-shrink-0" style={{ backgroundColor: v.color_hex }} />
-                            }
-                            <span className="font-medium truncate">{v.color}</span>
-                          </div>
-                          <div className="col-span-1 text-center">{v.size}</div>
-                          <div className="col-span-1 text-center">{v.sku || '-'}</div>
-                          <div className="col-span-1 text-center">{v.msku || '-'}</div>
-                          <div className="col-span-2 text-center">{v.price ? v.price.toLocaleString() : '-'}</div>
-                          <div className="col-span-2 text-center">{v.original_price ? v.original_price.toLocaleString() : '-'}</div>
-                          <div className="col-span-1 text-center font-medium">{v.stock}</div>
-                          <div className="col-span-2 flex justify-end gap-1">
-                            <button type="button" onClick={() => handleOpenEditExistingVariant(v)}
-                              className="p-1 text-primary hover:bg-primary/10 rounded text-xs">✏️</button>
-                            <button type="button" onClick={() => handleDeleteExistingVariant(v.id)}
-                              className="p-1 text-destructive hover:bg-destructive/10 rounded">
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                <div className="border border-border rounded-lg overflow-hidden">
+                  <div className="bg-muted/50 grid grid-cols-12 gap-2 p-3 text-xs font-medium text-muted-foreground border-b border-border">
+                    <div className="col-span-2">Warna</div>
+                    <div className="col-span-1 text-center">Size</div>
+                    <div className="col-span-1 text-center">SKU</div>
+                    <div className="col-span-1 text-center">MSKU</div>
+                    <div className="col-span-2 text-center">Harga</div>
+                    <div className="col-span-2 text-center">Coret</div>
+                    <div className="col-span-1 text-center">Stok</div>
+                    <div className="col-span-2 text-right">Aksi</div>
                   </div>
-                )}
+                  <div className="space-y-1 max-h-180 overflow-y-auto">
+                    {existingVariants.map((v) => (
+                      <div key={v.id} className="grid grid-cols-12 gap-2 p-3 items-center text-xs bg-background hover:bg-muted/50 border-b border-border last:border-b-0">
+                        <div className="col-span-2 flex items-center gap-2">
+                          {v.images?.length > 0
+                            ? <img src={v.images[0]} alt={v.color} className="w-24 h-24 object-cover flex-shrink-0" />
+                            : <div className="w-12 h-12 flex-shrink-0" style={{ backgroundColor: v.color_hex }} />
+                          }
+                          <span className="font-medium truncate">{v.color}</span>
+                        </div>
+                        <div className="col-span-1 text-center">{v.size}</div>
+                        <div className="col-span-1 text-center">{v.sku || '-'}</div>
+                        <div className="col-span-1 text-center">{v.msku || '-'}</div>
+                        <div className="col-span-2 text-center">{v.price ? v.price.toLocaleString() : '-'}</div>
+                        <div className="col-span-2 text-center">{v.original_price ? v.original_price.toLocaleString() : '-'}</div>
+                        <div className="col-span-1 text-center font-medium">{v.stock}</div>
+                        <div className="col-span-2 flex justify-end gap-1">
+                          <button type="button" onClick={() => handleOpenEditExistingVariant(v)}
+                            className="p-1 text-primary hover:bg-primary/10 rounded text-xs">✏️</button>
+                          <button type="button" onClick={() => handleDeleteExistingVariant(v.id)}
+                            className="p-1 text-destructive hover:bg-destructive/10 rounded">
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </section>
             )}
 
@@ -241,7 +253,7 @@ export const ProductFormModal = ({
 
               {/* Variant header */}
               <div className="grid grid-cols-12 gap-1 text-xs text-muted-foreground px-1">
-                <span className="col-span-1 text-center">Warna/Nama</span>
+                <span className="col-span-1 text-center">Warna</span>
                 <span className="col-span-1 text-center">Size</span>
                 <span className="col-span-2 text-center">SKU</span>
                 <span className="col-span-2 text-center">MSKU</span>
@@ -277,15 +289,15 @@ export const ProductFormModal = ({
                     </div>
                     <div className="col-span-2">
                       <Input type="number" placeholder="Harga" value={v.price}
-                        onChange={(e) => updateVariant(i, 'price', e.target.value)} className="h-8 text-xs" />
+                        onChange={(e) => updateVariant(i, 'price', parseInt(e.target.value) || 0)} className="h-8 text-xs" />
                     </div>
                     <div className="col-span-2">
                       <Input type="number" placeholder="Coret" value={v.original_price}
-                        onChange={(e) => updateVariant(i, 'original_price', e.target.value)} className="h-8 text-xs" />
+                        onChange={(e) => updateVariant(i, 'original_price', parseInt(e.target.value) || 0)} className="h-8 text-xs" />
                     </div>
                     <div className="col-span-2">
                       <Input type="number" min="0" placeholder="0" value={v.stock}
-                        onChange={(e) => updateVariant(i, 'stock', e.target.value)} className="h-8 text-xs text-center" />
+                        onChange={(e) => updateVariant(i, 'stock', parseInt(e.target.value) || 0)} className="h-8 text-xs text-center" />
                     </div>
                     <div className="col-span-2 flex justify-end">
                       {variants.length > 1 && (
@@ -301,8 +313,8 @@ export const ProductFormModal = ({
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">URL Gambar warna ini (satu per baris)</p>
                     <textarea
-                      className="w-full border border-border rounded-md px-2 py-1.5 bg-background text-xs min-h-[160px]"
-                      placeholder={"https://...\nhttps://..."}
+                      className="w-full border border-border rounded-md px-2 py-1.5 bg-background text-xs min-h-[120px]"
+                      placeholder="https://...\nhttps://..."
                       value={v.images || ''}
                       onChange={(e) => updateVariant(i, 'images', e.target.value)}
                     />
@@ -326,3 +338,4 @@ export const ProductFormModal = ({
     </div>
   );
 };
+
