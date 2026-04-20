@@ -66,6 +66,8 @@ export const EditVariantModal = ({ editingVariant, setEditingVariant, onSave }) 
               </div>
             </div>
 
+
+
             <div>
               <label className="text-sm font-medium">URL Gambar (satu per baris)</label>
               <textarea

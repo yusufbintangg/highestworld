@@ -1,6 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Trash2 } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 
 export const ProductFormModal = ({
   editProduct, form, setForm,
@@ -12,6 +13,25 @@ export const ProductFormModal = ({
   handleSubmit, onClose,
   generateSlug,
 }) => {
+  const [previewImages, setPreviewImages] = useState([]);
+
+  // Sync preview with form.images textarea
+  useEffect(() => {
+    const urls = (form.images || '')
+      .split('\n')
+      .map(url => url.trim())
+      .filter(url => url);
+    
+    setPreviewImages(urls.slice(0, 8)); // Max 8 previews
+  }, [form.images]);
+
+  const handleImageError = (index) => {
+    setPreviewImages(prev => {
+      const newImages = [...prev];
+      newImages[index] = null;
+      return newImages;
+    });
+  };
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
       <div className="bg-card border border-border rounded-lg w-full max-w-10xl max-h-[90vh] overflow-y-auto">
@@ -62,6 +82,33 @@ export const ProductFormModal = ({
                 value={form.images}
                 onChange={(e) => setForm(p => ({ ...p, images: e.target.value }))}
               />
+              {/* Images Preview Grid */}
+              {previewImages.length > 0 && (
+                <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {previewImages.map((img, i) => (
+                    img && (
+                      <div key={i} className="relative group">
+                        <img 
+                          src={img} 
+                          alt={`Preview ${i + 1}`}
+                          className="w-full aspect-square object-cover rounded-lg border border-border shadow-sm"
+                          onError={() => handleImageError(i)}
+                        />
+                        <button
+                          type="button"
+                          className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-all"
+                          onClick={() => {
+                            const newUrls = form.images.split('\n').filter((_, idx) => idx !== i).join('\n');
+                            setForm(p => ({ ...p, images: newUrls }));
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )
+                  ))}
+                </div>
+              ))}
               <textarea
                 className="w-full border border-border rounded-md px-3 py-2 bg-background text-sm min-h-[220px]"
                 placeholder="Deskripsi produk"

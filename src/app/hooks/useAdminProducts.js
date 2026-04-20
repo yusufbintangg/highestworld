@@ -42,6 +42,7 @@ export const useAdminProducts = () => {
     const { data } = await supabase
       .from('products')
       .select('*, categories(name)')
+      .order('is_active', { ascending: false })
       .order('created_at', { ascending: false });
     setProducts(data || []);
     setLoading(false);
