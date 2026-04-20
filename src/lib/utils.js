@@ -24,13 +24,13 @@ export function calculateDiscount(originalPrice, currentPrice) {
 }
 
 // Generate WhatsApp product order message
-export function generateProductWAMessage(product, selectedColor, selectedSize) {
+export function generateProductWAMessage(product, selectedColor, selectedSize, sku) {
   const message = `Halo Highest World! 🛍️
 
 Saya ingin memesan:
-• Produk: ${product.name}
-• Warna: ${selectedColor}
-• Ukuran: ${selectedSize}
+• Produk: ${product.name} (SKU: ${sku || 'N/A'})
+${selectedColor ? `• Warna: ${selectedColor}` : ''}
+${selectedSize ? `• Ukuran: ${selectedSize}` : ''}
 • Harga: ${formatPrice(product.price)}
 
 Link Produk: ${SITE_CONFIG.url}/produk/${product.slug}

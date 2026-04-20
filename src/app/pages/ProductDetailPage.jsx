@@ -171,9 +171,11 @@ export const ProductDetailPage = () => {
   };
 
   const handleWhatsAppOrder = () => {
-    if (!selectedColor) { toast.error('Pilih warna terlebih dahulu'); return; }
+    const needsColor = variants.length > 0 && uniqueColors.length > 1;
+    if (needsColor && !selectedColor) { toast.error('Pilih warna terlebih dahulu'); return; }
     if (!selectedSize) { toast.error('Pilih ukuran terlebih dahulu'); return; }
-    window.open(generateProductWAMessage(product, selectedColor, selectedSize), '_blank');
+    const activeSku = selectedVariant?.sku || product.sku;
+    window.open(generateProductWAMessage(product, selectedColor || null, selectedSize, activeSku), '_blank');
   };
 
   const handleShare = () => {
