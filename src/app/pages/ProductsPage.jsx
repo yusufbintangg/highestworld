@@ -124,7 +124,7 @@ export const ProductsPage = () => {
           {/* Product Grid */}
           <div className="px-4">
             {loading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-1 pt-2">
+              <div className="grid grid-cols-3 lg:grid-cols-4 gap-[2px] pt-[2px]">
                 {[...Array(PRODUCTS_PER_PAGE)].map((_, i) => (
                   <div key={i} className="aspect-[3/4] bg-gray-100 animate-pulse" />
                 ))}
@@ -149,7 +149,7 @@ export const ProductsPage = () => {
           {loading ? 'Loading...' : `${totalCount} Products`}
         </div>
         {loading ? (
-        <div className="grid grid-cols-2 gap-1">
+          <div className="grid grid-cols-2 gap-[2px]">
             {[...Array(PRODUCTS_PER_PAGE)].map((_, i) => (
               <div key={i} className="aspect-[3/4] bg-gray-100 animate-pulse" />
             ))}
