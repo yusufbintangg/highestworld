@@ -7,16 +7,32 @@ export const AdminAuthProvider = ({ children }) => {
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const checkAdminRole = async (user) => {
+    if (!user) {
+      setAdmin(null);
+      return;
+    }
+
+    const { data: adminUser } = await supabase
+      .from('admin_users')
+      .select('id, email, full_name, role, is_active')
+      .eq('id', user.id)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    // Kalau ada di admin_users → set admin
+    // Kalau tidak → set null tapi JANGAN signOut (biar user biasa tetap bisa login)
+    setAdmin(adminUser ? { ...user, ...adminUser } : null);
+  };
+
   useEffect(() => {
-    // Cek session yang sudah ada
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setAdmin(session?.user ?? null);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      await checkAdminRole(session?.user ?? null);
       setLoading(false);
     });
 
-    // Listen perubahan auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setAdmin(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      await checkAdminRole(session?.user ?? null);
     });
 
     return () => subscription.unsubscribe();
@@ -25,11 +41,25 @@ export const AdminAuthProvider = ({ children }) => {
   const signIn = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+
+    const { data: adminUser } = await supabase
+      .from('admin_users')
+      .select('id, email, full_name, role, is_active')
+      .eq('id', data.user.id)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (!adminUser) {
+      await supabase.auth.signOut();
+      throw new Error('Akses ditolak. Bukan admin.');
+    }
+
     return data;
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setAdmin(null);
   };
 
   return (
@@ -44,3 +74,4 @@ export const useAdminAuth = () => {
   if (!context) throw new Error('useAdminAuth must be used within AdminAuthProvider');
   return context;
 };
+

@@ -24,7 +24,7 @@ export const AdminLogin = () => {
       await signIn(email, password);
       navigate('/admin');
     } catch (error) {
-      toast.error('Email atau password salah');
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
