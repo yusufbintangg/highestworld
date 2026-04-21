@@ -1,10 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router';
 import { useAuth } from '../../../context/AuthContext';
-import { Link, useLocation } from 'react-router';
-import { Search, ShoppingCart, Menu, X } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Search, ShoppingBag, X, ArrowRight, User } from 'lucide-react';
 import { useCart } from '../../../context/CartContext';
 import { categories } from '../../../data/categories';
 import { cn } from '../../../lib/utils';
@@ -12,237 +9,292 @@ import { useProductSearch } from '../../hooks/useProductSearch';
 import { CartDrawer } from '../shared/CartDrawer';
 
 export const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [isScrolled, setIsScrolled]     = useState(false);
+  const [searchOpen, setSearchOpen]     = useState(false);
+  const [mobileOpen, setMobileOpen]     = useState(false);
+  const [searchQuery, setSearchQuery]   = useState('');
   const [searchTrigger, setSearchTrigger] = useState(false);
-  const [redirectTo, setRedirectTo] = useState(null);
-  
-  const navigate = useNavigate();
-  const { product, loading } = useProductSearch(searchQuery);
-  const { getCartCount } = useCart();
-  const { search } = useLocation();
-  const { user } = useAuth();
-  const location = useLocation();
 
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const { search } = useLocation();
+  const { user }  = useAuth();
+  const { getCartCount } = useCart();
+  const { product, loading } = useProductSearch(searchQuery);
+  const cartCount = getCartCount();
+
+  // Sync search query from URL
   useEffect(() => {
-    const query = new URLSearchParams(search).get('q');
-    if (query) {
-      setSearchQuery(decodeURIComponent(query));
-    }
+    const q = new URLSearchParams(search).get('q');
+    if (q) setSearchQuery(decodeURIComponent(q));
   }, [search]);
 
-  // Auto redirect logic after search
+  // Auto redirect after search
   useEffect(() => {
     if (searchTrigger && !loading && searchQuery.trim()) {
       setSearchTrigger(false);
-      
+      setSearchOpen(false);
+      setMobileOpen(false);
       if (product?.slug) {
-        // Direct to product detail 🎉
         navigate(`/produk/${product.slug}`);
       } else {
-        // Fallback to products list with query
         navigate(`/produk?q=${encodeURIComponent(searchQuery)}`);
       }
     }
   }, [searchTrigger, product, loading, searchQuery, navigate]);
 
+  // Scroll detection
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const onScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Lock body scroll when mobile menu open
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileOpen]);
+
+  // Close mobile on route change
+  useEffect(() => {
+    setMobileOpen(false);
+    setSearchOpen(false);
+  }, [location.pathname]);
+
   const navLinks = [
-    { name: 'Categories', path: '/produk' },
-  //{ name: 'Collection', path: '/koleksi', hasDropdown: true },
-    { name: 'Look', path: '/tentang' },
+    { name: 'Shop',    path: '/produk' },
+    { name: 'Look',    path: '/tentang' },
     { name: 'Dealers', path: '/kontak' },
   ];
 
-  const cartCount = getCartCount();
+  const triggerSearch = () => {
+    if (searchQuery.trim()) setSearchTrigger(true);
+  };
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
-        <div className="flex items-center h-[52px] px-0">
+      {/* ─── NAVBAR ─────────────────────────────────────────────── */}
+      <nav
+        className={cn(
+          'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
+          isScrolled
+            ? 'bg-white/95 backdrop-blur-md border-b border-black/8 shadow-[0_1px_0_0_rgba(0,0,0,0.06)]'
+            : 'bg-white border-b border-black/10'
+        )}
+      >
+    {/* Top announcement bar */}
+    <div className="bg-black text-white text-center py-1.5">
+      <p className="text-[9px] tracking-[0.35em] uppercase font-medium">
+        Free Shipping · Orders Above Rp500.000
+      </p>
+    </div>
 
-          {/* Logo */}
-          <Link to="/" className="flex items-center pl-4 pr-6 h-full border-r border-gray-200 shrink-0">
-            <img src="/logo hw web 2.jpg" alt="Highest World" className="h-12 w-auto" />
+        <div className="flex items-center justify-between h-14 px-5 lg:px-8 max-w-[1600px] mx-auto">
+
+          {/* ── Logo ── */}
+          <Link
+            to="/"
+            className="flex items-center shrink-0 group"
+          >
+            <img
+              src="/logo hw web 2.jpg"
+              alt="Highest World"
+              className="h-9 w-auto transition-opacity duration-200 group-hover:opacity-75"
+            />
           </Link>
 
-          {/* Search bar — DESKTOP ONLY */}
-          <div className="hidden lg:flex items-center flex-1 h-full border-r border-gray-200 px-4 gap-2">
-            <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-            <input
-              type="text"
-              placeholder="SEARCH"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && searchQuery.trim()) {
-                  e.preventDefault();
-                  setSearchTrigger(true);
-                }
-              }}
-              className="w-full text-[11px] tracking-[0.2em] uppercase placeholder:text-gray-400 text-gray-800 bg-transparent outline-none font-medium"
-            />
-          </div>
-
-          {/* Mobile spacer */}
-          <div className="flex-1 lg:hidden" />
-
-          {/* Desktop Nav Links */}
-          <div className="hidden lg:flex items-center h-full">
+          {/* ── Desktop Nav ── */}
+          <div className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => (
-              <div key={link.path} className="relative group h-full flex items-center">
-                <Link
-                  to={link.path}
-                  className={cn(
-                    'flex items-center px-5 h-full text-[11px] tracking-[0.18em] uppercase font-medium transition-colors border-r border-gray-200',
-                    location.pathname === link.path ? 'text-gray-900' : 'text-gray-500 hover:text-gray-900'
-                  )}
-                >
-                  {link.name}
-                </Link>
-                {link.hasDropdown && (
-                  <div className="absolute top-full left-0 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                    <div className="bg-white border border-gray-200 shadow-sm w-64">
-                      {categories.map((category, i) => (
-                        <Link
-                          key={category.id}
-                          to={`/koleksi/${category.slug}`}
-                          className={cn(
-                            'flex items-center px-5 py-3 text-[11px] tracking-[0.15em] uppercase font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors',
-                            i !== categories.length - 1 && 'border-b border-gray-100'
-                          )}
-                        >
-                          {category.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
+              <Link
+                key={link.path}
+                to={link.path}
+                className={cn(
+                  'relative text-[11px] tracking-[0.22em] uppercase font-semibold transition-colors duration-200 py-1 group',
+                  location.pathname === link.path
+                    ? 'text-black'
+                    : 'text-gray-400 hover:text-black'
                 )}
-              </div>
+              >
+                {link.name}
+                {/* Animated underline */}
+                <span
+                  className={cn(
+                    'absolute -bottom-0.5 left-0 h-[1.5px] bg-black transition-all duration-300',
+                    location.pathname === link.path
+                      ? 'w-full'
+                      : 'w-0 group-hover:w-full'
+                  )}
+                />
+              </Link>
             ))}
           </div>
 
-          {/* Login — desktop */}
-          <Link
-              to={user ? "/account" : "/login"}
-              className="hidden lg:flex items-center px-5 h-full text-[11px] tracking-[0.18em] uppercase font-medium text-gray-500 hover:text-gray-900 transition-colors border-l border-r border-gray-200">
-              {user ? 'Akun' : 'Login'}
-          </Link>
+          {/* ── Right Icons ── */}
+          <div className="flex items-center gap-1">
 
-          {/* Cart — desktop text style */}
-          <div className="hidden lg:block">
-            <CartDrawer>
-              <button className="flex items-center gap-1.5 px-5 h-[52px] text-[11px] tracking-[0.18em] uppercase font-medium text-gray-500 hover:text-gray-900 transition-colors border-r border-gray-200">
-                <span>Cart</span>
-                <span className="text-gray-900">({cartCount})</span>
-              </button>
-            </CartDrawer>
-          </div>
+            {/* Search button */}
+            <button
+              onClick={() => setSearchOpen(prev => !prev)}
+              className={cn(
+                'flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200',
+                searchOpen ? 'bg-black text-white' : 'text-gray-500 hover:text-black hover:bg-gray-100'
+              )}
+              aria-label="Search"
+            >
+              {searchOpen ? <X className="w-4 h-4" /> : <Search className="w-4 h-4" />}
+            </button>
 
-          {/* Cart — mobile icon + badge */}
-          <div className="lg:hidden">
+            {/* Account — desktop only */}
+            <Link
+              to={user ? '/account' : '/login'}
+              className="hidden lg:flex items-center justify-center w-10 h-10 rounded-full text-gray-500 hover:text-black hover:bg-gray-100 transition-all duration-200"
+              aria-label="Account"
+            >
+              <User className="w-4 h-4" />
+            </Link>
+
+            {/* Cart */}
             <CartDrawer>
-              <button className="flex items-center justify-center w-11 h-[52px] relative">
-                <ShoppingCart className="w-[18px] h-[18px] text-gray-800" strokeWidth={1.5} />
+              <button
+                className="relative flex items-center justify-center w-10 h-10 rounded-full text-gray-500 hover:text-black hover:bg-gray-100 transition-all duration-200"
+                aria-label="Cart"
+              >
+                <ShoppingBag className="w-4 h-4" />
                 {cartCount > 0 && (
-                  <span className="absolute top-2.5 right-1 min-w-[16px] h-4 bg-gray-900 text-white text-[9px] font-bold rounded-sm flex items-center justify-center px-0.5">
-                    {cartCount}
+                  <span className="absolute top-1.5 right-1.5 w-[18px] h-[18px] bg-black text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                    {cartCount > 9 ? '9+' : cartCount}
                   </span>
                 )}
               </button>
             </CartDrawer>
+
+            {/* Mobile Burger */}
+            <button
+              onClick={() => setMobileOpen(prev => !prev)}
+              className="lg:hidden flex flex-col items-center justify-center w-10 h-10 gap-[5px] rounded-full hover:bg-gray-100 transition-all duration-200"
+              aria-label="Menu"
+            >
+              <span className={cn(
+                'block h-[1.5px] bg-black transition-all duration-300 origin-center',
+                mobileOpen ? 'w-5 rotate-45 translate-y-[6.5px]' : 'w-5'
+              )} />
+              <span className={cn(
+                'block h-[1.5px] bg-black transition-all duration-300',
+                mobileOpen ? 'w-0 opacity-0' : 'w-3.5'
+              )} />
+              <span className={cn(
+                'block h-[1.5px] bg-black transition-all duration-300 origin-center',
+                mobileOpen ? 'w-5 -rotate-45 -translate-y-[6.5px]' : 'w-5'
+              )} />
+            </button>
           </div>
+        </div>
 
-          {/* Mobile Burger */}
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild className="lg:hidden">
-              <button className="flex items-center justify-center w-11 h-[52px] border-l border-gray-200">
-                <Menu className="w-[18px] h-[18px] text-gray-800" strokeWidth={1.5} />
+        {/* ── Search Dropdown ── */}
+        <div className={cn(
+          'overflow-hidden transition-all duration-300 border-t border-black/8',
+          searchOpen ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'
+        )}>
+          <div className="flex items-center gap-3 px-5 lg:px-8 h-16 max-w-[1600px] mx-auto">
+            <Search className="w-4 h-4 text-gray-400 shrink-0" />
+            <input
+              autoFocus={searchOpen}
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') triggerSearch();
+                if (e.key === 'Escape') setSearchOpen(false);
+              }}
+              className="flex-1 text-[13px] tracking-wide bg-transparent outline-none text-black placeholder:text-gray-300 font-medium"
+            />
+            {searchQuery && (
+              <button
+                onClick={triggerSearch}
+                className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase font-semibold text-black hover:opacity-60 transition-opacity"
+              >
+                Go <ArrowRight className="w-3.5 h-3.5" />
               </button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[280px] p-0 bg-white border-l border-gray-200">
-              <div className="flex flex-col h-full">
-                {/* Search inside burger */}
-                <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-gray-100">
-                  <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                    <input
-                    type="text"
-                    placeholder="SEARCH"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && searchQuery.trim()) {
-                        e.preventDefault();
-                        setSearchTrigger(true);
-                        setMobileMenuOpen(false);
-                      }
-                    }}
-                    className="w-full text-[11px] tracking-[0.2em] uppercase placeholder:text-gray-400 text-gray-800 bg-transparent outline-none font-medium"
-                  />
-                </div>
-
-                <nav className="flex-1 overflow-y-auto">
-                  {navLinks.map((link, i) =>
-                    link.hasDropdown ? (
-                      <Accordion key={link.path} type="single" collapsible>
-                        <AccordionItem value="koleksi" className="border-none">
-                          <AccordionTrigger className="px-5 py-4 text-[11px] tracking-[0.2em] uppercase font-medium text-gray-500 hover:text-gray-900 hover:no-underline border-t border-gray-100">
-                            {link.name}
-                          </AccordionTrigger>
-                          <AccordionContent className="pb-0">
-                            {categories.map((category) => (
-                              <Link
-                                key={category.id}
-                                to={`/koleksi/${category.slug}`}
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="block px-8 py-3 text-[11px] tracking-[0.15em] uppercase text-gray-400 hover:text-gray-900 transition-colors border-t border-gray-100"
-                              >
-                                {category.name}
-                              </Link>
-                            ))}
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
-                    ) : (
-                      <Link
-                        key={link.path}
-                        to={link.path}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={cn(
-                          'flex items-center px-5 py-4 text-[11px] tracking-[0.2em] uppercase font-medium transition-colors border-t border-gray-100',
-                          location.pathname === link.path ? 'text-gray-900' : 'text-gray-500 hover:text-gray-900'
-                        )}
-                      >
-                        {link.name}
-                      </Link>
-                    )
-                  )}
-                </nav>
-
-                <div className="border-t border-gray-200 px-5 py-4 space-y-3">
-                  <Link
-                      to={user ? "/account" : "/login"}
-                     onClick={() => setMobileMenuOpen(false)}
-                     className="block text-[11px] tracking-[0.2em] uppercase font-medium text-gray-500 hover:text-gray-900 transition-colors"
-                   >
-                      {user ? 'Akun' : 'Login'}
-                  </Link>
-                  <p className="text-[10px] text-gray-300 tracking-widest uppercase">© 2026 Highest World</p>
-                </div>
-
-              </div>
-            </SheetContent>
-          </Sheet>
-
+            )}
+          </div>
         </div>
       </nav>
-      <div className="h-[52px]" />
+
+      {/* ─── MOBILE FULL-SCREEN MENU ────────────────────────────── */}
+      <div className={cn(
+        'fixed inset-0 z-40 bg-white flex flex-col transition-all duration-500 lg:hidden',
+        mobileOpen
+          ? 'opacity-100 pointer-events-auto translate-y-0'
+          : 'opacity-0 pointer-events-none -translate-y-4'
+      )}>
+        {/* Spacer for navbar height */}
+        <div className="h-[89px] shrink-0" />
+
+        <div className="flex-1 flex flex-col px-7 py-8 overflow-y-auto">
+          {/* Nav links — big editorial style */}
+          <nav className="flex-1 space-y-1">
+            {navLinks.map((link, i) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  'group flex items-center justify-between py-4 border-b border-gray-100 transition-all duration-200',
+                  'animate-in fade-in slide-in-from-left-4',
+                )}
+                style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}
+              >
+                <span className={cn(
+                  'text-3xl font-bold tracking-tight uppercase transition-colors duration-200',
+                  location.pathname === link.path ? 'text-black' : 'text-gray-300 group-hover:text-black'
+                )}>
+                  {link.name}
+                </span>
+                <ArrowRight className={cn(
+                  'w-5 h-5 transition-all duration-200 -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100',
+                  location.pathname === link.path && 'translate-x-0 opacity-100 text-black'
+                )} />
+              </Link>
+            ))}
+
+            {/* Categories sub-list */}
+            <div className="pt-6">
+              <p className="text-[9px] tracking-[0.35em] uppercase text-gray-300 mb-3 font-semibold">Categories</p>
+              <div className="flex flex-wrap gap-2">
+                {categories.map((cat) => (
+                  <Link
+                    key={cat.id}
+                    to={`/produk?category=${cat.slug}`}
+                    onClick={() => setMobileOpen(false)}
+                    className="text-[10px] tracking-[0.18em] uppercase font-medium px-3 py-1.5 border border-gray-200 text-gray-500 hover:border-black hover:text-black transition-all duration-200"
+                  >
+                    {cat.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </nav>
+
+          {/* Bottom section */}
+          <div className="pt-8 space-y-4 border-t border-gray-100 mt-8">
+            <Link
+              to={user ? '/account' : '/login'}
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-2 text-[11px] tracking-[0.2em] uppercase font-semibold text-gray-500 hover:text-black transition-colors"
+            >
+              <User className="w-4 h-4" />
+              {user ? 'My Account' : 'Login'}
+            </Link>
+            <p className="text-[9px] text-gray-200 tracking-[0.3em] uppercase">© 2026 Highest World</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Spacer */}
+      <div className="h-[89px]" />
     </>
   );
 };
