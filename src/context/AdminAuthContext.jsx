@@ -18,13 +18,12 @@ export const AdminAuthProvider = ({ children }) => {
       .select('id, email, role, is_active')
       .eq('id', user.id)
       .eq('is_active', true)
-      .single();
+      .maybeSingle(); // pakai maybeSingle biar ga error kalau ga ketemu
 
     if (adminUser) {
       setAdmin({ ...user, ...adminUser });
     } else {
-      setAdmin(null);
-      await supabase.auth.signOut();
+      setAdmin(null); // bukan admin, tapi JANGAN signOut — biar user biasa tetap login
     }
   };
 
@@ -50,10 +49,10 @@ export const AdminAuthProvider = ({ children }) => {
       .select('id, email, role, is_active')
       .eq('id', data.user.id)
       .eq('is_active', true)
-      .single();
+      .maybeSingle();
 
     if (!adminUser) {
-      await supabase.auth.signOut();
+      await supabase.auth.signOut(); // signOut hanya kalau login via admin form tapi bukan admin
       throw new Error('Akses ditolak. Bukan admin.');
     }
 
