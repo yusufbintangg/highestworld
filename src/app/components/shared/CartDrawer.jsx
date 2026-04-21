@@ -56,12 +56,6 @@ export const CartDrawer = ({ children }) => {
               </span>
             )}
           </div>
-          <button
-            onClick={() => setOpen(false)}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-400 hover:text-black"
-          >
-            <X className="w-4 h-4" />
-          </button>
         </div>
 
         {/* ── Empty State ── */}
