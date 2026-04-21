@@ -88,36 +88,43 @@ export const ProductsPage = () => {
         />
       )}
 
-      {/* ── DESKTOP: Sidebar + Main ── */}
-      <div className="hidden lg:flex max-w-[1400px] mx-auto">
 
-        {/* Sidebar filter — sticky */}
-        <aside className="w-56 flex-shrink-0 border-r border-gray-200 sticky top-16 self-start h-[calc(100vh-64px)] overflow-y-auto">
-          <ProductFilter {...filterProps} onClose={null} />
-        </aside>
+        {/* ── DESKTOP: Main only (Filter in topbar) ── */}
+        <div className="hidden lg:flex max-w-[1400px] mx-auto">
+          {/* Filter dropdown - desktop only */}
+          <ProductFilter 
+            {...filterProps} 
+            isDropdown={true}
+            className="ml-6 mt-4 mb-2"
+          />
 
-        {/* Main content */}
-        <div className="flex-1 min-w-0">
+          {/* Main content */}
+          <div className="flex-1 min-w-0">
+
 
           {/* Top bar: count + sort */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-            <p className="text-[10px] tracking-widest uppercase text-gray-400">
-              {loading
-                ? 'Loading...'
-                : `${totalCount} Products`
-              }
-            </p>
-            <ProductSort
-              sortBy={sortBy}
-              sortOptions={SORT_OPTIONS}
-              onSortChange={handleSortChange}
-            />
+
+            <div className="flex items-center gap-4">
+              <p className="text-[10px] tracking-widest uppercase text-gray-400">
+                {loading ? 'Loading...' : `${totalCount} Products`}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Filter button will be here via ProductFilter(isDropdown) */}
+              <ProductSort
+                sortBy={sortBy}
+                sortOptions={SORT_OPTIONS}
+                onSortChange={handleSortChange}
+              />
+            </div>
+
           </div>
 
           {/* Product Grid */}
           <div className="px-4">
             {loading ? (
-              <div className="grid grid-cols-3 lg:grid-cols-4 gap-[2px] pt-[2px]">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-1 pt-2">
                 {[...Array(PRODUCTS_PER_PAGE)].map((_, i) => (
                   <div key={i} className="aspect-[3/4] bg-gray-100 animate-pulse" />
                 ))}
@@ -142,7 +149,7 @@ export const ProductsPage = () => {
           {loading ? 'Loading...' : `${totalCount} Products`}
         </div>
         {loading ? (
-          <div className="grid grid-cols-2 gap-[2px]">
+        <div className="grid grid-cols-2 gap-1">
             {[...Array(PRODUCTS_PER_PAGE)].map((_, i) => (
               <div key={i} className="aspect-[3/4] bg-gray-100 animate-pulse" />
             ))}

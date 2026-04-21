@@ -31,7 +31,7 @@ export const ProductCard = ({ product }) => {
       onMouseLeave={() => setHovered(false)}
     >
       {/* Image Container */}
-      <div className="relative aspect-[4/4] overflow-hidden">
+      <div className="relative aspect-[3/4] overflow-hidden">
         {/* Main Image */}
         {firstImage && (
           <img
