@@ -18,6 +18,7 @@ import { AdminProducts } from './pages/admin/AdminProducts';
 import { AdminOrders } from './pages/admin/AdminOrders';
 import { AdminStock } from './pages/admin/AdminStock';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { AdminAuthProvider } from '@/context/AdminAuthContext';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import { AccountDashboardPage } from './pages/AccountDashboardPage';
@@ -32,6 +33,12 @@ import LoyaltyReferralPage from './pages/LoyaltyReferralPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 
+// Buat wrapper khusus admin
+const AdminWrapper = () => (
+  <AdminAuthProvider>
+    <AdminLayout />
+  </AdminAuthProvider>
+);
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -70,15 +77,16 @@ export const router = createBrowserRouter([
     ],
   },
 
-  {
-    path: '/admin',
-    element: <AdminLayout />,
-    children: [
-      { index: true, element: <AdminDashboard /> },
-      { path: 'produk', element: <AdminProducts /> },
-      { path: 'order', element: <AdminOrders /> },
-      { path: 'stock', element: <AdminStock /> },
-    ],
-  },
-  { path: '/admin/login', element: <AdminLogin /> },
+  // Di routes:
+{
+  path: '/admin',
+  element: <AdminWrapper />,
+  children: [
+    { index: true, element: <AdminDashboard /> },
+    { path: 'produk', element: <AdminProducts /> },
+    { path: 'order', element: <AdminOrders /> },
+    { path: 'stock', element: <AdminStock /> },
+  ],
+},
+{ path: '/admin/login', element: <AdminLogin /> },
 ]);

@@ -18,13 +18,11 @@ import { router } from './routes';
 
 export default function App() {
   return (
-    <AdminAuthProvider>
-      <AuthProvider>
-        <CartProvider>
-          <RouterProvider router={router} />
-          <Toaster position="top-right" />
-        </CartProvider>
-      </AuthProvider>
-    </AdminAuthProvider>
+    <AuthProvider>
+      <CartProvider>
+        <RouterProvider router={router} />
+        <Toaster />
+      </CartProvider>
+    </AuthProvider>
   );
 }
