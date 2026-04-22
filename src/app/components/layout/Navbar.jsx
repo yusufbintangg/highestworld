@@ -36,9 +36,9 @@ export const Navbar = () => {
       setSearchOpen(false);
       setMobileOpen(false);
       if (product?.slug) {
-navigate(`/products/${product.slug}`);
+        navigate(`/products/${product.slug}`);
       } else {
-navigate(`/products?q=${encodeURIComponent(searchQuery)}`);
+        navigate(`/products?q=${encodeURIComponent(searchQuery)}`);
       }
     }
   }, [searchTrigger, product, loading, searchQuery, navigate]);
@@ -84,12 +84,12 @@ navigate(`/products?q=${encodeURIComponent(searchQuery)}`);
             : 'bg-white border-b border-black/10'
         )}
       >
-    {/* Top announcement bar */}
-    <div className="bg-black text-white text-center py-1.5">
-      <p className="text-[9px] tracking-[0.35em] uppercase font-medium">
-        Free Shipping · Orders Above Rp500.000
-      </p>
-    </div>
+        {/* Top announcement bar */}
+        <div className="bg-black text-white text-center py-1.5">
+          <p className="text-[9px] tracking-[0.35em] uppercase font-medium">
+            Free Shipping · Orders Above Rp500.000
+          </p>
+        </div>
 
         <div className="flex items-center justify-between h-14 px-5 lg:px-8 max-w-[1600px] mx-auto">
 
@@ -268,7 +268,7 @@ navigate(`/products?q=${encodeURIComponent(searchQuery)}`);
                 {categories.map((cat) => (
                   <Link
                     key={cat.id}
-`/products?category=${cat.slug}`
+                    to={`/products?category=${cat.slug}`}
                     onClick={() => setMobileOpen(false)}
                     className="text-[10px] tracking-[0.18em] uppercase font-medium px-3 py-1.5 border border-gray-200 text-gray-500 hover:border-black hover:text-black transition-all duration-200"
                   >
@@ -299,3 +299,4 @@ navigate(`/products?q=${encodeURIComponent(searchQuery)}`);
     </>
   );
 };
+

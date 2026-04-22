@@ -16,13 +16,17 @@ import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminLayout } from './pages/admin/AdminLayout';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminProducts } from './pages/admin/AdminProducts';
-import { Adminorders } from './pages/admin/Adminorders';
+
+import { AdminOrders } from './pages/admin/AdminOrders';
+
 import { AdminStock } from './pages/admin/AdminStock';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import { AccountDashboardPage } from './pages/AccountDashboardPage';
-import { AccountordersPage } from './pages/AccountordersPage';
+
+import { AccountOrdersPage } from './pages/AccountOrdersPage';
+
 import { AccountAddressesPage } from './pages/AccountAddressesPage';
 import { AccountSettingsPage } from './pages/AccountSettingsPage';
 import { AccountSecurityPage } from './pages/AccountSecurityPage';
@@ -67,7 +71,9 @@ export const router = createBrowserRouter([
 
       { path: 'checkout', element: <CheckoutPage /> },
       { path: 'account', element: <ProtectedRoute><AccountDashboardPage /></ProtectedRoute> },
-      { path: 'account/orders', element: <ProtectedRoute><AccountordersPage /></ProtectedRoute> },
+
+      { path: 'account/orders', element: <ProtectedRoute><AccountOrdersPage /></ProtectedRoute> },
+
       { path: 'account/addresses', element: <ProtectedRoute><AccountAddressesPage /></ProtectedRoute> },
       { path: 'account/settings', element: <ProtectedRoute><AccountSettingsPage /></ProtectedRoute> },
       { path: 'account/security', element: <ProtectedRoute><AccountSecurityPage /></ProtectedRoute> },
@@ -88,7 +94,9 @@ export const router = createBrowserRouter([
   children: [
     { index: true, element: <AdminDashboard /> },
     { path: 'produk', element: <AdminProducts /> },
-    { path: 'order', element: <Adminorders /> },
+
+    { path: 'order', element: <AdminOrders /> },
+
     { path: 'stock', element: <AdminStock /> },
   ],
 },
