@@ -287,9 +287,9 @@ export const Navbar = () => {
           </div>
         </div>
       </div>
-
+        {/* atur jarak content dan navbar*/}
       {/* Spacer */}
-      <div className="h-[89px]" />
+      <div className="h-14" />
     </>
   );
 };
