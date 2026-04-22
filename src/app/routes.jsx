@@ -11,6 +11,7 @@ import { CheckoutPage } from './pages/CheckoutPage';
 import { OrderDetailPage } from './pages/OrderDetailPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { Layout } from './Layout';
+import { AdminAuthProvider } from '@/context/AdminAuthContext';
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminLayout } from './pages/admin/AdminLayout';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
@@ -18,7 +19,6 @@ import { AdminProducts } from './pages/admin/AdminProducts';
 import { AdminOrders } from './pages/admin/AdminOrders';
 import { AdminStock } from './pages/admin/AdminStock';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { AdminAuthProvider } from '@/context/AdminAuthContext';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import { AccountDashboardPage } from './pages/AccountDashboardPage';
@@ -33,13 +33,17 @@ import LoyaltyReferralPage from './pages/LoyaltyReferralPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 
-// Buat wrapper khusus admin
 const AdminWrapper = () => (
   <AdminAuthProvider>
     <AdminLayout />
   </AdminAuthProvider>
 );
 
+const AdminLoginWrapper = () => (
+  <AdminAuthProvider>
+    <AdminLogin />
+  </AdminAuthProvider>
+);
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },
@@ -88,5 +92,5 @@ export const router = createBrowserRouter([
     { path: 'stock', element: <AdminStock /> },
   ],
 },
-{ path: '/admin/login', element: <AdminLogin /> },
+{ path: '/admin/login', element: <AdminLoginWrapper /> },
 ]);
