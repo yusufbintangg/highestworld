@@ -293,12 +293,12 @@ export const useCheckout = () => {
         onSuccess: async (result) => {
           try { await saveProfileIfNeeded(); } catch {}
           clearCart();
-          window.location.href = '/orders//' + result.order_number;
+          window.location.href = '/orders/' + result.order_number;
         },
         onPending: async (result) => {
           await saveProfileIfNeeded();
           clearCart();
-          window.location.href = '/orders//' + result.order_number;
+          window.location.href = '/orders/' + result.order_number;
         },
         onError: () => {
           toast.error('Pembayaran gagal. Silakan coba lagi.');
@@ -307,7 +307,7 @@ export const useCheckout = () => {
         onClose: (result) => {
           setIsProcessing(false);
           if (result?.order_number) {
-            window.location.href = '/orders//' + result.order_number;
+            window.location.href = '/orders/' + result.order_number;
           }
         },
       });
@@ -323,7 +323,7 @@ export const useCheckout = () => {
     const actualShippingCost = selectedRate?.price || 0;
     const actualGrandTotal = cartTotal + actualShippingCost;
 
-    let message = `📦 orders/ BARU - ${orderId}\n\n`;
+    let message = `📦 orders BARU - ${orderId}\n\n`;
     message += `👤 DATA PEMBELI:\nNama: ${formData.firstName} ${formData.lastName}\nEmail: ${formData.email}\nTelepon: ${formData.phone}\n\n`;
     message += `📍 ALAMAT:\n${formData.address}\n${formData.city}, ${formData.province} ${formData.postalCode}\n\n`;
     if (formData.notes) message += `📝 Catatan: ${formData.notes}\n\n`;

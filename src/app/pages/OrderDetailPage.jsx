@@ -176,7 +176,7 @@ export const OrderDetailPage = () => {
             <XCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
             <div>
               <p className="text-xs font-semibold text-red-600">Waktu pembayaran habis</p>
-              <p className="text-[11px] text-red-500 mt-0.5">orders/ ini sudah expired. Silakan buat orders/ baru.</p>
+              <p className="text-[11px] text-red-500 mt-0.5">orders ini sudah expired. Silakan buat orders baru.</p>
             </div>
           </div>
         )}

@@ -87,7 +87,7 @@ export const Navbar = () => {
         {/* Top announcement bar */}
         <div className="bg-black text-white text-center py-1.5">
           <p className="text-[9px] tracking-[0.35em] uppercase font-medium">
-            Free Shipping · Orders Above Rp500.000
+            
           </p>
         </div>
 

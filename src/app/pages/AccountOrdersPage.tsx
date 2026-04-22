@@ -92,7 +92,7 @@ export const AccountOrdersPage = () => {
           className="pt-12 pb-16 border-b border-[var(--border)]"
         >
           <p className="text-sm uppercase tracking-[0.2em] text-[var(--text-muted)] mb-4">
-            Riwayat orders/
+            Riwayat orders
           </p>
           <h1 className="text-5xl md:text-7xl font-light text-[var(--text-primary)]">
             Orders
@@ -192,7 +192,7 @@ export const AccountOrdersPage = () => {
                             </p>
                           </div>
                           <Link
-                            to={`/orders//${order.order_number}`}
+                            to={`/orders/${order.order_number}`}
                             className="px-6 py-3 border border-[var(--border)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] text-sm transition-colors"
                           >
                             Track Order
@@ -203,7 +203,7 @@ export const AccountOrdersPage = () => {
                       {/* Actions */}
                       <div className="pt-6 border-t border-[var(--border)] flex gap-3">
                         <Link
-                          to={`/orders//${order.order_number}`}
+                          to={`/orders/${order.order_number}`}
                           className="px-6 py-3 border border-[var(--border)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] text-sm transition-colors"
                         >
                           Lihat Detail
@@ -218,7 +218,7 @@ export const AccountOrdersPage = () => {
                 <div className="py-16 text-center">
                   <Package className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
                   <p className="text-sm text-[var(--text-muted)]">
-                    {orders.length === 0 ? 'Belum ada orders/' : 'Tidak ada orders/ dengan status ini'}
+                    {orders.length === 0 ? 'Belum ada orders' : 'Tidak ada orders dengan status ini'}
                   </p>
                 </div>
               )}
