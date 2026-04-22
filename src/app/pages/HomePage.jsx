@@ -284,7 +284,7 @@ export const HomePage = () => {
           {loading ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[2px]">
               {[...Array(12)].map((_, i) => (
-                <div key={i} className="aspect-[3/4] bg-gray-100 animate-pulse" />
+                <div key={i} className="aspect-[4/4] bg-gray-100 animate-pulse" />
               ))}
             </div>
           ) : activeProducts.length > 0 ? (

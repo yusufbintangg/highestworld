@@ -197,7 +197,7 @@ export const ProductDetailPage = () => {
           <div className="text-[10px] tracking-widest uppercase text-gray-400 pt-4 mb-4 flex gap-2 items-center">
             <span className="hover:text-black cursor-pointer transition-colors" onClick={() => navigate('/')}>Home</span>
             <span className="text-gray-300">/</span>
-            <span className="hover:text-black cursor-pointer transition-colors" onClick={() => navigate('/produk')}>
+            <span className="hover:text-black cursor-pointer transition-colors" onClick={() => navigate('/products')}>
               {product.categories?.name || 'Products'}
             </span>
             <span className="text-gray-300">/</span>
