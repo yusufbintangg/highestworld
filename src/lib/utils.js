@@ -83,7 +83,7 @@ export function generateGeneralWAMessage(message = "") {
 
 // Generate product share URL
 export function generateShareURL(product) {
-  return `${SITE_CONFIG.url}/produk/${product.slug}`;
+  return `${SITE_CONFIG.url}/products/${product.slug}`;
 }
 
 // Filter products by criteria

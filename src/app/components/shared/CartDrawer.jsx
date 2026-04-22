@@ -7,11 +7,14 @@ import { useAuth } from '../../../context/AuthContext';
 import { formatPrice, generateCartWAMessage } from '../../../lib/utils';
 import { cn } from '../../../lib/utils';
 
-export const CartDrawer = ({ children }) => {
+export const CartDrawer = ({ children, disabled = false }) => {
   const navigate  = useNavigate();
   const { cartItems, removeFromCart, updateQuantity, getCartTotal } = useCart();
   const { isAuthenticated } = useAuth();
   const [open, setOpen] = React.useState(false);
+
+  // Disabled: no drawer, just render children
+  if (disabled) return children;
 
   const total     = getCartTotal();
   const itemCount = cartItems.reduce((s, i) => s + i.quantity, 0);

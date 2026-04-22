@@ -150,20 +150,22 @@ export const Navbar = () => {
               <User className="w-4 h-4" />
             </Link>
 
-            {/* Cart */}
-            <CartDrawer>
-              <button
-                className="relative flex items-center justify-center w-10 h-10 rounded-full text-gray-500 hover:text-black hover:bg-gray-100 transition-all duration-200"
-                aria-label="Cart"
-              >
-                <ShoppingBag className="w-4 h-4" />
-                {cartCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-[18px] h-[18px] bg-black text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
-                    {cartCount > 9 ? '9+' : cartCount}
-                  </span>
-                )}
-              </button>
-            </CartDrawer>
+            {/* Cart - HIDE ON CHECKOUT */}
+            {location.pathname !== '/checkout' && (
+              <CartDrawer>
+                <button
+                  className="relative flex items-center justify-center w-10 h-10 rounded-full text-gray-500 hover:text-black hover:bg-gray-100 transition-all duration-200"
+                  aria-label="Cart"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  {cartCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-[18px] h-[18px] bg-black text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                      {cartCount > 9 ? '9+' : cartCount}
+                    </span>
+                  )}
+                </button>
+              </CartDrawer>
+            )}
 
             {/* Mobile Burger */}
             <button

@@ -37,7 +37,7 @@ serve(async (req) => {
         description: skuSize,  // ← SKU.SIZE tampil di sini
         value: item.price,
 
-        weight: item.products?.weight || item.product_weight || 500,
+        weight: item.products?.weight || item.product_weight || 100,
         quantity: item.qty,
       };
     });

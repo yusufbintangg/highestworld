@@ -48,11 +48,11 @@ export const useCheckout = () => {
     }));
   }, [user?.id, user?.name, user?.phone, user?.email]);
 
-  // Redirect kalau cart kosong
+// Redirect kalau cart kosong - EXCLUDE checkout direct access
   useEffect(() => {
-    if (cartItems.length === 0) {
+    if (cartItems.length === 0 && !document.referrer.includes('/products') && !document.referrer.includes('/product')) {
       toast.error('Keranjang Anda kosong');
-      navigate('/produk');
+      navigate('/products');
     }
   }, [cartItems, navigate]);
 
@@ -173,7 +173,7 @@ export const useCheckout = () => {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const totalWeight = cartItems.reduce((sum, item) => sum + ((item.product?.weight || 500) * item.quantity), 0);
+      const totalWeight = cartItems.reduce((sum, item) => sum + ((item.product?.weight || 100) * item.quantity), 0);
       const response = await fetch(`${supabaseUrl}/functions/v1/biteship-rates`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseKey}` },

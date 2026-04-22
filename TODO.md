@@ -1,17 +1,47 @@
-# TODO: Route Audit COMPLETE ✅
+# CHECKOUT VS CART SYSTEM FIX - PHASE 1 (Quick Fix)
+Status: 🚀 READY TO IMPLEMENT
 
-## ✅ All Done
-- [x] Audit project (0 Indo paths found)
-- [x] Fixed 5 `/produk` → `/products` di 3 files
-  - Navbar.jsx (3 spots: search + mobile categories)
-  - Footer.jsx (categories)
-  - CartDrawer.jsx (empty state)
-- [x] Routes 100% English & dynamic params OK
-- [x] Navigation flow tested
+## ✅ TODO STEPS (Phase 1 - Hide Cart in Checkout)
 
-## 📊 Final Status
-**Routing konsisten!** No Indo paths left.
+### 1. ✅ Edit Navbar.jsx
+- Hide CartDrawer button saat location.pathname === '/checkout'
 
-**Test:** `pnpm dev` → search, cart, footer links all → /products*
+### 2. ✅ Edit CartDrawer.jsx  
+- Add `disabled` prop → return children only (no drawer)
 
-Production ready 🚀
+### 3. ✅ Test Flow
+```
+ProductDetail → Buy Now (1 item) → Checkout 
+✅ CartDrawer hidden
+✅ Navbar simplified
+✅ Ongkir fixed
+```
+
+### 3. [ ] Test Flow
+```
+ProductDetail → Buy Now (1 item) → Checkout 
+✅ CartDrawer hidden
+✅ Ongkir fixed (ga berubah)
+✅ Navbar simplified
+```
+
+### 4. [ ] Verify Biteship
+```
+console.log(totalWeight) → pastiin sum semua items qty*weight
+```
+
+## 🔧 NEW ISSUE: REFRESH CHECKOUT → WRONG REDIRECT
+
+### 4. ✅ Fix Checkout Refresh Flow (FINAL)
+- Problem: Refresh `/checkout` → redirect ke /produk 
+- Fix: `document.referrer.includes('/products') || '/product'` + `navigate('/products')`
+
+## ⏳ AFTER PHASE 1 SUCCESS → Optional Phase 2
+```
+[ ] Cart snapshot in useCheckout.js  
+[ ] Decouple checkout from live cart
+```
+
+**Current: PHASE 1 - QUICK WIN (15 mins)**
+**Test Command: `pnpm dev`**
+

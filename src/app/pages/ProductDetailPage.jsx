@@ -129,7 +129,7 @@ export const ProductDetailPage = () => {
       {
         ...product,
         price: activePrice,
-        weight: product.weight || 500,
+        weight: product.weight || 100,
         variantId: selectedVariant?.id || null,
         variantImages: selectedVariant?.images || [],
         maxStock: currentStock,
