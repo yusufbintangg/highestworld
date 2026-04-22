@@ -85,12 +85,6 @@ export const Navbar = () => {
         )}
       >
         {/* Top announcement bar */}
-        <div className="bg-black text-white text-center py-1.5">
-          <p className="text-[9px] tracking-[0.35em] uppercase font-medium">
-            
-          </p>
-        </div>
-
         <div className="flex items-center justify-between h-14 px-5 lg:px-8 max-w-[1600px] mx-auto">
 
           {/* ── Logo ── */}
