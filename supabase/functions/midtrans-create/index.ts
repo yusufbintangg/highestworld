@@ -159,7 +159,7 @@ serve(async (req) => {
         await sendEmail(
           resendKey,
           customer.email,
-          `orders #${orderNumber} Diterima — Selesaikan Pembayaran`,
+          `Orders Anda #${orderNumber} Diterima — Selesaikan Pembayaran`,
           html
         );
       } catch (emailError) {
