@@ -176,6 +176,9 @@ to={`/products?category=${cat.slug}`}
         <p className="text-[10px] tracking-[0.25em] uppercase font-bold text-white/20">
           Big Size. <span className="text-white/40">Real Style.</span>
         </p>
+        <p className="text-[10px] tracking-[0.2em] uppercase text-black/10">
+          V.1.1.1
+        </p>
       </div>
 
     </footer>
