@@ -30,7 +30,7 @@ export const Footer = () => {
     { name: 'Shop',     path: '/products' },
     { name: 'Look',     path: '/about' },
     { name: 'Dealers',  path: '/contact' },
-  //{ name: 'Konfirmasi Pembayaran', path: '/payment-confirmation' },
+    { name: 'Collections', path: '/collections' },
   ];
 
   return (
