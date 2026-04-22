@@ -102,7 +102,7 @@ serve(async (req) => {
         phone: customer.phone,
         email: customer.email || "customer@highestworld.id",
       },
-      callbacks: { finish: `${frontendUrl}/pesanan/${orderNumber}` },
+      callbacks: { finish: `${frontendUrl}/orders/${orderNumber}` },
       item_details: [
         ...items.map(i => ({
           id: i.product_id,
@@ -159,7 +159,7 @@ serve(async (req) => {
         await sendEmail(
           resendKey,
           customer.email,
-          `Pesanan #${orderNumber} Diterima — Selesaikan Pembayaran`,
+          `orders/ #${orderNumber} Diterima — Selesaikan Pembayaran`,
           html
         );
       } catch (emailError) {

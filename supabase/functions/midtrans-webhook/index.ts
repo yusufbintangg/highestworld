@@ -136,7 +136,7 @@ serve(async (req) => {
       // 3. WA notif ke admin
       if (fonnteToken && adminWa) {
         const o = payment.orders;
-        const msg = `🛍️ ORDER BARU MASUK!\n\nNo: ${o.order_number}\nCustomer: ${o.customer_name}\nHP: ${o.customer_phone}\nTotal: Rp ${o.total?.toLocaleString("id-ID")}\nKurir: ${o.courier?.toUpperCase()} ${o.courier_service}\n\nSegera proses pesanan! 🚀`;
+        const msg = `🛍️ ORDER BARU MASUK!\n\nNo: ${o.order_number}\nCustomer: ${o.customer_name}\nHP: ${o.customer_phone}\nTotal: Rp ${o.total?.toLocaleString("id-ID")}\nKurir: ${o.courier?.toUpperCase()} ${o.courier_service}\n\nSegera proses orders/! 🚀`;
 
         await fetch("https://api.fonnte.com/send", {
           method: "POST",

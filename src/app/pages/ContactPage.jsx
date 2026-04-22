@@ -1,22 +1,25 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { MessageCircle, Mail, Phone, Instagram, Music, MapPin } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Textarea } from '../components/ui/textarea';
-import { Label } from '../components/ui/label';
-import { Separator } from '../components/ui/separator';
+import { motion } from 'motion/react';
+import { MessageCircle, Mail, Clock, Instagram, Music, MapPin, ArrowUpRight, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { SITE_CONFIG } from '../../lib/config';
 import { generateGeneralWAMessage } from '../../lib/utils';
 
 const contactSchema = z.object({
-  name: z.string().min(2, 'Nama minimal 2 karakter'),
-  email: z.string().email('Email tidak valid'),
-  phone: z.string().min(10, 'Nomor telepon tidak valid'),
+  name:    z.string().min(2, 'Nama minimal 2 karakter'),
+  email:   z.string().email('Email tidak valid'),
+  phone:   z.string().min(10, 'Nomor telepon tidak valid'),
   message: z.string().min(10, 'Pesan minimal 10 karakter'),
 });
+
+const inputClass = `
+  w-full bg-transparent border-b border-black/15 py-3 text-sm text-black
+  placeholder:text-gray-300 outline-none
+  focus:border-black transition-colors duration-200
+  tracking-wide
+`.trim();
 
 export const ContactPage = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
@@ -24,237 +27,219 @@ export const ContactPage = () => {
   });
 
   const onSubmit = (data) => {
-    const message = `Halo Highest World!
-
-Nama: ${data.name}
-Email: ${data.email}
-No. HP: ${data.phone}
-
-Pesan:
-${data.message}`;
-
-    const waUrl = `https://wa.me/${SITE_CONFIG.phone}?text=${encodeURIComponent(message)}`;
-    window.open(waUrl, '_blank');
+    const message = `Halo Highest World!\n\nNama: ${data.name}\nEmail: ${data.email}\nNo. HP: ${data.phone}\n\nPesan:\n${data.message}`;
+    window.open(`https://wa.me/${SITE_CONFIG.phone}?text=${encodeURIComponent(message)}`, '_blank');
     toast.success('Membuka WhatsApp...');
     reset();
   };
 
+  const socials = [
+    { icon: Instagram, label: 'Instagram', handle: SITE_CONFIG.instagram, url: `https://instagram.com/${SITE_CONFIG.instagram.replace('@', '')}` },
+    { icon: Music,     label: 'TikTok',    handle: SITE_CONFIG.tiktok,    url: `https://tiktok.com/@highestbigsizeofficial` },
+  ];
+
   return (
-    <div className="min-h-screen pt-32 pb-20">
-      <div className="container mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="font-display text-5xl md:text-6xl tracking-[0.1em] mb-4">
-            HUBUNGI KAMI
-          </h1>
-          <div className="w-24 h-1 bg-accent-gold mx-auto mb-6"></div>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Punya pertanyaan? Ingin konsultasi ukuran? Tim kami siap membantu Anda. 
-            Hubungi kami melalui formulir atau kontak langsung di bawah ini.
+    <div className="min-h-screen bg-white text-black pb-24">
+
+      {/* ── Header ── */}
+      <div className="max-w-[1600px] mx-auto px-5 lg:px-8 pt-12 pb-12 border-b border-black/8">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <p className="text-[9px] tracking-[0.4em] uppercase text-gray-300 mb-4 font-medium">
+            Highest World — Contact
           </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
-          {/* Contact Form */}
-          <div className="bg-card border border-border rounded-lg p-8">
-            <h2 className="font-subheading text-2xl uppercase tracking-wider mb-6">
-              Kirim Pesan
-            </h2>
-
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div>
-                <Label htmlFor="name">Nama Lengkap *</Label>
-                <Input
-                  id="name"
-                  {...register('name')}
-                  placeholder="Masukkan nama lengkap"
-                  className="mt-2"
-                />
-                {errors.name && (
-                  <p className="text-destructive text-sm mt-1">{errors.name.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  {...register('email')}
-                  placeholder="email@example.com"
-                  className="mt-2"
-                />
-                {errors.email && (
-                  <p className="text-destructive text-sm mt-1">{errors.email.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="phone">Nomor WhatsApp *</Label>
-                <Input
-                  id="phone"
-                  {...register('phone')}
-                  placeholder="08123456789"
-                  className="mt-2"
-                />
-                {errors.phone && (
-                  <p className="text-destructive text-sm mt-1">{errors.phone.message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="message">Pesan *</Label>
-                <Textarea
-                  id="message"
-                  {...register('message')}
-                  placeholder="Tuliskan pesan Anda di sini..."
-                  rows={5}
-                  className="mt-2"
-                />
-                {errors.message && (
-                  <p className="text-destructive text-sm mt-1">{errors.message.message}</p>
-                )}
-              </div>
-
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full bg-accent-gold hover:bg-accent-gold-light text-accent-gold font-subheading uppercase"
-              >
-                <MessageCircle className="w-5 h-5 mr-2" />
-                KIRIM VIA WHATSAPP
-              </Button>
-            </form>
-          </div>
-
-          {/* Contact Info */}
-          <div className="space-y-8">
-            <div>
-              <h2 className="font-subheading text-2xl uppercase tracking-wider mb-6">
-                Info Kontak
-              </h2>
-
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-accent-gold/10 flex items-center justify-center flex-shrink-0">
-                    <MessageCircle className="w-6 h-6 text-accent-gold" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">WhatsApp</h3>
-                    <a
-                      href={generateGeneralWAMessage()}
-                      className="text-muted-foreground hover:text-accent-gold transition-colors"
-                    >
-                      +{SITE_CONFIG.phone}
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-accent-gold/10 flex items-center justify-center flex-shrink-0">
-                    <Mail className="w-6 h-6 text-accent-gold" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Email</h3>
-                    <a
-                      href={`mailto:${SITE_CONFIG.email}`}
-                      className="text-muted-foreground hover:text-accent-gold transition-colors"
-                    >
-                      {SITE_CONFIG.email}
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-accent-gold/10 flex items-center justify-center flex-shrink-0">
-                    <Phone className="w-6 h-6 text-accent-gold" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Jam Operasional</h3>
-                    <p className="text-muted-foreground text-sm">
-                      Senin - Jumat: {SITE_CONFIG.operationalHours.weekdays}
-                    </p>
-                    <p className="text-muted-foreground text-sm">
-                      Sabtu - Minggu: {SITE_CONFIG.operationalHours.weekend}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div>
-              <h3 className="font-subheading text-xl uppercase tracking-wider mb-4">
-                Sosial Media
-              </h3>
-              <div className="flex gap-4">
-                {[
-                  { icon: Instagram, url: `https://instagram.com/${SITE_CONFIG.instagram.replace('@', '')}`, name: 'Instagram' },
-                  { icon: Music, url: `https://tiktok.com/${SITE_CONFIG.tiktok.replace('@', '')}`, name: 'TikTok' },
-                ].map((social, index) => {
-                  const Icon = social.icon;
-                  return (
-                    <a
-                      key={index}
-                      href={social.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-14 h-14 rounded-full border-2 border-border hover:border-accent-gold flex items-center justify-center transition-all group"
-                    >
-                      <Icon className="w-6 h-6 text-muted-foreground group-hover:text-accent-gold transition-colors" />
-                    </a>
-                  );
-                })}
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Chat Now Button */}
-            <Button
-              asChild
-              size="lg"
-              className="w-full bg-accent-gold hover:bg-accent-gold-light text-accent-gold font-subheading uppercase"
-            >
-              <a href={generateGeneralWAMessage()}>
-                <MessageCircle className="w-5 h-5 mr-2" />
-                CHAT WHATSAPP LANGSUNG
-              </a>
-            </Button>
-
-            {/* Google Maps */}
-            <Separator />
-
-            <div>
-              <h3 className="font-subheading text-xl uppercase tracking-wider mb-4 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-accent-gold" />
-                Lokasi Toko
-              </h3>
-              <div className="rounded-lg overflow-hidden border border-border h-64">
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3952.523469764618!2d110.4003815!3d-7.1042166!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7088e767bb481b%3A0x5c07527a968091ed!2sHighest%20World!5e0!3m2!1sid!2sid!4v1700000000000!5m2!1sid!2sid"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title="Lokasi Highest World"
-                />
-              </div>
-              <a
-                href="https://www.google.com/maps/place/Highest+World/@-7.1042166,110.4003815,17z/data=!3m1!4b1!4m6!3m5!1s0x2e7088e767bb481b:0x5c07527a968091ed!8m2!3d-7.1042166!4d110.4029564!16s%2Fg%2F11j4028cgf?entry=ttu&g_ep=EgoyMDI2MDMwNS4wIKXMDSoASAFQAw%3D%3D"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block text-center text-sm text-muted-foreground hover:text-accent-gold transition-colors mt-2"
-              >
-                Buka di Google Maps →
-              </a>
-            </div>
-          </div>
-        </div>
+          <h1 className="text-5xl lg:text-7xl font-black tracking-tighter uppercase leading-none">
+            Let's Talk
+          </h1>
+        </motion.div>
       </div>
+
+      {/* ── Main grid ── */}
+      <div className="max-w-[1600px] mx-auto px-5 lg:px-8 grid lg:grid-cols-5 gap-16 py-16">
+
+        {/* ── LEFT: Form (3/5) ── */}
+        <motion.div
+          className="lg:col-span-3"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <p className="text-[9px] tracking-[0.35em] uppercase text-gray-300 mb-8 font-semibold">
+            Send a Message
+          </p>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            <div>
+              <input
+                {...register('name')}
+                placeholder="Nama Lengkap"
+                className={inputClass}
+              />
+              {errors.name && <p className="text-red-400 text-xs mt-1 tracking-wide">{errors.name.message}</p>}
+            </div>
+            <div>
+              <input
+                {...register('email')}
+                type="email"
+                placeholder="Email"
+                className={inputClass}
+              />
+              {errors.email && <p className="text-red-400 text-xs mt-1 tracking-wide">{errors.email.message}</p>}
+            </div>
+            <div>
+              <input
+                {...register('phone')}
+                placeholder="Nomor WhatsApp"
+                className={inputClass}
+              />
+              {errors.phone && <p className="text-red-400 text-xs mt-1 tracking-wide">{errors.phone.message}</p>}
+            </div>
+            <div>
+              <textarea
+                {...register('message')}
+                placeholder="Pesan Anda..."
+                rows={4}
+                className={`${inputClass} resize-none`}
+              />
+              {errors.message && <p className="text-red-400 text-xs mt-1 tracking-wide">{errors.message.message}</p>}
+            </div>
+
+            <button
+              type="submit"
+              className="flex items-center gap-2 text-[11px] tracking-[0.25em] uppercase font-bold bg-black text-white px-8 py-4 hover:bg-gray-900 transition-colors group"
+            >
+              Kirim via WhatsApp
+              <Send className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+            </button>
+          </form>
+        </motion.div>
+
+        {/* ── RIGHT: Info (2/5) ── */}
+        <motion.div
+          className="lg:col-span-2 space-y-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          {/* Contact info */}
+          <div>
+            <p className="text-[9px] tracking-[0.35em] uppercase text-gray-300 mb-6 font-semibold">
+              Contact Info
+            </p>
+            <div className="space-y-6">
+              {[
+                {
+                  icon: MessageCircle,
+                  label: 'WhatsApp',
+                  value: `+${SITE_CONFIG.phone}`,
+                  href: generateGeneralWAMessage(),
+                },
+                {
+                  icon: Mail,
+                  label: 'Email',
+                  value: SITE_CONFIG.email,
+                  href: `mailto:${SITE_CONFIG.email}`,
+                },
+                {
+                  icon: Clock,
+                  label: 'Jam Operasional',
+                  value: `Sen–Jum ${SITE_CONFIG.operationalHours.weekdays}\nSab–Min ${SITE_CONFIG.operationalHours.weekend}`,
+                  href: null,
+                },
+              ].map(({ icon: Icon, label, value, href }) => (
+                <div key={label} className="flex items-start gap-4">
+                  <div className="w-8 h-8 border border-black/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <Icon className="w-3.5 h-3.5 text-gray-400" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] tracking-[0.3em] uppercase text-gray-300 mb-1 font-semibold">{label}</p>
+                    {href ? (
+                      <a
+                        href={href}
+                        target={href.startsWith('http') ? '_blank' : undefined}
+                        rel="noopener noreferrer"
+                        className="text-sm text-gray-600 hover:text-black transition-colors whitespace-pre-line"
+                      >
+                        {value}
+                      </a>
+                    ) : (
+                      <p className="text-sm text-gray-600 whitespace-pre-line">{value}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Socials */}
+          <div>
+            <p className="text-[9px] tracking-[0.35em] uppercase text-gray-300 mb-6 font-semibold">
+              Follow Us
+            </p>
+            <div className="space-y-3">
+              {socials.map(({ icon: Icon, label, handle, url }) => (
+                <a
+                  key={label}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center justify-between border border-black/8 px-4 py-3 hover:border-black transition-all duration-200"
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className="w-4 h-4 text-gray-400 group-hover:text-black transition-colors" />
+                    <div>
+                      <p className="text-[10px] tracking-widest uppercase font-bold text-black">{label}</p>
+                      <p className="text-[10px] text-gray-400 tracking-wide">{handle}</p>
+                    </div>
+                  </div>
+                  <ArrowUpRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-black transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick WA CTA */}
+          <a
+            href={generateGeneralWAMessage()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between w-full border border-black/8 px-5 py-4 hover:border-black hover:bg-black hover:text-white transition-all duration-300 group"
+          >
+            <div className="flex items-center gap-3">
+              <MessageCircle className="w-4 h-4" />
+              <span className="text-[11px] tracking-[0.2em] uppercase font-bold">Chat Langsung</span>
+            </div>
+            <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </a>
+
+          {/* Maps */}
+          
+        </motion.div>
+      </div>
+      <div className="max-w-[1600px] mx-auto px-5 lg:px-8 py-16 border-t border-black/8">
+            <p className="text-[9px] tracking-[0.35em] uppercase text-gray-300 mb-4 font-semibold flex items-center gap-2">
+              <MapPin className="w-3 h-3" /> Lokasi Toko
+            </p>
+            <div className="overflow-hidden border border-black/8 h-180">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3952.523469764618!2d110.4003815!3d-7.1042166!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7088e767bb481b%3A0x5c07527a968091ed!2sHighest%20World!5e0!3m2!1sid!2sid!4v1700000000000!5m2!1sid!2sid"
+                width="100%"
+                height="100%"
+                style={{ border: 0, filter: 'grayscale(30%)' }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Lokasi Highest World"
+              />
+            </div>
+            <a
+              href="https://www.google.com/maps/place/Highest+World/@-7.1042166,110.4003815,17z"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-[10px] tracking-widest uppercase text-gray-400 hover:text-black transition-colors mt-2"
+            >
+              Buka di Google Maps <ArrowUpRight className="w-3 h-3" />
+            </a>
+          </div>
     </div>
   );
 };

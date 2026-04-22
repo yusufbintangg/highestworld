@@ -26,7 +26,7 @@ export const ProductCard = ({ product }) => {
   return (
     <div
       className="group cursor-pointer"
-      onClick={() => navigate(`/produk/${product.slug}`)}
+onClick={() => navigate(`/products/${product.slug}`)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >

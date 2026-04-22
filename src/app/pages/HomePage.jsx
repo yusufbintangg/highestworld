@@ -163,11 +163,12 @@ export const HomePage = () => {
               </p>
             </div>
             {categories.slice(0, 3).map((cat) => (
-              <Link
-                key={cat.id}
-                to={`/produk?category=${encodeURIComponent(cat.slug)}`}
-                className="flex-1 px-8 py-6 flex items-center hover:bg-gray-50 transition-colors group"
-              >
+
+                <Link
+                  key={cat.id}
+                  to={`/products?category=${encodeURIComponent(cat.slug)}`}
+                  className="flex-1 px-8 py-6 flex items-center hover:bg-gray-50 transition-colors group"
+                >
                 <span className="text-[12px] tracking-widest uppercase font-semibold text-gray-400 group-hover:text-black transition-colors">
                   {cat.name}
                 </span>
@@ -232,9 +233,10 @@ export const HomePage = () => {
               <p className="text-[12px] tracking-widest uppercase font-bold text-black">Highest World</p>
             </div>
             {categories.map((cat) => (
+
               <Link
                 key={cat.id}
-                to={`/produk?category=${encodeURIComponent(cat.slug)}`}
+                to={`/products?category=${encodeURIComponent(cat.slug)}`}
                 className="px-5 py-4 text-[11px] tracking-widest uppercase text-gray-400 hover:text-black transition-colors"
               >
                 {cat.name}
@@ -296,10 +298,10 @@ export const HomePage = () => {
 
         {/* View All */}
         <div className="max-w-[1400px] mx-auto px-4 lg:px-6 pt-8 text-center">
-          <Link
-            to="/produk"
-            className="inline-block text-[11px] tracking-widest uppercase border border-black px-10 py-3 hover:bg-black hover:text-white transition-all duration-200"
-          >
+            <Link
+              to="/products"
+              className="inline-block text-[11px] tracking-widest uppercase border border-black px-10 py-3 hover:bg-black hover:text-white transition-all duration-200"
+            >
             View All
           </Link>
         </div>

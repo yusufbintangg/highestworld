@@ -71,7 +71,7 @@ export const CollectionDetailPage = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30 flex items-end">
             <div className="p-8">
-              <Link to="/koleksi" className="text-sm text-accent-gold hover:underline mb-2 inline-block">
+              <Link to="/collections" className="text-sm text-accent-gold hover:underline mb-2 inline-block">
                 ← Kembali ke Koleksi
               </Link>
               <h1 className="font-display text-5xl md:text-6xl tracking-[0.1em] text-foreground mb-2">

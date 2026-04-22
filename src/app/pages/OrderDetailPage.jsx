@@ -11,8 +11,8 @@ const STATUS_CONFIG = {
   payment_confirmed: { label: 'Pembayaran Berhasil', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', dot: 'bg-emerald-500' },
   processing: { label: 'Sedang Diproses', icon: Package, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', dot: 'bg-blue-500' },
   shipped: { label: 'Dalam Pengiriman', icon: Truck, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100', dot: 'bg-violet-500' },
-  completed: { label: 'Pesanan Selesai', icon: CheckCircle, color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-100', dot: 'bg-emerald-600' },
-  cancelled: { label: 'Pesanan Dibatalkan', icon: XCircle, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-100', dot: 'bg-red-400' },
+  completed: { label: 'orders Selesai', icon: CheckCircle, color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-100', dot: 'bg-emerald-600' },
+  cancelled: { label: 'orders Dibatalkan', icon: XCircle, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-100', dot: 'bg-red-400' },
 };
 
 const STEP_ORDER = ['waiting_payment', 'payment_confirmed', 'processing', 'shipped', 'completed'];
@@ -97,7 +97,7 @@ export const OrderDetailPage = () => {
 
         {/* Back */}
         <button
-          onClick={() => navigate('/produk')}
+          onClick={() => navigate('/products')}
           className="flex items-center gap-1.5 text-xs tracking-widest uppercase text-gray-400 hover:text-gray-900 transition-colors mt-4 mb-8"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
@@ -176,7 +176,7 @@ export const OrderDetailPage = () => {
             <XCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
             <div>
               <p className="text-xs font-semibold text-red-600">Waktu pembayaran habis</p>
-              <p className="text-[11px] text-red-500 mt-0.5">Pesanan ini sudah expired. Silakan buat pesanan baru.</p>
+              <p className="text-[11px] text-red-500 mt-0.5">orders/ ini sudah expired. Silakan buat orders/ baru.</p>
             </div>
           </div>
         )}
@@ -266,7 +266,7 @@ export const OrderDetailPage = () => {
 
         {/* CTA */}
         <button
-          onClick={() => navigate('/produk')}
+          onClick={() => navigate('/products')}
           className="w-full py-3.5 border border-gray-200 text-xs tracking-[0.15em] uppercase text-gray-600 hover:border-gray-900 hover:text-gray-900 transition-colors font-medium"
         >
           Lanjut Belanja

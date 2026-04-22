@@ -135,7 +135,7 @@ export const buildWaitingPaymentEmail = (order: any, items: any[], frontendUrl: 
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
       <tr>
         <td align="center">
-          <a href="${frontendUrl}/pesanan/${order.order_number}"
+          <a href="${frontendUrl}/orders/${order.order_number}"
             style="display:inline-block;background:#C9A84C;color:#111111;text-decoration:none;padding:16px 40px;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:500;">
             Lihat & Bayar Pesanan
           </a>

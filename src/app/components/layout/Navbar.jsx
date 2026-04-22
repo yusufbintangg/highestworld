@@ -36,9 +36,9 @@ export const Navbar = () => {
       setSearchOpen(false);
       setMobileOpen(false);
       if (product?.slug) {
-        navigate(`/produk/${product.slug}`);
+navigate(`/products/${product.slug}`);
       } else {
-        navigate(`/produk?q=${encodeURIComponent(searchQuery)}`);
+navigate(`/products?q=${encodeURIComponent(searchQuery)}`);
       }
     }
   }, [searchTrigger, product, loading, searchQuery, navigate]);
@@ -63,9 +63,10 @@ export const Navbar = () => {
   }, [location.pathname]);
 
   const navLinks = [
-    { name: 'Shop',    path: '/produk' },
-    { name: 'Look',    path: '/tentang' },
-    { name: 'Dealers', path: '/kontak' },
+    { name: 'Shop',    path: '/products' },
+    { name: 'Look',    path: '/about' },
+    { name: 'Dealers', path: '/contact' },
+    { name: 'Collections', path: '/collections' },
   ];
 
   const triggerSearch = () => {
@@ -267,7 +268,7 @@ export const Navbar = () => {
                 {categories.map((cat) => (
                   <Link
                     key={cat.id}
-                    to={`/produk?category=${cat.slug}`}
+`/products?category=${cat.slug}`
                     onClick={() => setMobileOpen(false)}
                     className="text-[10px] tracking-[0.18em] uppercase font-medium px-3 py-1.5 border border-gray-200 text-gray-500 hover:border-black hover:text-black transition-all duration-200"
                   >

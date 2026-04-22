@@ -129,7 +129,7 @@ export const PaymentConfirmationPage = () => {
               </div>
 
               <div>
-                <Label htmlFor="orderNumber">Nomor Order / Kode Pesanan *</Label>
+                <Label htmlFor="orderNumber">Nomor Order / Kode orders/ *</Label>
                 <Input
                   id="orderNumber"
                   {...register('orderNumber')}

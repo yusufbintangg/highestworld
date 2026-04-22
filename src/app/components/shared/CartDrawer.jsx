@@ -73,7 +73,7 @@ export const CartDrawer = ({ children }) => {
               </p>
             </div>
             <button
-              onClick={() => { setOpen(false); navigate('/produk'); }}
+              onClick={() => { setOpen(false); navigate('/products'); }}
               className="mt-2 flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase font-bold border border-black px-5 py-3 hover:bg-black hover:text-white transition-all duration-300 group"
             >
               Lihat Produk
@@ -168,7 +168,7 @@ export const CartDrawer = ({ children }) => {
                 <span className="text-[10px] tracking-[0.25em] uppercase font-semibold text-gray-400">
                   Total
                 </span>
-                <span className="text-xl font-black text-black tabular-nums tracking-tight">
+                <span className="text-xl font-bold text-black tabular-nums tracking-tight">
                   {formatPrice(total)}
                 </span>
               </div>
@@ -200,3 +200,4 @@ export const CartDrawer = ({ children }) => {
     </Sheet>
   );
 };
+

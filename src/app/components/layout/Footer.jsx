@@ -27,10 +27,10 @@ export const Footer = () => {
   ];
 
   const quickLinks = [
-    { name: 'Shop',     path: '/produk' },
-    { name: 'Look',     path: '/tentang' },
-    { name: 'Dealers',  path: '/kontak' },
-  //{ name: 'Konfirmasi Pembayaran', path: '/konfirmasi-pembayaran' },
+    { name: 'Shop',     path: '/products' },
+    { name: 'Look',     path: '/about' },
+    { name: 'Dealers',  path: '/contact' },
+  //{ name: 'Konfirmasi Pembayaran', path: '/payment-confirmation' },
   ];
 
   return (
@@ -98,7 +98,7 @@ export const Footer = () => {
             {categories.map((cat) => (
               <li key={cat.id}>
                 <Link
-                  to={`/produk?category=${cat.slug}`}
+to={`/products?category=${cat.slug}`}
                   className="group flex items-center gap-1.5 text-[12px] tracking-[0.12em] uppercase font-medium text-white/50 hover:text-white transition-colors duration-200"
                 >
                   <span className="w-0 h-[1px] bg-white transition-all duration-300 group-hover:w-3" />

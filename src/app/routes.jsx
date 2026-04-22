@@ -16,13 +16,13 @@ import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminLayout } from './pages/admin/AdminLayout';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminProducts } from './pages/admin/AdminProducts';
-import { AdminOrders } from './pages/admin/AdminOrders';
+import { Adminorders } from './pages/admin/Adminorders';
 import { AdminStock } from './pages/admin/AdminStock';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import { AccountDashboardPage } from './pages/AccountDashboardPage';
-import { AccountOrdersPage } from './pages/AccountOrdersPage';
+import { AccountordersPage } from './pages/AccountordersPage';
 import { AccountAddressesPage } from './pages/AccountAddressesPage';
 import { AccountSettingsPage } from './pages/AccountSettingsPage';
 import { AccountSecurityPage } from './pages/AccountSecurityPage';
@@ -56,18 +56,18 @@ export const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: 'produk', element: <ProductsPage /> },
-      { path: 'produk/:slug', element: <ProductDetailPage /> },
-      { path: 'koleksi', element: <CollectionsPage /> },
-      { path: 'koleksi/:slug', element: <CollectionDetailPage /> },
-      { path: 'tentang', element: <AboutPage /> },
-      { path: 'kontak', element: <ContactPage /> },
-      { path: 'konfirmasi-pembayaran', element: <PaymentConfirmationPage /> },
-      { path: 'pesanan/:orderNumber', element: <OrderDetailPage /> },
+      { path: 'products', element: <ProductsPage /> },
+      { path: 'products/:slug', element: <ProductDetailPage /> },
+      { path: 'collections', element: <CollectionsPage /> },
+      { path: 'collections/:slug', element: <CollectionDetailPage /> },
+      { path: 'about', element: <AboutPage /> },
+      { path: 'contact', element: <ContactPage /> },
+      { path: 'payment-confirmation', element: <PaymentConfirmationPage /> },
+      { path: 'orders/:orderNumber', element: <OrderDetailPage /> },
 
       { path: 'checkout', element: <CheckoutPage /> },
       { path: 'account', element: <ProtectedRoute><AccountDashboardPage /></ProtectedRoute> },
-      { path: 'account/orders', element: <ProtectedRoute><AccountOrdersPage /></ProtectedRoute> },
+      { path: 'account/orders', element: <ProtectedRoute><AccountordersPage /></ProtectedRoute> },
       { path: 'account/addresses', element: <ProtectedRoute><AccountAddressesPage /></ProtectedRoute> },
       { path: 'account/settings', element: <ProtectedRoute><AccountSettingsPage /></ProtectedRoute> },
       { path: 'account/security', element: <ProtectedRoute><AccountSecurityPage /></ProtectedRoute> },
@@ -88,7 +88,7 @@ export const router = createBrowserRouter([
   children: [
     { index: true, element: <AdminDashboard /> },
     { path: 'produk', element: <AdminProducts /> },
-    { path: 'order', element: <AdminOrders /> },
+    { path: 'order', element: <Adminorders /> },
     { path: 'stock', element: <AdminStock /> },
   ],
 },
