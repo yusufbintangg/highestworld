@@ -1,8 +1,8 @@
-import { useRef } from 'react';
-import { Search, Loader2, CheckCircle2 } from 'lucide-react';
-import { CourierCard } from './CourierCard';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
-import { ChevronRight } from 'lucide-react';
+import { useEffect } from 'react';
+import { useState } from 'react';
+import { Search, Loader2, CheckCircle2, ChevronRight } from 'lucide-react';
+import { CourierCard, COURIER_LOGOS } from './CourierCard';
+import { PaymentMethodModal, PAYMENT_METHODS } from './PaymentMethodModal';
 
 export const CheckoutForm = ({
   formData,
@@ -24,6 +24,15 @@ export const CheckoutForm = ({
   onSelectRate,
   onPaymentMethodChange,
 }) => {
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showCourierModal, setShowCourierModal] = useState(false);
+
+  const selectedMethod = PAYMENT_METHODS.find(m => m.id === paymentMethod) || null;
+
+  useEffect(() => {
+  document.body.style.overflow = showCourierModal ? 'hidden' : 'auto';
+}, [showCourierModal]);
+
   return (
     <div className="lg:col-span-3 space-y-8">
       <div>
@@ -33,9 +42,7 @@ export const CheckoutForm = ({
       {/* Email */}
       <div className="space-y-3">
         <input
-          id="email"
-          name="email"
-          type="email"
+          id="email" name="email" type="email"
           value={formData.email}
           onChange={onInputChange}
           disabled={!!user}
@@ -43,17 +50,18 @@ export const CheckoutForm = ({
           className={`w-full px-4 py-3 rounded-xl border text-sm placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-gray-200 transition ${!!user ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : ''} ${errors.email ? 'border-red-400' : 'border-gray-200'}`}
         />
         {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
-        <div className="text-xs text-gray-400">
-          {user ? 'Email ini sudah terisi berdasarkan data akun Anda.' : 'Pastikan email yang dimasukkan benar untuk menerima notifikasi pesanan, cek bagian spam jika email tidak muncul di inbox.'}
-        </div>
-
+        <p className="text-xs text-gray-400">
+          {user
+            ? 'Email ini sudah terisi berdasarkan data akun Anda.'
+            : 'Pastikan email yang dimasukkan benar untuk menerima notifikasi pesanan, cek bagian spam jika email tidak muncul di inbox.'
+          }
+        </p>
       </div>
 
       {/* Nama */}
       <div className="space-y-3">
         <input
-          id="firstName"
-          name="firstName"
+          id="firstName" name="firstName"
           value={formData.firstName}
           onChange={onInputChange}
           placeholder="Nama Lengkap Penerima"
@@ -65,9 +73,7 @@ export const CheckoutForm = ({
       {/* Phone */}
       <div className="space-y-3">
         <input
-          id="phone"
-          name="phone"
-          type="tel"
+          id="phone" name="phone" type="tel"
           value={formData.phone}
           onChange={onInputChange}
           placeholder="Nomor HP Penerima"
@@ -86,25 +92,20 @@ export const CheckoutForm = ({
             placeholder="Kecamatan dan Kota"
             className={`w-full pl-10 pr-10 py-3 rounded-xl border text-sm placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-gray-200 transition ${errors.area ? 'border-red-400' : selectedArea ? 'border-gray-400' : 'border-gray-200'}`}
           />
-          {loadingArea && (
-            <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
-          )}
+          {loadingArea && <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />}
         </div>
         {errors.area && <p className="text-xs text-red-500 mt-1">{errors.area}</p>}
 
         {showAreaDropdown && areaResults.length > 0 && (
           <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-y-auto">
             {areaResults.map((area, i) => (
-              <div
-                key={i}
-                onClick={() => onSelectArea(area)}
-                className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0 transition-colors"
-              >
+              <div key={i} onClick={() => onSelectArea(area)} className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0 transition-colors">
                 <p className="text-sm font-medium text-gray-900">
                   {area.administrative_division_level_3_name}, {area.administrative_division_level_2_name}
                 </p>
                 <p className="text-xs text-gray-400">
-                  {area.administrative_division_level_1_name} • Kode Pos: <span className="font-semibold text-gray-700">{area.postal_code}</span>
+                  {area.administrative_division_level_1_name} • Kode Pos:{' '}
+                  <span className="font-semibold text-gray-700">{area.postal_code}</span>
                 </p>
               </div>
             ))}
@@ -115,7 +116,10 @@ export const CheckoutForm = ({
           <div className="mt-2 flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
             <CheckCircle2 className="w-3.5 h-3.5 text-gray-600 shrink-0" />
             <p className="text-xs text-gray-600">
-              {selectedArea.administrative_division_level_3_name}, {selectedArea.administrative_division_level_2_name}, {selectedArea.administrative_division_level_1_name} — Kode Pos: <strong>{selectedArea.postal_code}</strong>
+              {selectedArea.administrative_division_level_3_name},{' '}
+              {selectedArea.administrative_division_level_2_name},{' '}
+              {selectedArea.administrative_division_level_1_name} — Kode Pos:{' '}
+              <strong>{selectedArea.postal_code}</strong>
             </p>
           </div>
         )}
@@ -124,8 +128,7 @@ export const CheckoutForm = ({
       {/* Detail Alamat */}
       <div className="space-y-1">
         <textarea
-          id="address"
-          name="address"
+          id="address" name="address"
           value={formData.address}
           onChange={onInputChange}
           placeholder="Detail Alamat"
@@ -134,10 +137,7 @@ export const CheckoutForm = ({
           className={`w-full px-4 py-3 rounded-xl border text-sm placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-gray-200 transition resize-none ${errors.address ? 'border-red-400' : 'border-gray-200'}`}
         />
         <div className="flex justify-between items-center">
-          {errors.address
-            ? <p className="text-xs text-red-500">{errors.address}</p>
-            : <span />
-          }
+          {errors.address ? <p className="text-xs text-red-500">{errors.address}</p> : <span />}
           <p className="text-xs text-gray-400 text-right">{formData.address.length} / 250</p>
         </div>
       </div>
@@ -157,65 +157,134 @@ export const CheckoutForm = ({
       {/* Metode Pengiriman */}
       <div>
         <h2 className="text-xl font-bold text-gray-900 mb-4">Metode Pengiriman</h2>
-
-        {!selectedArea && !loadingRates && shippingRates.length === 0 && (
-          <div className="px-4 py-4 rounded-xl border border-gray-200 bg-gray-50">
-            <p className="text-sm text-gray-500">Lengkapi rincian alamat untuk melihat metode pengiriman yang tersedia.</p>
-          </div>
-        )}
-
         {loadingRates && (
           <div className="flex items-center gap-2 px-4 py-4 rounded-xl border border-gray-200 bg-gray-50">
             <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
             <span className="text-sm text-gray-500">Mengecek ongkir...</span>
           </div>
         )}
-
-        {shippingRates.length > 0 && !loadingRates && (
-          <div className="rounded-xl border border-gray-200 overflow-hidden divide-y divide-gray-100 max-h-64 overflow-y-auto">
-            {shippingRates.map((rate, i) => (
-              <CourierCard
-                key={i}
-                rate={rate}
-                selected={
-                  selectedRate?.courier_code === rate.courier_code &&
-                  selectedRate?.courier_service_code === rate.courier_service_code
-                }
-                onClick={() => onSelectRate(rate)}
+        <button
+            type="button"
+            onClick={() => setShowCourierModal(true)}
+            className="w-full flex h-16 items-center justify-between px-4 py-4 border border-gray-200 rounded-xl hover:bg-gray-50"
+          >
+            <div className="flex items-center gap-3">
+              {selectedRate ? (
+                <>
+                  <img
+                    src={COURIER_LOGOS[selectedRate.courier_code]}
+                    alt={selectedRate.courier_name}
+                    className="h-10 w-10 object-contain"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                  <span className="text-sm font-medium text-gray-900">
+                    {selectedRate.courier_name} - {selectedRate.courier_service_name}
+                  </span>
+                </>
+              ) : (
+                <span className="text-sm text-gray-700">Pilih metode pengiriman</span>
+              )}
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400" />
+          </button>
+          {showCourierModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              {/* BACKDROP */}
+              <div
+                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                onClick={() => setShowCourierModal(false)}
               />
-            ))}
-          </div>
-        )}
+              {/* MODAL */}
+              <div className="relative bg-white rounded-2xl w-full max-w-md p-5 z-10">
+                <h2 className="text-lg font-bold mb-4">Pilih Pengiriman</h2>
+                {/* AI bantu gue bikin logic kalau gada kurir yang muncul harus isi alamat dulu  */}
+                { shippingRates.length === 0 && !loadingRates ? (
+                  <span className="text-xs text-gray-500 mb-3 block"> Isi alamat </span>
+                ) : null }
+                <div className="max-h-180 overflow-y-auto divide-y">
+                  {shippingRates.map((rate, i) => (
+                    <CourierCard
+                      key={i}
+                      rate={rate}
+                      selected={
+                        selectedRate?.courier_code === rate.courier_code &&
+                        selectedRate?.courier_service_code === rate.courier_service_code
+                      }
+                      onClick={() => {
+                        onSelectRate(rate);
+                        setShowCourierModal(false);
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
       </div>
 
-      {/* Metode Pembayaran */}
+      {/* ── Metode Pembayaran ── */}
       <div>
         <h2 className="text-xl font-bold text-gray-900 mb-4">Metode Pembayaran</h2>
-        <RadioGroup value={paymentMethod} onValueChange={onPaymentMethodChange}>
-          <div className="rounded-xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
-            <label htmlFor="midtrans" className="flex items-center justify-between px-4 py-3.5 cursor-pointer hover:bg-gray-50 transition-colors">
-              <div className="flex items-center gap-3">
-                <RadioGroupItem value="midtrans" id="midtrans" />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Pembayaran Online (Midtrans)</p>
-                  <p className="text-xs text-gray-400">Kartu Kredit, E-wallet, Virtual Account</p>
-                </div>
+        <div className="rounded-xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
+          {/* Midtrans — klik buka modal */}
+          <button
+            type="button"
+            onClick={() => setShowPaymentModal(true)}
+            className="w-full flex items-center justify-between px-4 py-5 hover:bg-gray-50 transition-colors text-left"
+          >
+            <div className="flex items-center gap-3">
+              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${paymentMethod && paymentMethod !== 'bank_transfer' ? 'border-black' : 'border-gray-300'}`}>
+                {paymentMethod && paymentMethod !== 'bank_transfer' && (
+                  <div className="w-2 h-2 rounded-full bg-black" />
+                )}
               </div>
-              <ChevronRight className="w-4 h-4 text-gray-400" />
-            </label>
-            <label htmlFor="bank_transfer" className="flex items-center justify-between px-4 py-3.5 cursor-pointer hover:bg-gray-50 transition-colors">
-              <div className="flex items-center gap-3">
-                <RadioGroupItem value="bank_transfer" id="bank_transfer" />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Transfer Bank Manual</p>
-                  <p className="text-xs text-gray-400">Konfirmasi via WhatsApp</p>
-                </div>
+              <div>
+                {selectedMethod?.id === 'qris' ? (
+                  <img 
+                    src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1776859990/695e3a709eccbe055c311aac6b25729d_canx9h.jpg" 
+                    alt="QRIS" 
+                    className="h-4 w-auto object-contain"
+                  />
+                ) : selectedMethod ? (
+                  <p className="text-xs font-semibold text-black mt-0.5">{selectedMethod.label} — {selectedMethod.description}</p>
+                ) : (
+                  <p className="text-xs text-gray-400">QRIS, OVO, VA, Kartu Kredit, dll</p>
+                )}
               </div>
-              <ChevronRight className="w-4 h-4 text-gray-400" />
-            </label>
-          </div>
-        </RadioGroup>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
+          </button>
+
+          {/* Transfer Bank Manual */}
+          <button
+            type="button"
+            onClick={() => onPaymentMethodChange('bank_transfer')}
+            className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-gray-50 transition-colors text-left"
+          >
+            <div className="flex items-center gap-3">
+              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${paymentMethod === 'bank_transfer' ? 'border-black' : 'border-gray-300'}`}>
+                {paymentMethod === 'bank_transfer' && <div className="w-2 h-2 rounded-full bg-black" />}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Transfer Bank Manual</p>
+                <p className="text-xs text-gray-400">Konfirmasi via WhatsApp</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400" />
+          </button>
+        </div>
       </div>
+
+      {/* Modal */}
+      <PaymentMethodModal
+        open={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        selected={selectedMethod}
+        onSelect={(method) => {
+          onPaymentMethodChange(method.id);
+          setShowPaymentModal(false);
+        }}
+      />
     </div>
   );
 };

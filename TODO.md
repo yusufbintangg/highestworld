@@ -1,47 +1,12 @@
-# CHECKOUT VS CART SYSTEM FIX - PHASE 1 (Quick Fix)
-Status: 🚀 READY TO IMPLEMENT
+# TODO: Munculin Logo Kurir yang Dipilih
 
-## ✅ TODO STEPS (Phase 1 - Hide Cart in Checkout)
+## Plan
+Export `COURIER_LOGOS` dari `CourierCard.jsx`, terus pake di `CheckoutForm.jsx` (button pemilihan) dan `OrderSummary.jsx` (sidebar).
 
-### 1. ✅ Edit Navbar.jsx
-- Hide CartDrawer button saat location.pathname === '/checkout'
-
-### 2. ✅ Edit CartDrawer.jsx  
-- Add `disabled` prop → return children only (no drawer)
-
-### 3. ✅ Test Flow
-```
-ProductDetail → Buy Now (1 item) → Checkout 
-✅ CartDrawer hidden
-✅ Navbar simplified
-✅ Ongkir fixed
-```
-
-### 3. [ ] Test Flow
-```
-ProductDetail → Buy Now (1 item) → Checkout 
-✅ CartDrawer hidden
-✅ Ongkir fixed (ga berubah)
-✅ Navbar simplified
-```
-
-### 4. [ ] Verify Biteship
-```
-console.log(totalWeight) → pastiin sum semua items qty*weight
-```
-
-## 🔧 NEW ISSUE: REFRESH CHECKOUT → WRONG REDIRECT
-
-### 4. ✅ Fix Checkout Refresh Flow (FINAL)
-- Problem: Refresh `/checkout` → redirect ke /produk 
-- Fix: `document.referrer.includes('/products') || '/product'` + `navigate('/products')`
-
-## ⏳ AFTER PHASE 1 SUCCESS → Optional Phase 2
-```
-[ ] Cart snapshot in useCheckout.js  
-[ ] Decouple checkout from live cart
-```
-
-**Current: PHASE 1 - QUICK WIN (15 mins)**
-**Test Command: `pnpm dev`**
+## Steps
+- [x] Analisis file-file yang relevan (CheckoutForm, CourierCard, OrderSummary)
+- [x] Step 1: Export `COURIER_LOGOS` dari `CourierCard.jsx`
+- [x] Step 2: Tampilin logo + teks kurir di button `CheckoutForm.jsx`
+- [x] Step 3: Tampilin logo kecil di sidebar `OrderSummary.jsx`
+- [x] Final check & testing
 

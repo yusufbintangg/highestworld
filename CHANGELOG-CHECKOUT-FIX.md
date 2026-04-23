@@ -108,7 +108,86 @@ useEffect(() => {
   }
 }, [cartItems, navigate]);
 ```
-**Note:** Cover `/products` + `/product` path + English route `/products`
+### **5. src/app/hooks/useCheckout.js** - Midtrans Payment Enhancement
+
+**TAMBAHAN (handleMidtransPayment):**
+```js
+// Import
+import { PAYMENT_METHODS } from '../components/checkout/PaymentMethodModal';
+
+// Sebelum pemanggilan openMidtransPayment
+const selectedMethod = PAYMENT_METHODS.find(m => m.id === paymentMethod);
+await openMidtransPayment(orderPayload, callbacks, selectedMethod?.enabledPayments || []);
+```
+
+**Effect:** Filter payment methods berdasarkan `paymentMethod` state → QRIS only, VA only, etc. Midtrans Snap tampilkan metode spesifik, bukan semua.
+
+### **6. src/app/hooks/useCheckout.js** - Payment Flow Logic Fix
+
+**SEBELUM (handleSubmit):**
+```js
+if (paymentMethod === 'midtrans') {
+  await handleMidtransPayment();
+} else {
+  handleBankTransferPayment(); // ← QRIS/OVO/etc masuk sini = WRONG!
+}
+```
+
+**SESUDAH:**
+```js
+if (paymentMethod === 'bank_transfer') {
+  handleBankTransferPayment();
+} else {
+  await handleMidtransPayment(); // QRIS/OVO/CC → Midtrans filtered
+}
+```
+
+**handleMidtransPayment udah punya filter:**
+```js
+const selectedMethod = PAYMENT_METHODS.find(m => m.id === paymentMethod);
+await openMidtransPayment(..., selectedMethod?.enabledPayments || []);
+```
+
+**Effect:** 'qris' → QRIS only, 'ovo' → OVO only, dll. Bank transfer → WhatsApp.
+
+### **7. src/app/components/checkout/OrderSummary.jsx** - Button Text Fix
+
+**SEBELUM:**
+```jsx
+paymentMethod === 'midtrans' ? 'Order Sekarang' : 'Lanjutkan ke WhatsApp'
+```
+
+**SESUDAH:**
+```jsx
+paymentMethod === 'bank_transfer' ? 'Lanjutkan ke WhatsApp' : 'Order Sekarang'
+```
+
+**Effect:** Button text sync dengan actual flow ('qris' → \"Order Sekarang\")
+
+### **8. src/app/components/checkout/PaymentMethodModal.jsx** - OVO Logo Update
+
+**SEBELUM:**
+```jsx
+logo: (
+  <span className=\"text-[#4C2A86] font-black text-lg tracking-tight\">OVO</span>
+),
+```
+
+**SESUDAH:**
+```jsx
+logo: (
+  <img 
+    src=\"https://res.cloudinary.com/dopr9tvnv/image/upload/v1776860057/GKL14_OVO_-_Koleksilogo.com_oun8yg.jpg\" 
+    alt=\"OVO\" 
+    className=\"h-8 w-auto\" 
+  />
+),
+```
+
+**Effect:** Real OVO logo untuk better brand recognition
+
+**Midtrans lib udah support param 3: `enabledPayments = []`**
+
 
 
 **Effect:** Refresh checkout ga redirect → stay di checkout page

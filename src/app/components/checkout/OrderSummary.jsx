@@ -1,6 +1,7 @@
 import { Loader2, Tag, ChevronRight, Lock } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { formatPrice } from '../../../lib/utils';
+import { COURIER_LOGOS } from './CourierCard';
 
 export const OrderSummary = ({
   cartItems,
@@ -77,7 +78,15 @@ export const OrderSummary = ({
             </span>
           </div>
           {selectedRate && (
-            <p className="text-xs text-gray-400 text-right">{selectedRate.courier_name} {selectedRate.courier_service_name}</p>
+            <div className="flex items-center justify-end gap-2">
+              <img
+                src={COURIER_LOGOS[selectedRate.courier_code]}
+                alt={selectedRate.courier_name}
+                className="h-4 w-auto object-contain"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+              <p className="text-xs text-gray-400">{selectedRate.courier_name} {selectedRate.courier_service_name}</p>
+            </div>
           )}
         </div>
 
@@ -109,7 +118,7 @@ export const OrderSummary = ({
             {isProcessing ? (
               <><Loader2 className="w-4 h-4 animate-spin" />Memproses...</>
             ) : (
-              paymentMethod === 'midtrans' ? 'Order Sekarang' : 'Lanjutkan ke WhatsApp'
+              paymentMethod === 'midtrans' ? 'Order Sekarang' : 'Lanjutkan ke Pembayaran'
             )}
           </button>
           <p className="text-[11px] text-center text-gray-400 mt-3">

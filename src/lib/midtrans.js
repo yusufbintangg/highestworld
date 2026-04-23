@@ -5,10 +5,7 @@ export const MIDTRANS_CONFIG = {
 
 export function loadMidtransScript() {
   return new Promise((resolve, reject) => {
-    if (window.snap) {
-      resolve(window.snap);
-      return;
-    }
+    if (window.snap) { resolve(window.snap); return; }
     const script = document.createElement('script');
     script.src = MIDTRANS_CONFIG.isProduction
       ? 'https://app.midtrans.com/snap/snap.js'
@@ -53,11 +50,19 @@ export function generateOrderId() {
   return `HW-${timestamp}-${random}`;
 }
 
-export async function openMidtransPayment(orderData, callbacks = {}) {
+/**
+ * @param {object} orderData
+ * @param {object} callbacks - { onSuccess, onPending, onError, onClose }
+ * @param {string[]} [enabledPayments] - filter metode pembayaran di Snap
+ *   contoh: ['other_qris'], ['ovo'], ['bca_va', 'bni_va'], ['credit_card']
+ *   kalau kosong/undefined → Snap tampilkan semua metode (default)
+ */
+export async function openMidtransPayment(orderData, callbacks = {}, enabledPayments = []) {
   try {
     const snap = await loadMidtransScript();
     const { token, orderId, orderNumber } = await createTransaction(orderData);
-    snap.pay(token, {
+
+    const snapOptions = {
       onSuccess: (result) => {
         if (callbacks.onSuccess) callbacks.onSuccess({ ...result, order_id: orderId, order_number: orderNumber });
       },
@@ -70,7 +75,14 @@ export async function openMidtransPayment(orderData, callbacks = {}) {
       onClose: () => {
         if (callbacks.onClose) callbacks.onClose({ order_number: orderNumber });
       },
-    });
+    };
+
+    // Kalau ada filter metode, pass ke Snap
+    if (enabledPayments && enabledPayments.length > 0) {
+      snapOptions.enabledPayments = enabledPayments;
+    }
+
+    snap.pay(token, snapOptions);
   } catch (error) {
     if (callbacks.onError) callbacks.onError({ message: error.message });
     throw error;

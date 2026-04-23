@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { formatPrice } from '../../lib/utils';
 import { WHATSAPP_NUMBER } from '../../lib/config';
 import { openMidtransPayment, generateOrderId } from '../../lib/midtrans';
+import { PAYMENT_METHODS } from '../components/checkout/PaymentMethodModal';
 import { toast } from 'sonner';
 
 export const useCheckout = () => {
@@ -14,7 +15,7 @@ export const useCheckout = () => {
   const { user } = useAuth();
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('midtrans');
+  const [paymentMethod, setPaymentMethod] = useState('qris');
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '',
     address: '', city: '', province: '', postalCode: '', notes: '',
@@ -289,6 +290,7 @@ export const useCheckout = () => {
         })),
       };
 
+      const selectedMethod = PAYMENT_METHODS.find(m => m.id === paymentMethod);
       await openMidtransPayment(orderPayload, {
         onSuccess: async (result) => {
           try { await saveProfileIfNeeded(); } catch {}
@@ -310,7 +312,7 @@ export const useCheckout = () => {
             window.location.href = '/orders/' + result.order_number;
           }
         },
-      });
+      }, selectedMethod?.enabledPayments || []);
     } catch {
       toast.error('Terjadi kesalahan. Silakan coba lagi.');
       setIsProcessing(false);
@@ -342,10 +344,10 @@ export const useCheckout = () => {
       toast.error('Mohon lengkapi semua data yang wajib diisi');
       return;
     }
-    if (paymentMethod === 'midtrans') {
-      await handleMidtransPayment();
-    } else {
+    if (paymentMethod === 'bank_transfer') {
       handleBankTransferPayment();
+    } else {
+      await handleMidtransPayment();
     }
   };
 
