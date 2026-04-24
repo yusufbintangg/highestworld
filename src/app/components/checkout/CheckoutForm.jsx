@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
 import { Search, Loader2, CheckCircle2, ChevronRight } from 'lucide-react';
 import { CourierCard, COURIER_LOGOS } from './CourierCard';
@@ -188,92 +189,99 @@ export const CheckoutForm = ({
             <ChevronRight className="w-4 h-4 text-gray-400" />
           </button>
           {showCourierModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center">
-              {/* BACKDROP */}
-              <div
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                onClick={() => setShowCourierModal(false)}
-              />
-              {/* MODAL */}
-              <div className="relative bg-white rounded-2xl w-full max-w-md p-5 z-10">
-                <h2 className="text-lg font-bold mb-4">Pilih Pengiriman</h2>
-                {/* AI bantu gue bikin logic kalau gada kurir yang muncul harus isi alamat dulu  */}
-                { shippingRates.length === 0 && !loadingRates ? (
-                  <span className="text-xs text-gray-500 mb-3 block"> Isi alamat </span>
-                ) : null }
-                <div className="max-h-180 overflow-y-auto divide-y">
-                  {shippingRates.map((rate, i) => (
-                    <CourierCard
-                      key={i}
-                      rate={rate}
-                      selected={
-                        selectedRate?.courier_code === rate.courier_code &&
-                        selectedRate?.courier_service_code === rate.courier_service_code
-                      }
-                      onClick={() => {
-                        onSelectRate(rate);
-                        setShowCourierModal(false);
-                      }}
-                    />
-                  ))}
+            <AnimatePresence>
+              <div className="fixed inset-0 z-50 flex items-center justify-center">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                  onClick={() => setShowCourierModal(false)}
+                />      
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96, y: 16 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="relative bg-white rounded-2xl w-full max-w-md p-5 z-10"
+                >
+                  <h2 className="text-lg font-bold mb-4">Pilih Pengiriman</h2>
+                  {shippingRates.length === 0 && !loadingRates ? (
+                    <span className="text-xs text-gray-500 mb-3 block">Isi alamat dulu</span>
+                  ) : null}
+                  <div className="max-h-180 overflow-y-auto divide-y">
+                    {shippingRates.map((rate, i) => (
+                      <CourierCard
+                        key={i}
+                        rate={rate}
+                        selected={
+                          selectedRate?.courier_code === rate.courier_code &&
+                          selectedRate?.courier_service_code === rate.courier_service_code
+                        }
+                        onClick={() => {
+                          onSelectRate(rate);
+                          setShowCourierModal(false);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </motion.div>
+              </div>
+            </AnimatePresence>
+          )}
+        </div>
+        {/* ── Metode Pembayaran ── */}
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Metode Pembayaran</h2>
+            <div className="rounded-xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
+              {/* Midtrans — klik buka modal */}
+              <button
+                type="button"
+                onClick={() => setShowPaymentModal(true)}
+                className="w-full flex items-center justify-between px-4 py-5 hover:bg-gray-50 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${paymentMethod && paymentMethod !== 'bank_transfer' ? 'border-black' : 'border-gray-300'}`}>
+                    {paymentMethod && paymentMethod !== 'bank_transfer' && (
+                      <div className="w-2 h-2 rounded-full bg-black" />
+                    )}
+                  </div>
+                  <div>
+                    {selectedMethod?.id === 'qris' ? (
+                      <img 
+                        src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1776859990/695e3a709eccbe055c311aac6b25729d_canx9h.jpg" 
+                        alt="QRIS" 
+                        className="h-4 w-auto object-contain"
+                      />
+                    ) : selectedMethod ? (
+                      <p className="text-xs font-semibold text-black mt-0.5">{selectedMethod.label} — {selectedMethod.description}</p>
+                    ) : (
+                      <p className="text-xs text-gray-400">QRIS, OVO, VA, Kartu Kredit, dll</p>
+                    )}
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
+              </button>
+
+            {/* Transfer Bank Manual */}
+            <button
+              type="button"
+              onClick={() => onPaymentMethodChange('bank_transfer')}
+              className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-gray-50 transition-colors text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${paymentMethod === 'bank_transfer' ? 'border-black' : 'border-gray-300'}`}>
+                  {paymentMethod === 'bank_transfer' && <div className="w-2 h-2 rounded-full bg-black" />}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Transfer Bank Manual</p>
+                  <p className="text-xs text-gray-400">Konfirmasi via WhatsApp</p>
                 </div>
               </div>
-            </div>
-          )}
-      </div>
-
-      {/* ── Metode Pembayaran ── */}
-      <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Metode Pembayaran</h2>
-        <div className="rounded-xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
-          {/* Midtrans — klik buka modal */}
-          <button
-            type="button"
-            onClick={() => setShowPaymentModal(true)}
-            className="w-full flex items-center justify-between px-4 py-5 hover:bg-gray-50 transition-colors text-left"
-          >
-            <div className="flex items-center gap-3">
-              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${paymentMethod && paymentMethod !== 'bank_transfer' ? 'border-black' : 'border-gray-300'}`}>
-                {paymentMethod && paymentMethod !== 'bank_transfer' && (
-                  <div className="w-2 h-2 rounded-full bg-black" />
-                )}
-              </div>
-              <div>
-                {selectedMethod?.id === 'qris' ? (
-                  <img 
-                    src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1776859990/695e3a709eccbe055c311aac6b25729d_canx9h.jpg" 
-                    alt="QRIS" 
-                    className="h-4 w-auto object-contain"
-                  />
-                ) : selectedMethod ? (
-                  <p className="text-xs font-semibold text-black mt-0.5">{selectedMethod.label} — {selectedMethod.description}</p>
-                ) : (
-                  <p className="text-xs text-gray-400">QRIS, OVO, VA, Kartu Kredit, dll</p>
-                )}
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
-          </button>
-
-          {/* Transfer Bank Manual */}
-          <button
-            type="button"
-            onClick={() => onPaymentMethodChange('bank_transfer')}
-            className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-gray-50 transition-colors text-left"
-          >
-            <div className="flex items-center gap-3">
-              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${paymentMethod === 'bank_transfer' ? 'border-black' : 'border-gray-300'}`}>
-                {paymentMethod === 'bank_transfer' && <div className="w-2 h-2 rounded-full bg-black" />}
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">Transfer Bank Manual</p>
-                <p className="text-xs text-gray-400">Konfirmasi via WhatsApp</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
-          </button>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </button>
+          </div>
         </div>
-      </div>
 
       {/* Modal */}
       <PaymentMethodModal
