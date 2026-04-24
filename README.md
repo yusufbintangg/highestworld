@@ -21,6 +21,16 @@
 <img src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1776860046/Logo_J_T_Merah_Square_pldeu4.jpg" height="20" alt="J&T" />
 &nbsp;
 <img src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1776880838/copy_of_logo-sicepat-1536x1152_pw8nkw_c72b18.png" height="20" alt="SiCepat" />
+&nbsp;
+<img src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1776859990/695e3a709eccbe055c311aac6b25729d_canx9h.jpg" height="20" alt="QRIS" />
+&nbsp;
+<img src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1776860057/GKL14_OVO_-_Koleksilogo.com_oun8yg.jpg" height="20" alt="OVO" />
+&nbsp;
+<img src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1776859979/ALFAMART_LOGO_BARU_sx4wj1.png" height="20" alt="Alfamart" />
+&nbsp;
+<img src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1776859979/ALFAMART_LOGO_BARU_sx4wj1.png" alt="Alfamart" height="20" />
+&nbsp;
+<img src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1776877359/_bjGT4LXUDvlKg6ySYU_Q_image_nlwqlk.webp" alt="Akulaku" height="20" />
 
 ---
 
