@@ -2,6 +2,28 @@
 
 > B2C E-Commerce platform for big-size fashion (2XL–8XL) — Production Ready
 
+<!-- Tech Stack -->
+![React](https://img.shields.io/badge/React_18-61DAFB?style=flat&logo=react&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat&logo=tailwindcss&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=flat&logo=supabase&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat&logo=vercel&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Production-brightgreen?style=flat)
+
+<!-- Payment (ganti URL logo sesuai Cloudinary lo) -->
+<img src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1777005438/midtrans-3107x512_cw4s05.png" height="20" alt="Midtrans" />
+&nbsp;
+<!-- Shipping (ganti URL logo sesuai Cloudinary lo) -->
+<img src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1777005461/ru7gxauuol6z65snajo6.png" height="20" alt="Biteship" />
+&nbsp;
+<img src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1776880345/New_Logo_JNE_pdsxka.png" height="20" alt="JNE" />
+&nbsp;
+<img src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1776860046/Logo_J_T_Merah_Square_pldeu4.jpg" height="20" alt="J&T" />
+&nbsp;
+<img src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1776880838/copy_of_logo-sicepat-1536x1152_pw8nkw_c72b18.png" height="20" alt="SiCepat" />
+
+---
+
 **Stack:** React 18 · Vite · Tailwind CSS · shadcn/ui · Supabase · Midtrans · Biteship · Resend · Vercel
 
 | Property | Value |
