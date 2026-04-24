@@ -40,7 +40,7 @@ export const Footer = () => {
       <div className="border-b border-white/10 overflow-hidden">
         <div className="max-w-[1600px] mx-auto px-5 lg:px-8 py-14 lg:py-20 flex flex-col lg:flex-row items-start lg:items-end justify-between gap-8">
           <div>
-            <p className="text-[10px] tracking-[0.35em] uppercase text-white/30 mb-3 font-medium">Est. Jakarta, Indonesia</p>
+            <p className="text-[10px] tracking-[0.35em] uppercase text-white/30 mb-3 font-medium">Est. Semarang, Indonesia</p>
             <div className="flex items-center gap-6 lg:gap-10">
             <img
               src="/favicon.png"
@@ -98,7 +98,7 @@ export const Footer = () => {
             {categories.map((cat) => (
               <li key={cat.id}>
                 <Link
-to={`/products?category=${cat.slug}`}
+                  to={`/products?category=${cat.slug}`}
                   className="group flex items-center gap-1.5 text-[12px] tracking-[0.12em] uppercase font-medium text-white/50 hover:text-white transition-colors duration-200"
                 >
                   <span className="w-0 h-[1px] bg-white transition-all duration-300 group-hover:w-3" />
