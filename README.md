@@ -9,7 +9,7 @@
 | Category | B2C E-Commerce — Big Size Fashion (2XL–8XL) |
 | Frontend | React 18, Vite, Tailwind CSS, shadcn/ui |
 | Backend | Supabase (PostgreSQL + Edge Functions/Deno) |
-| Payments | Midtrans Snap (Production) + WhatsApp Transfer |
+| Payments | Midtrans Snap (Production) + Core API (QRIS/VA/e-wallet) + WhatsApp Transfer |
 | Shipping | Biteship Real-time API |
 | Email | Resend (Transactional) + Supabase Auth Emails |
 | WA Notif | Fonnte API |
@@ -49,18 +49,22 @@ Highest World is a production-grade B2C e-commerce platform specializing in big-
 |---|---|---|
 | Product Catalog | Filter by category/size/badge, sort, pagination | ✅ Production |
 | Guest Checkout | Full checkout without account — user_id nullable | ✅ Production |
-| Midtrans Payment | Snap popup, full lifecycle (settlement/expire/cancel) | ✅ Production |
+| Midtrans Payment | Snap popup with method filtering (QRIS/VA/OVO/CC/Alfamart/Akulaku) | ✅ Production |
+| Midtrans Core API | Direct charge for QRIS/VA/Gopay via Edge Function | ✅ Production |
+| Payment Detail | Query Midtrans status & rebuild payment details | ✅ Production |
 | WhatsApp Transfer | Manual bank transfer via WA message | ✅ Production |
-| Real-time Shipping | Biteship — JNE, J&T, SiCepat rate calculation | ✅ Production |
+| Real-time Shipping | Biteship — JNE, J&T, SiCepat, AnterAja rate calculation | ✅ Production |
 | Loyalty Points | Earn per purchase, 1-year expiry, ledger-based | ✅ Production |
-| Rewards Redemption | Redeem points for rewards (user_rewards table) | 🔧 Schema Ready |
+| Loyalty Dashboard | Points balance, history, referral page (frontend live) | 🟡 Partial |
+| Rewards Redemption | Redeem points for rewards (user_rewards table ready, UI Coming Soon) | 🔧 Schema Ready |
 | Voucher System | Percentage/fixed discount codes | 🔧 Schema Ready |
-| Referral System | Referral code + referral_uses tracking | 🔧 Schema Ready |
+| Referral System | Referral code + referral_uses tracking (UI Coming Soon) | 🔧 Schema Ready |
 | Email Notifications | Order confirmation + payment success via Resend | ✅ Production |
 | Google OAuth | Sign in with Google for customers | ✅ Production |
-| Admin Dashboard | Orders, products, stock, AWB management | ✅ Production |
+| Admin Dashboard | Orders, products, stock, AWB management + batch ops | ✅ Production |
 | Banners CMS | Hero/promotional banner management | ✅ Production |
-| Shipping Tracking | AWB number upload + tracking | ✅ Production |
+| Shipping Tracking | AWB number upload + Biteship push + tracking | ✅ Production |
+| Order Re-payment | Re-open Snap from Order Detail page if unpaid | ✅ Production |
 
 ---
 
@@ -72,32 +76,70 @@ Highest World is a production-grade B2C e-commerce platform specializing in big-
 src/
 ├── app/
 │   ├── pages/                  # Route-level page components
-│   │   ├── admin/              # Admin panel (Dashboard, Orders, Products, Stock)
-│   │   └── auth/               # Login, Register, ForgotPassword, ResetPassword
+│   │   ├── admin/              # Admin panel (Dashboard, Login, Layout, Orders, Products, Stock)
+│   │   ├── auth/               # Login, Register, ForgotPassword, ResetPassword
+│   │   ├── AboutPage.jsx
+│   │   ├── AccountAddressesPage.tsx
+│   │   ├── AccountDashboardPage.tsx
+│   │   ├── AccountOrdersPage.tsx
+│   │   ├── AccountSecurityPage.tsx
+│   │   ├── AccountSettingsPage.tsx
+│   │   ├── CheckoutPage.jsx
+│   │   ├── CollectionDetailPage.jsx
+│   │   ├── CollectionsPage.jsx
+│   │   ├── ContactPage.jsx
+│   │   ├── HomePage.jsx
+│   │   ├── LoyaltyDashboardPage.tsx
+│   │   ├── LoyaltyHistoryPage.tsx
+│   │   ├── LoyaltyReferralPage.tsx
+│   │   ├── LoyaltyRewardsPage.tsx
+│   │   ├── NotFoundPage.jsx
+│   │   ├── OrderDetailPage.jsx
+│   │   ├── PaymentConfirmationPage.jsx
+│   │   ├── ProductDetailPage.jsx
+│   │   └── ProductsPage.jsx
 │   ├── components/
-│   │   ├── checkout/           # CheckoutForm, OrderSummary
-│   │   ├── auth/               # ProtectedRoute
-│   │   └── ui/                 # shadcn/ui base components
-│   ├── hooks/                  # useCheckout.js, useProducts.js
-│   ├── routes.jsx              # React Router v6 config
-│   └── Layout.jsx              # Main layout (Navbar, Footer)
+│   │   ├── admin/              # BatchDialogs, DateRangePicker, EditVariantModal, OrderDetailDialog, ProductFormModal
+│   │   ├── auth/               # AdminProtectedRoute.tsx, ProtectedRoute.tsx
+│   │   ├── checkout/           # CheckoutForm, CourierCard, OrderSummary, PaymentMethodModal
+│   │   ├── figma/              # ImageWithFallback.tsx
+│   │   ├── layout/             # Footer.jsx, Navbar.jsx
+│   │   ├── product/            # ColorSelector, ProductCard, ProductGrid, SizeSelector
+│   │   │   ├── detail/         # ProductActions, ProductImages, ProductInfo, ProductMeta, ProductVariants
+│   │   │   └── product-page/   # Pagination, ProductFilter, ProductSort
+│   │   ├── shared/             # BackToTop, CartDrawer, UserMenu.tsx, WhatsAppFloat
+│   │   └── ui/                 # shadcn/ui base components (40+ components)
+│   ├── hooks/                  # orderActions.js, useAdminProducts.js, useCheckout.js, useOrders.js, useProducts.js, useProductSearch.js
+│   ├── routes.jsx              # React Router v7 config
+│   ├── App.tsx / App.jsx       # Root component with providers
+│   └── Layout.jsx              # Main layout (Navbar, Footer, Outlet)
 ├── context/
 │   ├── AuthContext.tsx         # Customer auth state (global)
 │   ├── AdminAuthContext.jsx    # Admin auth + role check (scoped)
 │   └── CartContext.jsx         # Cart state via localStorage
+├── data/
+│   ├── categories.js
+│   └── products.js             # Static product seed data
 ├── lib/
 │   ├── supabase.js             # Supabase anon client
-│   ├── midtrans.js             # Snap popup integration
-│   ├── config.js               # WHATSAPP_NUMBER, constants
-│   └── utils.js                # formatPrice, generateCartWAMessage
+│   ├── midtrans.js             # Snap popup integration + createTransaction
+│   ├── config.js               # WHATSAPP_NUMBER, BANK_INFO, SITE_CONFIG, SHIPPING_INFO
+│   └── utils.js                # formatPrice, generateCartWAMessage, cn
+├── styles/
+│   ├── fonts.css
+│   ├── index.css
+│   ├── tailwind.css
+│   └── theme.css
 └── supabase/functions/
     ├── _shared/
     │   └── email-templates.ts  # Shared email HTML builders
-    ├── midtrans-create/        # Order creation + Midtrans init
-    ├── midtrans-webhook/       # Payment status sync + points
+    ├── midtrans-create/        # Order creation + Midtrans Snap init
+    ├── midtrans-webhook/       # Payment status sync + points + stock decrement
+    ├── charge-payment/         # Midtrans Core API charge (QRIS/VA/Gopay)
+    ├── get-payment-detail/     # Query Midtrans status + rebuild payment details
     ├── biteship-rates/         # Shipping rate proxy
     ├── biteship-search/        # Area/city search proxy
-    └── biteship-create-order/  # Submit order to Biteship
+    └── biteship-create-order/  # Submit order to Biteship for pickup
 ```
 
 ### 2.2 Provider Hierarchy
@@ -169,20 +211,31 @@ App.tsx
 | user_id | uuid | YES | null (guest orders allowed) |
 | customer_name | varchar | NO | null |
 | customer_email | varchar | YES | null |
+| customer_phone | varchar | YES | null |
 | shipping_address | text | NO | null |
+| shipping_city | varchar | YES | null |
+| shipping_city_id | integer | YES | null |
+| shipping_province | varchar | YES | null |
+| shipping_postal_code | varchar | YES | null |
 | courier | varchar | NO | null e.g. 'jne' |
 | courier_service | varchar | NO | null e.g. 'REG' |
 | shipping_cost | integer | NO | 0 |
+| shipping_etd | varchar | YES | null (estimated delivery) |
 | subtotal | integer | NO | null |
 | discount_amount | integer | YES | 0 |
 | points_used | integer | YES | 0 |
 | total | integer | NO | null |
-| payment_method | varchar | NO | 'midtrans' or 'bank_transfer' |
+| payment_method | varchar | NO | 'qris', 'bank_transfer', 'ovo', 'va', 'gopay', 'credit_card', 'alfamart', 'akulaku' |
 | status | varchar | NO | 'waiting_payment' |
 | snap_token | varchar | YES | null |
 | payment_expired_at | timestamptz | YES | null (+24h from creation) |
 | points_earned | integer | YES | 0 |
+| notes | text | YES | null |
+| awb_number | varchar | YES | null |
+| biteship_order_id | varchar | YES | null |
+| tracking_number | varchar | YES | null |
 | created_at | timestamptz | YES | now() |
+| updated_at | timestamptz | YES | now() |
 
 ### 3.4 Order Status Lifecycle
 
@@ -190,19 +243,21 @@ App.tsx
 waiting_payment → payment_confirmed → processing → shipped → completed
                ↘ expired (terminal)
                ↘ payment_failed (terminal)
+               ↘ cancelled (terminal)
 ```
 
 | Status | Trigger | Next States |
 |---|---|---|
-| waiting_payment | Order creation (midtrans-create) | payment_confirmed, expired, payment_failed |
+| waiting_payment | Order creation (midtrans-create) | payment_confirmed, expired, payment_failed, cancelled |
 | payment_confirmed | Midtrans webhook (settlement/capture) | processing |
 | processing | Admin manual update | shipped |
-| shipped | Admin inputs AWB number | completed |
+| shipped | Admin inputs AWB / Biteship push | completed |
 | completed | Admin or auto-complete | — terminal |
-| expired | Midtrans webhook (expire) | — terminal |
+| expired | Midtrans webhook (expire) or 24h timeout | — terminal |
 | payment_failed | Midtrans webhook (deny/cancel) | — terminal |
+| cancelled | Admin manual cancellation | — terminal |
 
-> For full schema of all 18 tables (products, variants, categories, payments, points_ledger, rewards, vouchers, etc.) see the internal technical documentation v1.0.
+> For full schema of all 18+ tables (products, variants, categories, payments, points_ledger, rewards, vouchers, etc.) see the internal technical documentation v1.0.
 
 ---
 
@@ -245,16 +300,31 @@ waiting_payment → payment_confirmed → processing → shipped → completed
 
 | Feature | Guest | Logged-in Member |
 |---|---|---|
-| Form data | Manual input all fields | Auto-fill from user_profiles |
+| Form data | Manual input all fields | Auto-fill from user_profiles + saved address |
 | user_id in orders | NULL | auth.users UUID |
 | Loyalty points | Not earned | Earned post-payment |
 | Order history | Via order number only | Account dashboard |
 
-### 5.2 Midtrans Full Payment Lifecycle
+### 5.2 Payment Method Selection
+
+Checkout supports **8 payment methods** via Midtrans Snap filtering:
+
+| Method | ID | Snap Filter |
+|---|---|---|
+| QRIS | qris | `['other_qris']` |
+| OVO | ovo | `['ovo']` |
+| Virtual Account | va | `['bca_va','bni_va','bri_va','permata_va','other_va']` |
+| Alfamart | alfamart | `['alfamart','indomaret']` |
+| Akulaku | akulaku | `['akulaku']` |
+| Credit Card | cc | `['credit_card']` |
+| GoPay | gopay | `['gopay']` (via Core API) |
+| Bank Transfer Manual | bank_transfer | WhatsApp redirect (manual) |
+
+### 5.3 Midtrans Snap Payment Lifecycle
 
 ```
 FRONTEND (useCheckout.js)
-1. User fills form + selects courier
+1. User fills form + selects courier + selects payment method
 2. validateForm()
 3. POST /functions/v1/midtrans-create
 
@@ -269,8 +339,8 @@ EDGE FUNCTION: midtrans-create
 11. Return { snap_token, order_number, order_id }
 
 FRONTEND
-12. window.snap.pay(snap_token, { callbacks })
-13. onSuccess/onPending → navigate to /pesanan/:orderNumber
+12. window.snap.pay(snap_token, { callbacks, enabledPayments })
+13. onSuccess/onPending → navigate to /orders/:orderNumber
 
 MIDTRANS WEBHOOK
 14. Receive: { order_id, transaction_status, payment_type }
@@ -283,7 +353,28 @@ MIDTRANS WEBHOOK
     - Send 'payment_confirmed' email via Resend
 ```
 
-### 5.3 WhatsApp Transfer Flow
+### 5.4 Midtrans Core API (Alternative Flow)
+
+For direct charge without Snap popup:
+
+```
+EDGE FUNCTION: charge-payment
+1. Receive { order_number, payment_type, bank?, phone_number? }
+2. GET order from DB
+3. POST Midtrans /v2/charge with payment-specific payload
+4. Extract payment detail (QR URL / VA number / deeplink)
+5. UPDATE payments SET payment_detail, midtrans_order_id
+6. Return { success, detail }
+
+EDGE FUNCTION: get-payment-detail
+1. Receive { order_number }
+2. GET midtrans_order_id from payments table
+3. GET Midtrans /v2/{order_id}/status
+4. Build detail object per payment_type (qris, bank_transfer, cstore, echannel, gopay, credit_card)
+5. Return { success, detail }
+```
+
+### 5.5 WhatsApp Transfer Flow
 
 > ⚠️ **Note:** WhatsApp transfer orders are NOT saved to the database. This is a manual process.
 
@@ -296,6 +387,17 @@ MIDTRANS WEBHOOK
 
 **Recommendation:** Add database order creation before WA redirect to enable order tracking for manual transfer customers.
 
+### 5.6 Order Re-payment
+
+From `OrderDetailPage.jsx`, unpaid orders can be re-paid:
+
+```
+1. Check if order.status === 'waiting_payment' && !expired
+2. Load Midtrans Snap script
+3. snap.pay(order.snap_token, { callbacks })
+4. On success/pending → refresh order data
+```
+
 ---
 
 ## 6. Edge Functions Reference
@@ -304,6 +406,8 @@ MIDTRANS WEBHOOK
 |---|---|---|
 | midtrans-create | POST | Create order in DB + initialize Midtrans Snap transaction |
 | midtrans-webhook | POST | Handle Midtrans payment status callbacks |
+| charge-payment | POST | Direct charge via Midtrans Core API (QRIS/VA/Gopay) |
+| get-payment-detail | POST | Query Midtrans status & rebuild payment details |
 | biteship-rates | POST | Proxy: get shipping rates for origin → destination |
 | biteship-search | POST | Proxy: search city/district areas by keyword |
 | biteship-create-order | POST | Submit confirmed order to Biteship for pickup |
@@ -312,7 +416,7 @@ MIDTRANS WEBHOOK
 
 | Secret Key | Used In | Description |
 |---|---|---|
-| MIDTRANS_SERVER_KEY | midtrans-create, midtrans-webhook | Production server key |
+| MIDTRANS_SERVER_KEY | midtrans-create, midtrans-webhook, charge-payment, get-payment-detail | Production server key |
 | SUPABASE_URL | All functions | Project URL |
 | SUPABASE_SERVICE_ROLE_KEY | All functions | Full DB access (server-side only) |
 | RESEND_API_KEY | midtrans-create, midtrans-webhook | Resend email API key |
@@ -327,7 +431,7 @@ MIDTRANS WEBHOOK
 |---|---|---|
 | Origin postal code | 50265 | Hardcoded — Warehouse location (Semarang) |
 | Weight unit | grams | Default product weight: 500g |
-| Supported couriers | JNE, J&T, SiCepat + others | Based on Biteship availability |
+| Supported couriers | JNE, J&T, SiCepat, AnterAja + others | Based on Biteship availability |
 
 ---
 
@@ -368,6 +472,15 @@ Each `user_profiles` row has a unique `referral_code`. A `referral_uses` record 
 |---|---|
 | voucher_given | Whether referrer received their reward voucher |
 | first_purchase | Whether referred user completed their first purchase |
+
+### 7.4 Frontend Loyalty Pages
+
+| Page | Path | Status |
+|---|---|---|
+| Loyalty Dashboard | /loyalty | ✅ Live — points balance, recent activity, earn rules |
+| History | /loyalty/history | ✅ Live — full points ledger |
+| Rewards | /loyalty/rewards | 🟡 UI Live — redeem button disabled (Coming Soon) |
+| Referral | /loyalty/referral | 🟡 UI Live — referral code display, share disabled (Coming Soon) |
 
 ---
 
@@ -420,9 +533,29 @@ UPDATE admin_users SET is_active = false WHERE id = 'uuid';
 | Page | File | Capabilities |
 |---|---|---|
 | Dashboard | AdminDashboard.jsx | Stats overview, recent orders, low-stock alerts (<5 units) |
-| Orders | AdminOrders.jsx | Filter by status, search, update status, input AWB number |
-| Products | AdminProducts.jsx | CRUD products + variants, image management |
+| Orders | AdminOrders.jsx | Filter by status, date range, search; update status; input AWB; batch status update; batch Biteship push; export CSV |
+| Products | AdminProducts.jsx | CRUD products + variants, image management, toggle active, shopee/tokopedia URL |
 | Stock | AdminStock.jsx | Bulk stock updates per variant |
+
+### 9.3 Admin Batch Operations
+
+| Operation | Description | File |
+|---|---|---|
+| Batch Status Update | Multi-select orders → update status + audit log | AdminOrders.jsx + BatchDialogs.jsx |
+| Batch Biteship Push | Multi-select eligible orders → push to Biteship | AdminOrders.jsx + BatchDialogs.jsx |
+| Batch Print Invoice | Multi-select → print multiple invoices at once | orderActions.js |
+| Batch Print AWB | Multi-select → print multiple AWB labels at once | orderActions.js |
+| Export CSV | Export filtered orders to CSV | orderActions.js |
+
+### 9.4 Admin Dialogs & Modals
+
+| Component | Purpose |
+|---|---|
+| OrderDetailDialog.jsx | Full order detail view, push Biteship, print invoice/AWB |
+| ProductFormModal.jsx | Add/edit product with variant management |
+| EditVariantModal.jsx | Inline edit existing variant (stock, price, SKU, images) |
+| BatchDialogs.jsx | Batch status update & Biteship push confirmation dialogs |
+| DateRangePicker.jsx | Filter orders by date range |
 
 ---
 
@@ -435,7 +568,7 @@ UPDATE admin_users SET is_active = false WHERE id = 'uuid';
 | WA transfer not saved to DB | No order record for manual transfers | Add order insert before WA redirect |
 | New domain email to spam | Customers may miss emails | Domain warmup over 2–4 weeks |
 | No stock reservation during checkout | Race condition on last item | Implement soft-lock RPC |
-| Snap token expires 24h | User cannot re-pay | Add re-payment CTA on order detail |
+| ~Snap token expires 24h~ | ~User cannot re-pay~ | ✅ **RESOLVED** — OrderDetailPage has re-payment CTA |
 | shipping_city_id hardcoded as 1 | May break Biteship integration | Pass actual city_id from Biteship search |
 
 ### 10.2 Development Roadmap
@@ -443,10 +576,10 @@ UPDATE admin_users SET is_active = false WHERE id = 'uuid';
 | Priority | Feature | Schema Status | Effort |
 |---|---|---|---|
 | 🔴 High | Shipping resi email notification | shipping_tracking ready | Low |
-| 🔴 High | Order re-payment (expired orders) | snap_token in orders | Low |
+| 🔴 High | ~Order re-payment (expired orders)~ | ✅ **DONE** — snap_token re-use in OrderDetailPage |
 | 🔴 High | Promo/voucher frontend integration | vouchers table ready | Medium |
-| 🟡 Medium | Points redemption frontend | rewards + user_rewards ready | Medium |
-| 🟡 Medium | Referral program frontend | referral_uses ready | Medium |
+| 🟡 Medium | ~Points redemption frontend~ | 🟡 **PARTIAL** — UI live, redeem logic pending |
+| 🟡 Medium | ~Referral program frontend~ | 🟡 **PARTIAL** — UI live, share logic pending |
 | 🟡 Medium | WA transfer → DB order creation | orders schema ready | Low |
 | 🟢 Low | Analytics dashboard | — | High |
 | 🟢 Low | SMS via Fonnte | — | Low |
@@ -467,6 +600,8 @@ VITE_MIDTRANS_CLIENT_KEY=[midtrans-client-key]
 # Deploy
 git push origin main  # auto-deploys via Vercel Git integration
 ```
+
+> **SPA Routing:** `vercel.json` includes rewrite rule `{ "source": "/(.*)", "destination": "/index.html" }` for React Router v7 client-side routing.
 
 ### 11.2 Edge Functions — Supabase CLI
 
@@ -503,7 +638,9 @@ supabase secrets set BITESHIP_API_KEY=biteship-xxxxx
 - [ ] Test end-to-end checkout with real Midtrans payment
 - [ ] Confirm Fonnte WA notification received on test order
 - [ ] Verify email to inbox (not spam) after domain warmup
+- [ ] Test order re-payment from Order Detail page
+- [ ] Confirm Biteship batch push works for multiple orders
 
 ---
 
-*Technical System Documentation v1.0 — April 2026 — Internal Use Only*
+*Technical System Documentation v1.1 — May 2026 — Internal Use Only*
