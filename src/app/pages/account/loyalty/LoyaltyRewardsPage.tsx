@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 import { motion } from 'motion/react';
 import { ArrowLeft, Gift, Construction } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../../../context/AuthContext';
 
 export default function LoyaltyRewardsPage() {
   const { user } = useAuth();

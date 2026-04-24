@@ -1,17 +1,17 @@
 import { useParams, Navigate, useNavigate } from 'react-router';
-import { useIsMobile } from '../components/ui/use-mobile';
+import { useIsMobile } from '../../components/ui/use-mobile';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { ProductGrid } from '../components/product/ProductGrid';
-import { supabase } from '../../lib/supabase';
-import { calculateDiscount, generateProductWAMessage } from '../../lib/utils';
-import { useCart } from '../../context/CartContext';
+import { ProductGrid } from '../../components/product/ProductGrid';
+import { supabase } from '../../../lib/supabase';
+import { calculateDiscount, generateProductWAMessage } from '../../../lib/utils';
+import { useCart } from '../../../context/CartContext';
 
-import { ProductImages } from '../components/product/detail/ProductImages';
-import { ProductInfo } from '../components/product/detail/ProductInfo';
-import { ProductVariants, sortSizes } from '../components/product/detail/ProductVariants';
-import { ProductActions } from '../components/product/detail/ProductActions';
-import { ProductMeta } from '../components/product/detail/ProductMeta';
+import { ProductImages } from '../../components/product/detail/ProductImages';
+import { ProductInfo } from '../../components/product/detail/ProductInfo';
+import { ProductVariants, sortSizes } from '../../components/product/detail/ProductVariants';
+import { ProductActions } from '../../components/product/detail/ProductActions';
+import { ProductMeta } from '../../components/product/detail/ProductMeta';
 
 export const ProductDetailPage = () => {
   const { slug } = useParams();

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Navigate, Link } from 'react-router';
-import { ProductGrid } from '../components/product/ProductGrid';
-import { supabase } from '../../lib/supabase';
+import { ProductGrid } from '../../components/product/ProductGrid';
+import { supabase } from '../../../lib/supabase';
 
 export const CollectionDetailPage = () => {
   const { slug } = useParams();

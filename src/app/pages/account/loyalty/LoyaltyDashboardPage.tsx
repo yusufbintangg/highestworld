@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { motion } from 'motion/react';
 import { Gift, History, ArrowRight, Clock, Award, Construction } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../../../context/AuthContext';
+import { supabase } from '../../../../lib/supabase';
 
 export default function LoyaltyDashboardPage() {
   const { user } = useAuth();

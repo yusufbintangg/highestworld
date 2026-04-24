@@ -1,9 +1,10 @@
 import { createBrowserRouter } from 'react-router';
+// Import all page components
 import { HomePage } from './pages/HomePage';
-import { ProductsPage } from './pages/ProductsPage';
-import { ProductDetailPage } from './pages/ProductDetailPage';
-import { CollectionsPage } from './pages/CollectionsPage';
-import { CollectionDetailPage } from './pages/CollectionDetailPage';
+import { ProductsPage } from './pages/products/ProductsPage';
+import { ProductDetailPage } from './pages/products/ProductDetailPage';
+import { CollectionsPage } from './pages/collections/CollectionsPage';
+import { CollectionDetailPage } from './pages/collections/CollectionDetailPage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
 import { PaymentConfirmationPage } from './pages/PaymentConfirmationPage';
@@ -11,29 +12,29 @@ import { CheckoutPage } from './pages/CheckoutPage';
 import { OrderDetailPage } from './pages/OrderDetailPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { Layout } from './Layout';
+// Import admin pages and context
 import { AdminAuthProvider } from '@/context/AdminAuthContext';
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminLayout } from './pages/admin/AdminLayout';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminProducts } from './pages/admin/AdminProducts';
-
 import { AdminOrders } from './pages/admin/AdminOrders';
-
 import { AdminStock } from './pages/admin/AdminStock';
+// Import account pages and context
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
-import { AccountDashboardPage } from './pages/AccountDashboardPage';
-
-import { AccountOrdersPage } from './pages/AccountOrdersPage';
-
-import { AccountAddressesPage } from './pages/AccountAddressesPage';
-import { AccountSettingsPage } from './pages/AccountSettingsPage';
-import { AccountSecurityPage } from './pages/AccountSecurityPage';
-import LoyaltyDashboardPage from './pages/LoyaltyDashboardPage';
-import LoyaltyHistoryPage from './pages/LoyaltyHistoryPage';
-import LoyaltyRewardsPage from './pages/LoyaltyRewardsPage';
-import LoyaltyReferralPage from './pages/LoyaltyReferralPage';
+// Account pages
+import { AccountDashboardPage } from './pages/account/AccountDashboardPage';
+import { AccountOrdersPage } from './pages/account/AccountOrdersPage';
+import { AccountAddressesPage } from './pages/account/AccountAddressesPage';
+import { AccountSettingsPage } from './pages/account/AccountSettingsPage';
+import { AccountSecurityPage } from './pages/account/AccountSecurityPage';
+// Loyalty pages
+import LoyaltyDashboardPage from './pages/account/loyalty/LoyaltyDashboardPage';
+import LoyaltyHistoryPage from './pages/account/loyalty/LoyaltyHistoryPage';
+import LoyaltyRewardsPage from './pages/account/loyalty/LoyaltyRewardsPage';
+import LoyaltyReferralPage from './pages/account/loyalty/LoyaltyReferralPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 
@@ -59,6 +60,8 @@ export const router = createBrowserRouter([
     path: '/',
     element: <Layout />,
     children: [
+      // Public routes:
+      // pages for home, products, collections, about, contact, etc.
       { index: true, element: <HomePage /> },
       { path: 'products', element: <ProductsPage /> },
       { path: 'products/:slug', element: <ProductDetailPage /> },
@@ -68,21 +71,19 @@ export const router = createBrowserRouter([
       { path: 'contact', element: <ContactPage /> },
       { path: 'payment-confirmation', element: <PaymentConfirmationPage /> },
       { path: 'orders/:orderNumber', element: <OrderDetailPage /> },
-
       { path: 'checkout', element: <CheckoutPage /> },
+      // Account routes:
       { path: 'account', element: <ProtectedRoute><AccountDashboardPage /></ProtectedRoute> },
-
       { path: 'account/orders', element: <ProtectedRoute><AccountOrdersPage /></ProtectedRoute> },
-
       { path: 'account/addresses', element: <ProtectedRoute><AccountAddressesPage /></ProtectedRoute> },
       { path: 'account/settings', element: <ProtectedRoute><AccountSettingsPage /></ProtectedRoute> },
       { path: 'account/security', element: <ProtectedRoute><AccountSecurityPage /></ProtectedRoute> },
-
+      // Loyalty program routes:
       { path: 'loyalty', element: <ProtectedRoute><LoyaltyDashboardPage /></ProtectedRoute> },
       { path: 'loyalty/history', element: <ProtectedRoute><LoyaltyHistoryPage /></ProtectedRoute> },
       { path: 'loyalty/rewards', element: <ProtectedRoute><LoyaltyRewardsPage /></ProtectedRoute> },
       { path: 'loyalty/referral', element: <ProtectedRoute><LoyaltyReferralPage /></ProtectedRoute> },
-
+      // Catch-all route for 404 Not Found
       { path: '*', element: <NotFoundPage /> },
     ],
   },
@@ -92,13 +93,13 @@ export const router = createBrowserRouter([
   path: '/admin',
   element: <AdminWrapper />,
   children: [
+    // Admin dashboard and management routes
     { index: true, element: <AdminDashboard /> },
     { path: 'produk', element: <AdminProducts /> },
-
     { path: 'order', element: <AdminOrders /> },
-
     { path: 'stock', element: <AdminStock /> },
   ],
 },
+  // Admin login route (separate from the main layout)
 { path: '/admin/login', element: <AdminLoginWrapper /> },
 ]);

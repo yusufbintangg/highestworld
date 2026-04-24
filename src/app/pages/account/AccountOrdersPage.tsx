@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { motion } from 'motion/react';
 import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck, Loader2, CreditCard } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { supabase } from '../../lib/supabase';
-import { formatPrice } from '../../lib/utils';
+import { useAuth } from '../../../context/AuthContext';
+import { supabase } from '../../../lib/supabase';
+import { formatPrice } from '../../../lib/utils';
 
 const STATUS_MAP = {
   waiting_payment:  { label: 'Menunggu Pembayaran', icon: CreditCard, color: 'text-[var(--accent-gold)]',   bgColor: 'bg-[var(--accent-gold)]/10',   filter: 'processing' },

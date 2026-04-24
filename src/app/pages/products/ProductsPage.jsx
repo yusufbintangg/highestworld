@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { useProducts } from '../hooks/useProducts';
-import { ProductGrid } from '../components/product/ProductGrid';
-import { ProductFilter } from '../components/product/product-page/ProductFilter';
-import { ProductSort } from '../components/product/product-page/ProductSort';
-import { Pagination } from '../components/product/product-page/Pagination';
+import { useProducts } from '../../hooks/useProducts';
+import { ProductGrid } from '../../components/product/ProductGrid';
+import { ProductFilter } from '../../components/product/product-page/ProductFilter';
+import { ProductSort } from '../../components/product/product-page/ProductSort';
+import { Pagination } from '../../components/product/product-page/Pagination';
 
 const SORT_OPTIONS = [
   { value: 'newest',     label: 'New Arrivals' },
