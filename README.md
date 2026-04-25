@@ -89,28 +89,42 @@ Highest World is a production-grade B2C e-commerce platform specializing in big-
 src/
 ├── app/
 │   ├── pages/                  # Route-level page components
-│   │   ├── admin/              # Admin panel (Dashboard, Login, Layout, Orders, Products, Stock)
+│   │   ├── account/            # Customer account pages
+│   │   │   ├── loyalty/        # Loyalty sub-pages
+│   │   │   │   ├── LoyaltyDashboardPage.tsx
+│   │   │   │   ├── LoyaltyHistoryPage.tsx
+│   │   │   │   ├── LoyaltyReferralPage.tsx
+│   │   │   │   └── LoyaltyRewardsPage.tsx
+│   │   │   ├── AccountAddressesPage.tsx
+│   │   │   ├── AccountDashboardPage.tsx
+│   │   │   ├── AccountOrdersPage.tsx
+│   │   │   ├── AccountSecurityPage.tsx
+│   │   │   └── AccountSettingsPage.tsx
+│   │   ├── admin/              # Admin panel
+│   │   │   ├── AdminDashboard.jsx
+│   │   │   ├── AdminLayout.jsx
+│   │   │   ├── AdminLogin.jsx
+│   │   │   ├── AdminOrders.jsx
+│   │   │   ├── AdminProducts.jsx
+│   │   │   └── AdminStock.jsx
 │   │   ├── auth/               # Login, Register, ForgotPassword, ResetPassword
+│   │   │   ├── ForgotPasswordPage.tsx
+│   │   │   ├── LoginPage.tsx
+│   │   │   ├── RegisterPage.tsx
+│   │   │   └── ResetPasswordPage.tsx
+│   │   ├── collections/        # Collection pages
+│   │   │   ├── CollectionDetailPage.jsx
+│   │   │   └── CollectionsPage.jsx
+│   │   ├── products/           # Product catalog pages
+│   │   │   ├── ProductDetailPage.jsx
+│   │   │   └── ProductsPage.jsx
 │   │   ├── AboutPage.jsx
-│   │   ├── AccountAddressesPage.tsx
-│   │   ├── AccountDashboardPage.tsx
-│   │   ├── AccountOrdersPage.tsx
-│   │   ├── AccountSecurityPage.tsx
-│   │   ├── AccountSettingsPage.tsx
 │   │   ├── CheckoutPage.jsx
-│   │   ├── CollectionDetailPage.jsx
-│   │   ├── CollectionsPage.jsx
 │   │   ├── ContactPage.jsx
 │   │   ├── HomePage.jsx
-│   │   ├── LoyaltyDashboardPage.tsx
-│   │   ├── LoyaltyHistoryPage.tsx
-│   │   ├── LoyaltyReferralPage.tsx
-│   │   ├── LoyaltyRewardsPage.tsx
 │   │   ├── NotFoundPage.jsx
 │   │   ├── OrderDetailPage.jsx
-│   │   ├── PaymentConfirmationPage.jsx
-│   │   ├── ProductDetailPage.jsx
-│   │   └── ProductsPage.jsx
+│   │   └── PaymentConfirmationPage.jsx
 │   ├── components/
 │   │   ├── admin/              # BatchDialogs, DateRangePicker, EditVariantModal, OrderDetailDialog, ProductFormModal
 │   │   ├── auth/               # AdminProtectedRoute.tsx, ProtectedRoute.tsx
