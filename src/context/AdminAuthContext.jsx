@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 const AdminAuthContext = createContext(null);
@@ -6,6 +6,7 @@ const AdminAuthContext = createContext(null);
 export const AdminAuthProvider = ({ children }) => {
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
+  const initialized = useRef(false); // ← guard biar getSession ga bentrok sama onAuthStateChange
 
   const checkAdminRole = async (user) => {
     if (!user) {
@@ -20,20 +21,30 @@ export const AdminAuthProvider = ({ children }) => {
       .eq('is_active', true)
       .maybeSingle();
 
-    // Kalau ada di admin_users → set admin
-    // Kalau tidak → set null tapi JANGAN signOut (biar user biasa tetap bisa login)
     setAdmin(adminUser ? { ...user, ...adminUser } : null);
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      await checkAdminRole(session?.user ?? null);
-      setLoading(false);
-    });
+    // ✅ Fix: pakai onAuthStateChange INITIAL_SESSION event aja
+    // jangan gabungin getSession() + onAuthStateChange bersamaan
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!initialized.current) {
+          // First fire = initial session load
+          initialized.current = true;
+          await checkAdminRole(session?.user ?? null);
+          setLoading(false);
+          return;
+        }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      await checkAdminRole(session?.user ?? null);
-    });
+        // Subsequent events (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, dll)
+        if (event === 'SIGNED_OUT') {
+          setAdmin(null);
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          await checkAdminRole(session?.user ?? null);
+        }
+      }
+    );
 
     return () => subscription.unsubscribe();
   }, []);
@@ -74,4 +85,3 @@ export const useAdminAuth = () => {
   if (!context) throw new Error('useAdminAuth must be used within AdminAuthProvider');
   return context;
 };
-
