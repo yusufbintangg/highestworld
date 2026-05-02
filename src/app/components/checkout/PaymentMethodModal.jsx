@@ -17,60 +17,12 @@ export const PAYMENT_METHODS = [
     ),
   },
   {
-    id: 'ovo',
-    label: 'OVO',
-    coreApi: false,
-    enabledPayments: ['ovo'],
-    logo: (
-      <img
-        src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1776860057/GKL14_OVO_-_Koleksilogo.com_oun8yg.jpg"
-        alt="OVO"
-        className="h-8 w-auto"
-      />
-    ),
-  },
-  {
-    id: 'alfamart',
-    label: 'Alfamart',
-    coreApi: false,
-    enabledPayments: ['alfamart', 'indomaret'],
-    logo: (
-      <img
-        src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1776859979/ALFAMART_LOGO_BARU_sx4wj1.png"
-        alt="Alfamart"
-        className="h-8 w-auto"
-      />
-    ),
-  },
-  {
-    id: 'akulaku',
-    label: 'Akulaku',
-    coreApi: false,
-    enabledPayments: ['akulaku'],
-    logo: (
-      <img
-        src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1776877359/_bjGT4LXUDvlKg6ySYU_Q_image_nlwqlk.webp"
-        alt="Akulaku"
-        className="h-16 w-auto"
-      />
-    ),
-  },
-  {
     id: 'va',
     label: 'Virtual Account',
     coreApi: true,
     enabledPayments: ['bca_va', 'bni_va', 'bri_va', 'permata_va', 'other_va'],
     logo: (
       <span className="text-gray-700 font-bold text-sm tracking-wide">Virtual Account</span>
-    ),
-  },
-  {
-    id: 'cc',
-    label: 'Kartu Kredit / Debit',
-    coreApi: false,
-    enabledPayments: ['credit_card'],
-    logo: (
-      <span className="text-gray-700 font-bold text-sm tracking-wide">Kartu Kredit/Debit</span>
     ),
   },
 ];
