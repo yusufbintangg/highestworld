@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, Gift, X } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import { useCheckout } from '../hooks/useCheckout';
 import { useAuth } from '../../context/AuthContext';
 import { CheckoutForm } from '../components/checkout/CheckoutForm';
 import { OrderSummary } from '../components/checkout/OrderSummary';
-import { formatPrice } from '../../lib/utils';
 
 export const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -14,8 +13,6 @@ export const CheckoutPage = () => {
   const [dismissed, setDismissed] = useState(false);
 
   if (checkout.cartItems.length === 0) return null;
-
-  const discount = checkout.cartTotal * 0.05;
 
   return (
     <div className="min-h-screen bg-white pt-2 pb-20">
@@ -32,9 +29,7 @@ export const CheckoutPage = () => {
         {!isAuthenticated && !dismissed && (
           <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-5 py-4 mb-8">
             <div>
-              <p className="text-sm font-semibold text-gray-900">
-                Login Sekarang!! 
-              </p>
+              <p className="text-sm font-semibold text-gray-900">Login Sekarang!!</p>
               <p className="text-xs text-gray-500 mt-0.5">
                 Dapatkan poin loyalty untuk member untuk setiap pembelian, yang bisa ditukar dengan diskon di pembelian berikutnya!
               </p>
@@ -67,12 +62,14 @@ export const CheckoutPage = () => {
             loadingRates={checkout.loadingRates}
             selectedRate={checkout.selectedRate}
             paymentMethod={checkout.paymentMethod}
+            selectedVaBank={checkout.selectedVaBank}
             areaRef={checkout.areaRef}
             onInputChange={checkout.handleInputChange}
             onAreaInput={checkout.handleAreaInput}
             onSelectArea={checkout.handleSelectArea}
             onSelectRate={checkout.setSelectedRate}
             onPaymentMethodChange={checkout.setPaymentMethod}
+            onPaymentMethodSelect={checkout.handlePaymentMethodSelect}
           />
           <OrderSummary
             cartItems={checkout.cartItems}

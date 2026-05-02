@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { formatPrice } from '../../lib/utils';
 import { WHATSAPP_NUMBER } from '../../lib/config';
-import { openMidtransPayment, generateOrderId } from '../../lib/midtrans';
+import { openMidtransPayment, createAndChargeOrder, generateOrderId } from '../../lib/midtrans';
 import { PAYMENT_METHODS } from '../components/checkout/PaymentMethodModal';
 import { toast } from 'sonner';
 
@@ -14,28 +14,38 @@ export const useCheckout = () => {
   const { cartItems, getCartTotal, clearCart } = useCart();
   const { user } = useAuth();
 
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('qris');
+  const [isProcessing, setIsProcessing]       = useState(false);
+  const [paymentMethod, setPaymentMethod]     = useState('qris');  // method id
+  const [selectedVaBank, setSelectedVaBank]   = useState(null);    // bank id kalau VA
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '',
     address: '', city: '', province: '', postalCode: '', notes: '',
   });
-  const [errors, setErrors] = useState({});
-  const [shippingRates, setShippingRates] = useState([]);
-  const [selectedRate, setSelectedRate] = useState(null);
-  const [loadingRates, setLoadingRates] = useState(false);
-  const [areaSearch, setAreaSearch] = useState('');
-  const [areaResults, setAreaResults] = useState([]);
-  const [loadingArea, setLoadingArea] = useState(false);
+  const [errors, setErrors]                   = useState({});
+  const [shippingRates, setShippingRates]     = useState([]);
+  const [selectedRate, setSelectedRate]       = useState(null);
+  const [loadingRates, setLoadingRates]       = useState(false);
+  const [areaSearch, setAreaSearch]           = useState('');
+  const [areaResults, setAreaResults]         = useState([]);
+  const [loadingArea, setLoadingArea]         = useState(false);
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
-  const [selectedArea, setSelectedArea] = useState(null);
-  const [savedAddress, setSavedAddress] = useState(null);
-  const areaRef = useRef(null);
-  const searchTimeout = useRef(null);
+  const [selectedArea, setSelectedArea]       = useState(null);
+  const [savedAddress, setSavedAddress]       = useState(null);
+  const areaRef                               = useRef(null);
+  const searchTimeout                         = useRef(null);
 
-  const cartTotal = getCartTotal();
+  const cartTotal   = getCartTotal();
   const shippingCost = selectedRate?.price || 0;
-  const grandTotal = cartTotal + shippingCost;
+  const grandTotal  = cartTotal + shippingCost;
+
+  // ------------------------------------------------------------------
+  // Handler yang dibungkus supaya onSelect dari PaymentMethodModal
+  // bisa set method + bank sekaligus
+  // ------------------------------------------------------------------
+  const handlePaymentMethodSelect = (method, bank = null) => {
+    setPaymentMethod(method.id);
+    setSelectedVaBank(bank);
+  };
 
   // Auto-fill dari user login
   useEffect(() => {
@@ -43,15 +53,19 @@ export const useCheckout = () => {
     setFormData(prev => ({
       ...prev,
       firstName: prev.firstName || user.name?.split(' ')[0] || '',
-      lastName: prev.lastName || user.name?.split(' ').slice(1).join(' ') || '',
-      email: prev.email || user.email || '',
-      phone: prev.phone || user.phone || '',
+      lastName:  prev.lastName  || user.name?.split(' ').slice(1).join(' ') || '',
+      email:     prev.email     || user.email || '',
+      phone:     prev.phone     || user.phone || '',
     }));
   }, [user?.id, user?.name, user?.phone, user?.email]);
 
-// Redirect kalau cart kosong - EXCLUDE checkout direct access
+  // Redirect kalau cart kosong
   useEffect(() => {
-    if (cartItems.length === 0 && !document.referrer.includes('/products') && !document.referrer.includes('/product')) {
+    if (
+      cartItems.length === 0 &&
+      !document.referrer.includes('/products') &&
+      !document.referrer.includes('/product')
+    ) {
       toast.error('Keranjang Anda kosong');
       navigate('/products');
     }
@@ -82,12 +96,12 @@ export const useCheckout = () => {
           setSavedAddress(data);
           setFormData(prev => ({
             ...prev,
-            firstName: data.recipient_name?.split(' ')[0] || '',
-            lastName: data.recipient_name?.split(' ').slice(1).join(' ') || '',
-            phone: data.phone || '',
-            address: data.address || '',
-            city: data.city || '',
-            province: data.province || '',
+            firstName:  data.recipient_name?.split(' ')[0] || '',
+            lastName:   data.recipient_name?.split(' ').slice(1).join(' ') || '',
+            phone:      data.phone || '',
+            address:    data.address || '',
+            city:       data.city || '',
+            province:   data.province || '',
             postalCode: data.postal_code || '',
           }));
           const cityParts = data.city?.split(', ') || [];
@@ -155,8 +169,8 @@ export const useCheckout = () => {
     setAreaSearch(`${area.administrative_division_level_3_name}, ${area.administrative_division_level_2_name}`);
     setFormData(prev => ({
       ...prev,
-      city: area.administrative_division_level_2_name || area.name,
-      province: area.administrative_division_level_1_name || '',
+      city:       area.administrative_division_level_2_name || area.name,
+      province:   area.administrative_division_level_1_name || '',
       postalCode: String(area.postal_code) || '',
     }));
     setShowAreaDropdown(false);
@@ -174,7 +188,9 @@ export const useCheckout = () => {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const totalWeight = cartItems.reduce((sum, item) => sum + ((item.product?.weight || 100) * item.quantity), 0);
+      const totalWeight = cartItems.reduce(
+        (sum, item) => sum + ((item.product?.weight || 100) * item.quantity), 0
+      );
       const response = await fetch(`${supabaseUrl}/functions/v1/biteship-rates`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseKey}` },
@@ -246,11 +262,90 @@ export const useCheckout = () => {
     if (existing) {
       await supabase.from('user_addresses').update(addressPayload).eq('id', existing.id);
     } else {
-      await supabase.from('user_addresses').insert({ ...addressPayload, user_id: user.id, label: 'Rumah', is_default: true });
+      await supabase.from('user_addresses').insert({
+        ...addressPayload, user_id: user.id, label: 'Rumah', is_default: true,
+      });
     }
   };
 
-  const handleMidtransPayment = async () => {
+  // ------------------------------------------------------------------
+  // Build order payload (shared antara Core API dan Snap)
+  // ------------------------------------------------------------------
+  const buildOrderPayload = () => ({
+    user_id: user?.id || null,
+    order: { notes: formData.notes || null },
+    customer: {
+      name:  `${formData.firstName} ${formData.lastName || ''}`.trim(),
+      phone: formData.phone,
+      email: formData.email,
+    },
+    shipping: {
+      address:    formData.address,
+      city:       formData.city,
+      city_id:    1,
+      province:   formData.province,
+      postal_code: formData.postalCode,
+      courier:    selectedRate?.courier_code || 'jne',
+      service:    selectedRate?.courier_service_code || 'REG',
+      cost:       selectedRate.price,
+      etd:        selectedRate?.duration || '2-3 hari',
+    },
+    items: cartItems.map(item => ({
+      product_id:     item.product.id,
+      variant_id:     item.variantId || null,
+      name:           item.product.name,
+      price:          item.product.price,
+      qty:            item.quantity,
+      size:           item.size,
+      sku:            item.sku || null,
+      variant_images: item.variantImages || [],
+      weight:         item.product.weight || 100,
+    })),
+  });
+
+  // ------------------------------------------------------------------
+  // Path A: Core API — QRIS & Virtual Account
+  // Buat order di DB → charge langsung → redirect ke order detail
+  // ------------------------------------------------------------------
+  const handleCoreApiPayment = async () => {
+    setIsProcessing(true);
+    if (!selectedRate) {
+      toast.error('Pilih kurir pengiriman dulu');
+      setIsProcessing(false);
+      return;
+    }
+
+    // VA wajib ada bank
+    if (paymentMethod === 'va' && !selectedVaBank) {
+      toast.error('Pilih bank Virtual Account terlebih dahulu');
+      setIsProcessing(false);
+      return;
+    }
+
+    try {
+      const orderPayload = buildOrderPayload();
+
+      // payment_type untuk Core API: "qris" atau "bank_transfer"
+      const paymentType = paymentMethod === 'va' ? 'bank_transfer' : 'qris';
+      const bank        = paymentMethod === 'va' ? selectedVaBank : null;
+
+      const { orderNumber } = await createAndChargeOrder(orderPayload, paymentType, bank);
+
+      try { await saveProfileIfNeeded(); } catch {}
+      clearCart();
+
+      // Redirect ke order detail — halaman itu sudah menampilkan QR / VA number
+      window.location.href = `/orders/${orderNumber}`;
+    } catch (err) {
+      toast.error(err.message || 'Terjadi kesalahan. Silakan coba lagi.');
+      setIsProcessing(false);
+    }
+  };
+
+  // ------------------------------------------------------------------
+  // Path B: Snap popup — OVO, Alfamart, Akulaku, CC
+  // ------------------------------------------------------------------
+  const handleSnapPayment = async () => {
     setIsProcessing(true);
     if (!selectedRate) {
       toast.error('Pilih kurir pengiriman dulu');
@@ -258,38 +353,7 @@ export const useCheckout = () => {
       return;
     }
     try {
-      const orderPayload = {
-        user_id: user?.id || null,
-        order: { notes: formData.notes || null },
-        customer: {
-          name: `${formData.firstName} ${formData.lastName || ''}`.trim(),
-          phone: formData.phone,
-          email: formData.email,
-        },
-        shipping: {
-          address: formData.address,
-          city: formData.city,
-          city_id: 1,
-          province: formData.province,
-          postal_code: formData.postalCode,
-          courier: selectedRate?.courier_code || 'jne',
-          service: selectedRate?.courier_service_code || 'REG',
-          cost: selectedRate.price,
-          etd: selectedRate?.duration || '2-3 hari',
-        },
-        items: cartItems.map(item => ({
-          product_id: item.product.id,
-          variant_id: item.variantId || null,
-          name: item.product.name,
-          price: item.product.price,
-          qty: item.quantity,
-          size: item.size,
-          sku: item.sku || null,
-          variant_images: item.variantImages || [],
-          weight: item.product.weight || 100,
-        })),
-      };
-
+      const orderPayload   = buildOrderPayload();
       const selectedMethod = PAYMENT_METHODS.find(m => m.id === paymentMethod);
       await openMidtransPayment(orderPayload, {
         onSuccess: async (result) => {
@@ -319,11 +383,14 @@ export const useCheckout = () => {
     }
   };
 
+  // ------------------------------------------------------------------
+  // Path C: WhatsApp transfer (manual)
+  // ------------------------------------------------------------------
   const handleBankTransferPayment = () => {
     setIsProcessing(true);
-    const orderId = generateOrderId();
+    const orderId            = generateOrderId();
     const actualShippingCost = selectedRate?.price || 0;
-    const actualGrandTotal = cartTotal + actualShippingCost;
+    const actualGrandTotal   = cartTotal + actualShippingCost;
 
     let message = `📦 orders BARU - ${orderId}\n\n`;
     message += `👤 DATA PEMBELI:\nNama: ${formData.firstName} ${formData.lastName}\nEmail: ${formData.email}\nTelepon: ${formData.phone}\n\n`;
@@ -338,22 +405,35 @@ export const useCheckout = () => {
     setTimeout(() => { clearCart(); navigate('/konfirmasi-pembayaran'); }, 1000);
   };
 
+  // ------------------------------------------------------------------
+  // Entry point — router ke path yang tepat
+  // ------------------------------------------------------------------
   const handleSubmit = async (e) => {
     e?.preventDefault();
     if (!validateForm()) {
       toast.error('Mohon lengkapi semua data yang wajib diisi');
       return;
     }
+
     if (paymentMethod === 'bank_transfer') {
+      // WhatsApp manual transfer
       handleBankTransferPayment();
+      return;
+    }
+
+    // Cek apakah metode ini pakai Core API atau Snap
+    const selectedMethod = PAYMENT_METHODS.find(m => m.id === paymentMethod);
+    if (selectedMethod?.coreApi) {
+      await handleCoreApiPayment();
     } else {
-      await handleMidtransPayment();
+      await handleSnapPayment();
     }
   };
 
   return {
     // state
-    formData, errors, isProcessing, paymentMethod,
+    formData, errors, isProcessing,
+    paymentMethod, selectedVaBank,
     areaSearch, areaResults, loadingArea, showAreaDropdown, selectedArea,
     shippingRates, loadingRates, selectedRate, savedAddress,
     cartItems, cartTotal, shippingCost, grandTotal,
@@ -364,6 +444,7 @@ export const useCheckout = () => {
     handleSelectArea,
     setSelectedRate,
     setPaymentMethod,
+    handlePaymentMethodSelect,   // <-- gunakan ini di PaymentMethodModal onSelect
     handleSubmit,
   };
 };

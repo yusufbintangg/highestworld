@@ -1,76 +1,73 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import {
   CheckCircle, Clock, Package, Truck, XCircle, Loader2,
-  AlertTriangle, ArrowLeft, MapPin, CreditCard, ChevronDown, ChevronUp,
+  ArrowLeft, MapPin, CreditCard, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { formatPrice } from '../../lib/utils';
 import { loadMidtransScript } from '../../lib/midtrans';
 import { toast } from 'sonner';
+import { PaymentDetailDisplay } from '../components/checkout/PaymentDetailDisplay';
 
 const STATUS_CONFIG = {
-  waiting_payment: { label: 'Menunggu Pembayaran', icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-100' },
-  payment_confirmed: { label: 'Pembayaran Berhasil', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
-  processing: { label: 'Sedang Diproses', icon: Package, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
-  shipped: { label: 'Dalam Pengiriman', icon: Truck, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100' },
-  completed: { label: 'Order Selesai', icon: CheckCircle, color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-100' },
-  cancelled: { label: 'Order Dibatalkan', icon: XCircle, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-100' },
+  waiting_payment:   { label: 'Menunggu Pembayaran',  icon: Clock,        color: 'text-amber-500',   bg: 'bg-amber-50',   border: 'border-amber-100' },
+  payment_confirmed: { label: 'Pembayaran Berhasil',  icon: CheckCircle,  color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+  processing:        { label: 'Sedang Diproses',       icon: Package,      color: 'text-blue-600',    bg: 'bg-blue-50',    border: 'border-blue-100' },
+  shipped:           { label: 'Dalam Pengiriman',      icon: Truck,        color: 'text-violet-600',  bg: 'bg-violet-50',  border: 'border-violet-100' },
+  completed:         { label: 'Order Selesai',         icon: CheckCircle,  color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+  cancelled:         { label: 'Order Dibatalkan',      icon: XCircle,      color: 'text-red-500',     bg: 'bg-red-50',     border: 'border-red-100' },
 };
 
-const STEP_ORDER = ['waiting_payment', 'payment_confirmed', 'processing', 'shipped', 'completed'];
+const STEP_ORDER  = ['waiting_payment', 'payment_confirmed', 'processing', 'shipped', 'completed'];
 const STEP_LABELS = ['Pembayaran', 'Berhasil', 'Diproses', 'Pengiriman', 'Selesai'];
 
-function CountdownTimer({ expiresAt }) {
-  const [now, setNow] = useState(new Date());
-
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-  // set 12 menit 
-  const diff = Math.max(0, expiresAt - now);
-  const m = String(Math.floor((diff % 720000) / 60000)).padStart(2, '0');
-  const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
-
-  return (
-    <div className="flex items-center gap-1 font-mono">
-      {[m, s].map((v, i) => (
-        <span key={i} className="flex items-center gap-1">
-          <span className="bg-amber-100 text-amber-800 text-sm font-bold px-2 py-0.5 ">{v}</span>
-          {i < 2 && <span className="text-amber-400 font-bold text-sm">:</span>}
-        </span>
-      ))}
-    </div>
-  );
-}
 
 export const OrderDetailPage = () => {
   const { orderNumber } = useParams();
-  const navigate = useNavigate();
-  const [order, setOrder] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [paying, setPaying] = useState(false);
+  const navigate        = useNavigate();
+
+  const [order,       setOrder]       = useState(null);
+  const [payment,     setPayment]     = useState(null);   // ← row dari tabel payments
+  const [loading,     setLoading]     = useState(true);
+  const [paying,      setPaying]      = useState(false);
   const [showSummary, setShowSummary] = useState(false);
 
   useEffect(() => { fetchOrder(); }, [orderNumber]);
 
   const fetchOrder = async () => {
-    const { data, error } = await supabase
+    setLoading(true);
+
+    // 1. Fetch order
+    const { data: orderData, error } = await supabase
       .from('orders')
       .select('*, order_items(*)')
       .eq('order_number', orderNumber)
       .single();
 
-    if (error || !data) {
+    if (error || !orderData) {
       toast.error('Order tidak ditemukan');
       navigate('/');
       return;
     }
-    setOrder(data);
+
+    setOrder(orderData);
+
+    // 2. Fetch payment detail (untuk Core API — QRIS / VA)
+    const { data: paymentData } = await supabase
+    .from('payments')
+    .select('payment_detail, midtrans_payment_type, status')
+    .eq('order_id', orderData.id)
+    .single();
+
+    console.log('order.id:', orderData.id);
+    console.log('paymentData:', paymentData);
+
+    setPayment(paymentData);
     setLoading(false);
   };
 
+  // Snap popup — untuk order yang pakai Snap (OVO, Alfamart, dll)
   const handleBayarSekarang = async () => {
     if (!order.snap_token) {
       toast.error('Token pembayaran tidak ditemukan');
@@ -82,8 +79,8 @@ export const OrderDetailPage = () => {
       snap.pay(order.snap_token, {
         onSuccess: () => { toast.success('Pembayaran berhasil!'); fetchOrder(); setPaying(false); },
         onPending: () => { toast.info('Menunggu pembayaran...'); setPaying(false); },
-        onError: () => { toast.error('Pembayaran gagal'); setPaying(false); },
-        onClose: () => setPaying(false),
+        onError:   () => { toast.error('Pembayaran gagal'); setPaying(false); },
+        onClose:   () => setPaying(false),
       });
     } catch {
       toast.error('Gagal membuka pembayaran');
@@ -97,15 +94,17 @@ export const OrderDetailPage = () => {
     </div>
   );
 
-  const statusInfo = STATUS_CONFIG[order.status] || STATUS_CONFIG.waiting_payment;
-  const StatusIcon = statusInfo.icon;
-  const isUnpaid = order.status === 'waiting_payment';
-  const expiredAt = order.payment_expired_at ? new Date(order.payment_expired_at) : null;
-  const now = new Date();
-  const isExpired = expiredAt && now > expiredAt;
-  const minutesLeft = expiredAt ? Math.max(0, Math.ceil((expiredAt - now) / (1000 * 60))) : 0;
-  const hoursLeft = Math.floor(minutesLeft / 60);
-  const currentStepIndex = STEP_ORDER.indexOf(order.status);
+  const statusInfo      = STATUS_CONFIG[order.status] || STATUS_CONFIG.waiting_payment;
+  const StatusIcon      = statusInfo.icon;
+  const isUnpaid        = order.status === 'waiting_payment';
+  const expiredAt       = order.payment_expired_at ? new Date(order.payment_expired_at) : null;
+  const isExpired       = expiredAt && new Date() > expiredAt;
+  const currentStepIdx  = STEP_ORDER.indexOf(order.status);
+
+  // Apakah order ini pakai Core API (sudah ada payment_detail)?
+  const hasCoreApiDetail = isUnpaid && payment?.payment_detail && !isExpired;
+  // Apakah perlu tampilkan tombol "Bayar Sekarang" via Snap?
+  const showSnapButton   = isUnpaid && !isExpired && !hasCoreApiDetail && order.snap_token;
 
   return (
     <div className="min-h-screen bg-white pb-16">
@@ -126,10 +125,39 @@ export const OrderDetailPage = () => {
           <h1 className="text-xl font-bold tracking-wide text-gray-900">{order.order_number}</h1>
         </div>
 
-        {/* ── PAYMENT CARD (kalau belum bayar) ── */}
-        {isUnpaid && !isExpired && (
-          <div className="bg-white border border-gray-100 shadow-sm overflow-hidden mb-4">
+        {/* ── CORE API: QR / VA display ─────────────────────────────── */}
+        {hasCoreApiDetail && (
+          <div className="mb-4">
             {/* Header card */}
+            <div className="bg-white border border-gray-100 shadow-sm overflow-hidden mb-0">
+              <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  <p className="text-sm font-semibold text-gray-900">Selesaikan Pembayaran</p>
+                </div>
+                {expiredAt && (
+                  <div className="text-right">
+                    <p className="text-[10px] text-gray-400">Berakhir</p>
+                    <p className="text-[11px] font-medium text-gray-600">
+                      {expiredAt.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}{' '}
+                      {expiredAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* QR / VA detail */}
+            <PaymentDetailDisplay
+              detail={payment.payment_detail}
+              total={order.total}
+            />
+          </div>
+        )}
+
+        {/* ── SNAP: tombol Bayar Sekarang ───────────────────────────── */}
+        {showSnapButton && (
+          <div className="bg-white border border-gray-100 shadow-sm overflow-hidden mb-4">
             <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
@@ -145,14 +173,10 @@ export const OrderDetailPage = () => {
                 </div>
               )}
             </div>
-
-            {/* Amount */}
             <div className="px-5 py-4 flex items-center justify-between border-b border-gray-50">
               <p className="text-xs text-gray-400">Total Pembayaran</p>
               <p className="text-xl font-bold text-gray-900">{formatPrice(order.total)}</p>
             </div>
-
-            {/* Countdown */}
             {expiredAt && (
               <div className="px-5 py-3.5 flex items-center justify-between bg-amber-50 border-b border-amber-100">
                 <div className="flex items-center gap-2">
@@ -162,8 +186,6 @@ export const OrderDetailPage = () => {
                 <CountdownTimer expiresAt={expiredAt} />
               </div>
             )}
-
-            {/* CTA */}
             <div className="px-5 py-4">
               <button
                 onClick={handleBayarSekarang}
@@ -179,7 +201,7 @@ export const OrderDetailPage = () => {
           </div>
         )}
 
-        {/* Alert expired */}
+        {/* Expired alert */}
         {isUnpaid && isExpired && (
           <div className="mb-4 bg-red-50 border border-red-100 px-4 py-3 flex items-start gap-3">
             <XCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
@@ -190,11 +212,11 @@ export const OrderDetailPage = () => {
           </div>
         )}
 
-        {/* Status Banner (kalau bukan waiting_payment) */}
+        {/* Status Banner (paid/processing/shipped/completed/cancelled) */}
         {!isUnpaid && (
-          <div className={` p-4 ${statusInfo.bg} ${statusInfo.border} border mb-4 flex items-center gap-3`}>
-            <div className={`w-9 h-9  flex items-center justify-center ${statusInfo.bg} border ${statusInfo.border}`}>
-              <StatusIcon className={`w-4.5 h-4.5 ${statusInfo.color}`} />
+          <div className={`p-4 ${statusInfo.bg} ${statusInfo.border} border mb-4 flex items-center gap-3`}>
+            <div className={`w-9 h-9 flex items-center justify-center ${statusInfo.bg} border ${statusInfo.border}`}>
+              <StatusIcon className={`w-4 h-4 ${statusInfo.color}`} />
             </div>
             <div className="flex-1">
               <p className={`font-semibold text-sm ${statusInfo.color}`}>{statusInfo.label}</p>
@@ -215,10 +237,10 @@ export const OrderDetailPage = () => {
               <div className="absolute left-0 right-0 top-[10px] h-[1px] bg-gray-100 z-0" />
               <div
                 className="absolute left-0 top-[10px] h-[1px] bg-gray-900 z-0 transition-all duration-700"
-                style={{ width: `${Math.min(100, (currentStepIndex / (STEP_ORDER.length - 1)) * 100)}%` }}
+                style={{ width: `${Math.min(100, (currentStepIdx / (STEP_ORDER.length - 1)) * 100)}%` }}
               />
               {STEP_ORDER.map((step, i) => {
-                const done = i <= currentStepIndex;
+                const done = i <= currentStepIdx;
                 return (
                   <div key={step} className="flex flex-col items-center z-10 gap-1.5">
                     <div className={`w-5 h-5 rounded-full border-2 transition-all duration-300 ${done ? 'bg-gray-900 border-gray-900' : 'bg-white border-gray-200'}`} />
@@ -232,7 +254,7 @@ export const OrderDetailPage = () => {
           </div>
         )}
 
-        {/* ── ORDER SUMMARY (collapsible) ── */}
+        {/* Order Summary collapsible */}
         <div className="bg-white border border-gray-100 shadow-sm overflow-hidden mb-4">
           <button
             onClick={() => setShowSummary(!showSummary)}
@@ -247,7 +269,6 @@ export const OrderDetailPage = () => {
               : <ChevronDown className="w-4 h-4 text-gray-400" />
             }
           </button>
-
           {showSummary && (
             <div className="border-t border-gray-50">
               {order.order_items?.map((item, i) => (

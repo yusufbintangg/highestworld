@@ -51,11 +51,72 @@ export function generateOrderId() {
 }
 
 /**
- * @param {object} orderData
- * @param {object} callbacks - { onSuccess, onPending, onError, onClose }
- * @param {string[]} [enabledPayments] - filter metode pembayaran di Snap
- *   contoh: ['other_qris'], ['ovo'], ['bca_va', 'bni_va'], ['credit_card']
- *   kalau kosong/undefined → Snap tampilkan semua metode (default)
+ * Buat order di DB via midtrans-create, lalu charge via Core API charge-payment.
+ * Dipakai untuk QRIS dan Virtual Account.
+ *
+ * @param {object} orderData        – sama persis seperti yang dikirim ke midtrans-create
+ * @param {string} paymentType      – "qris" | "bank_transfer"
+ * @param {string|null} bank        – "bni" | "bri" | "mandiri" | "permata" (hanya kalau bank_transfer)
+ * @returns {{ orderNumber: string, orderId: string, detail: object }}
+ */
+export async function createAndChargeOrder(orderData, paymentType, bank = null) {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  // 1. Buat order di DB + dapatkan snap_token (kita butuh order_number untuk charge)
+  const createRes = await fetch(`${supabaseUrl}/functions/v1/midtrans-create`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify(orderData),
+  });
+
+  if (!createRes.ok) {
+    const err = await createRes.json();
+    throw new Error(err.error || 'Gagal membuat order');
+  }
+
+  const createData = await createRes.json();
+  const { order_number: orderNumber, order_id: orderId } = createData;
+
+  if (!orderNumber) throw new Error('order_number tidak ditemukan dari server');
+
+  // 2. Charge via Core API
+  const chargePayload = { order_number: orderNumber, payment_type: paymentType };
+  if (paymentType === 'bank_transfer' && bank) {
+    chargePayload.bank = bank;
+  }
+
+  const chargeRes = await fetch(`${supabaseUrl}/functions/v1/charge-payment`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify(chargePayload),
+  });
+
+  const chargeData = await chargeRes.json();
+
+  if (!chargeData.success) {
+    throw new Error(chargeData.error || 'Pembayaran gagal diproses');
+  }
+
+  return {
+    orderNumber,
+    orderId,
+    detail: chargeData.detail,
+  };
+}
+
+/**
+ * Snap popup (untuk OVO, Alfamart, Akulaku, CC — metode yang tidak pakai Core API).
+ *
+ * @param {object}   orderData
+ * @param {object}   callbacks        – { onSuccess, onPending, onError, onClose }
+ * @param {string[]} enabledPayments  – filter metode di Snap
  */
 export async function openMidtransPayment(orderData, callbacks = {}, enabledPayments = []) {
   try {
@@ -77,7 +138,6 @@ export async function openMidtransPayment(orderData, callbacks = {}, enabledPaym
       },
     };
 
-    // Kalau ada filter metode, pass ke Snap
     if (enabledPayments && enabledPayments.length > 0) {
       snapOptions.enabledPayments = enabledPayments;
     }
