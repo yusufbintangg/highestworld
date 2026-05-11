@@ -53,7 +53,7 @@ export const AccountDashboardPage = () => {
 
   const menuItems = [
     { icon: Package, title: 'Order History', description: 'Lihat semua pesanan kamu', link: '/account/orders', count: stats.totalOrders },
-    { icon: Award, title: 'Loyalty Program', description: 'Lihat poin dan reward kamu', link: '/loyalty', count: stats.points, highlight: true },
+    // { icon: Award, title: 'Loyalty Program', description: 'Lihat poin dan reward kamu', link: '/loyalty', count: stats.points, highlight: true },
     { icon: MapPin, title: 'Alamat Pengiriman', description: 'Kelola alamat pengiriman', link: '/account/addresses', count: stats.savedAddresses },
     { icon: User, title: 'Profile Settings', description: 'Edit informasi profil', link: '/account/settings' },
     { icon: Lock, title: 'Keamanan', description: 'Ganti password & keamanan', link: '/account/security' },

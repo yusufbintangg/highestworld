@@ -31,7 +31,7 @@ export const CheckoutPage = () => {
             <div>
               <p className="text-sm font-semibold text-gray-900">Login Sekarang!!</p>
               <p className="text-xs text-gray-500 mt-0.5">
-                Dapatkan poin loyalty untuk member untuk setiap pembelian, yang bisa ditukar dengan diskon di pembelian berikutnya!
+                Login untuk mendapatkan pengalaman checkout yang lebih cepat dan mudah, serta akses ke riwayat pesanan Anda.
               </p>
             </div>
             <div className="flex items-center gap-2">

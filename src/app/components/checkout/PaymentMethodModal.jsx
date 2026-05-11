@@ -195,13 +195,13 @@ export const PaymentMethodModal = ({ open, onClose, selected, selectedBank: init
                               }}
                               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-150 ${
                                 isActive
-                                  ? 'bg-black text-white'
-                                  : 'hover:bg-gray-50 text-gray-700'
+                                  ? 'bg-white text-black'
+                                  : 'hover:bg-gray-50 text-white'
                               }`}
                             >
                               <div className="flex items-center gap-3">
                                 <img src={bank.logo} alt={bank.label} className="h-10 w-24 object-contain" />
-                                <span className={`text-[11px] ${isActive ? 'text-gray-300' : 'text-gray-400'}`}>
+                                <span className={`text-[11px] ${isActive ? 'text-black' : 'text-gray-400'}`}>
                                   {bank.note}
                                 </span>
                               </div>
