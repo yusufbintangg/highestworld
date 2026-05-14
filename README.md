@@ -22,7 +22,7 @@
 | Category | B2C E-Commerce — Big Size Fashion (2XL–8XL) |
 | Frontend | React 18, Vite, Tailwind CSS, shadcn/ui |
 | Backend | Supabase (PostgreSQL + Edge Functions/Deno) |
-| Payments | Midtrans Snap (Production) + Core API (QRIS/VA/e-wallet) + WhatsApp Transfer |
+| Payments | Core API (QRIS/VA/e-wallet) + WhatsApp Transfer |
 | Shipping | Biteship Real-time API |
 | Email | Resend (Transactional) + Supabase Auth Emails |
 | WA Notif | Fonnte API |
