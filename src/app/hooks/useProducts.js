@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 
-const PRODUCTS_PER_PAGE = 15;
+const PRODUCTS_PER_PAGE = 18;
 
 export const useProducts = () => {
   const [products, setProducts] = useState([]);

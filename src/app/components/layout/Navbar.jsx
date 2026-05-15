@@ -62,11 +62,12 @@ export const Navbar = () => {
     setSearchOpen(false);
   }, [location.pathname]);
 
+  // Disesuaikan dengan menu yang ada di gambar contoh
   const navLinks = [
-    { name: 'Shop',    path: '/products' },
-    { name: 'Look',    path: '/about' },
-    { name: 'Dealers', path: '/contact' },
-    { name: 'Collections', path: '/collections' },
+    { name: 'Brands',     path: '/products' },
+    { name: 'Collection', path: '/collections' },
+    { name: 'Look',       path: '/about' },
+    { name: 'Dealers',    path: '/contact' },
   ];
 
   const triggerSearch = () => {
@@ -84,13 +85,13 @@ export const Navbar = () => {
             : 'bg-white border-b border-black/10'
         )}
       >
-        {/* Top announcement bar */}
-        <div className="flex items-center justify-between h-14 px-5 lg:px-8 max-w-[1600px] mx-auto">
+        {/* Menggunakan lg:items-stretch agar pembatas border vertikal full ke bawah */}
+        <div className="flex items-center justify-between lg:items-stretch h-14 px-5 lg:px-0 mx-auto">
 
           {/* ── Logo ── */}
           <Link
             to="/"
-            className="flex items-center shrink-0 group"
+            className="flex items-center shrink-0 group lg:px-8 lg:border-r lg:border-black/10 h-full"
           >
             <img
               src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1778581365/fedhplb62vyrza2qrobp.png"
@@ -99,102 +100,124 @@ export const Navbar = () => {
             />
           </Link>
 
-          {/* ── Desktop Nav ── */}
-          <div className="hidden lg:flex items-center gap-8">
+          {/* ── Desktop Inline Search (Kek di Gambar) ── */}
+          <div className="hidden lg:flex items-center gap-2 px-6 flex-1 max-w-xs">
+            <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+            <input
+              type="text"
+              placeholder="SEARCH"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') triggerSearch();
+              }}
+              className="w-full text-[11px] tracking-[0.2em] uppercase font-bold bg-transparent outline-none text-black placeholder:text-gray-400"
+            />
+          </div>
+
+          {/* Spacer fleksibel tengah */}
+          <div className="hidden lg:block flex-1" />
+
+          {/* ── Desktop Nav Links ── */}
+          <div className="hidden lg:flex items-center gap-6 px-8 lg:border-r lg:border-black/10 h-full">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
                 className={cn(
-                  'relative text-[11px] tracking-[0.22em] uppercase font-semibold transition-colors duration-200 py-1 group',
+                  'text-[11px] tracking-[0.2em] uppercase font-bold transition-all duration-200',
                   location.pathname === link.path
                     ? 'text-black'
-                    : 'text-gray-400 hover:text-black'
+                    : 'text-black hover:opacity-50'
                 )}
               >
                 {link.name}
-                {/* Animated underline */}
-                <span
-                  className={cn(
-                    'absolute -bottom-0.5 left-0 h-[1.5px] bg-black transition-all duration-300',
-                    location.pathname === link.path
-                      ? 'w-full'
-                      : 'w-0 group-hover:w-full'
-                  )}
-                />
               </Link>
             ))}
           </div>
 
-          {/* ── Right Icons ── */}
-          <div className="flex items-center gap-1">
+          {/* ── Right Section (Desktop Text Links & Mobile Icons Container) ── */}
+          <div className="flex items-center lg:items-stretch h-full lg:px-8">
+            
+            {/* Desktop Auth & Cart (Full Plain Text, Tanpa Ikon) */}
+            <div className="hidden lg:flex items-center gap-6 h-full">
+              <Link
+                to={user ? '/account' : '/login'}
+                className="text-[11px] tracking-[0.2em] uppercase font-bold text-black hover:opacity-50 transition-opacity"
+              >
+                {user ? 'ACCOUNT' : 'LOGIN'}
+              </Link>
 
-            {/* Search button */}
-            <button
-              onClick={() => setSearchOpen(prev => !prev)}
-              className={cn(
-                'flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200',
-                searchOpen ? 'bg-black text-white' : 'text-gray-500 hover:text-black hover:bg-gray-100'
+              {location.pathname !== '/checkout' && (
+                <CartDrawer>
+                  <button className="text-[11px] tracking-[0.2em] uppercase font-bold text-black hover:opacity-50 transition-opacity">
+                    CART({cartCount})
+                  </button>
+                </CartDrawer>
               )}
-              aria-label="Search"
-            >
-              {searchOpen ? <X className="w-4 h-4" /> : <Search className="w-4 h-4" />}
-            </button>
+            </div>
 
-            {/* Account — desktop only */}
-            <Link
-              to={user ? '/account' : '/login'}
-              className="hidden lg:flex items-center justify-center w-10 h-10 rounded-full text-gray-500 hover:text-black hover:bg-gray-100 transition-all duration-200"
-              aria-label="Account"
-            >
-              <User className="w-4 h-4" />
-            </Link>
+            {/* Mobile View Only (Icon-icon default bawaanmu tetap utuh di sini) */}
+            <div className="flex lg:hidden items-center gap-1">
+              {/* Search button */}
+              <button
+                onClick={() => setSearchOpen(prev => !prev)}
+                className={cn(
+                  'flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200',
+                  searchOpen ? 'bg-black text-white' : 'text-gray-500 hover:text-black hover:bg-gray-100'
+                )}
+                aria-label="Search"
+              >
+                {searchOpen ? <X className="w-4 h-4" /> : <Search className="w-4 h-4" />}
+              </button>
 
-            {/* Cart - HIDE ON CHECKOUT */}
-            {location.pathname !== '/checkout' && (
-              <CartDrawer>
-                <button
-                  className="relative flex items-center justify-center w-10 h-10 rounded-full text-gray-500 hover:text-black hover:bg-gray-100 transition-all duration-200"
-                  aria-label="Cart"
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  {cartCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-[18px] h-[18px] bg-black text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
-                      {cartCount > 9 ? '9+' : cartCount}
-                    </span>
-                  )}
-                </button>
-              </CartDrawer>
-            )}
+              {/* Cart - HIDE ON CHECKOUT */}
+              {location.pathname !== '/checkout' && (
+                <CartDrawer>
+                  <button
+                    className="relative flex items-center justify-center w-10 h-10 rounded-full text-gray-500 hover:text-black hover:bg-gray-100 transition-all duration-200"
+                    aria-label="Cart"
+                  >
+                    <ShoppingBag className="w-4 h-4" />
+                    {cartCount > 0 && (
+                      <span className="absolute top-1.5 right-1.5 w-[18px] h-[18px] bg-black text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                        {cartCount > 9 ? '9+' : cartCount}
+                      </span>
+                    )}
+                  </button>
+                </CartDrawer>
+              )}
 
-            {/* Mobile Burger */}
-            <button
-              onClick={() => setMobileOpen(prev => !prev)}
-              className="lg:hidden flex flex-col items-center justify-center w-10 h-10 gap-[5px] rounded-full hover:bg-gray-100 transition-all duration-200"
-              aria-label="Menu"
-            >
-              <span className={cn(
-                'block h-[1.5px] bg-black transition-all duration-300 origin-center',
-                mobileOpen ? 'w-5 rotate-45 translate-y-[6.5px]' : 'w-5'
-              )} />
-              <span className={cn(
-                'block h-[1.5px] bg-black transition-all duration-300',
-                mobileOpen ? 'w-0 opacity-0' : 'w-3.5'
-              )} />
-              <span className={cn(
-                'block h-[1.5px] bg-black transition-all duration-300 origin-center',
-                mobileOpen ? 'w-5 -rotate-45 -translate-y-[6.5px]' : 'w-5'
-              )} />
-            </button>
+              {/* Mobile Burger */}
+              <button
+                onClick={() => setMobileOpen(prev => !prev)}
+                className="flex flex-col items-center justify-center w-10 h-10 gap-[5px] rounded-full hover:bg-gray-100 transition-all duration-200"
+                aria-label="Menu"
+              >
+                <span className={cn(
+                  'block h-[1.5px] bg-black transition-all duration-300 origin-center',
+                  mobileOpen ? 'w-5 rotate-45 translate-y-[6.5px]' : 'w-5'
+                )} />
+                <span className={cn(
+                  'block h-[1.5px] bg-black transition-all duration-300',
+                  mobileOpen ? 'w-0 opacity-0' : 'w-3.5'
+                )} />
+                <span className={cn(
+                  'block h-[1.5px] bg-black transition-all duration-300 origin-center',
+                  mobileOpen ? 'w-5 -rotate-45 -translate-y-[6.5px]' : 'w-5'
+                )} />
+              </button>
+            </div>
+
           </div>
         </div>
 
-        {/* ── Search Dropdown ── */}
+        {/* ── Mobile Search Dropdown Only (Hidden di Desktop) ── */}
         <div className={cn(
-          'overflow-hidden transition-all duration-300 border-t border-black/8',
+          'overflow-hidden transition-all duration-300 border-t border-black/8 lg:hidden',
           searchOpen ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'
         )}>
-          <div className="flex items-center gap-3 px-5 lg:px-8 h-16 max-w-[1600px] mx-auto">
+          <div className="flex items-center gap-3 px-5 h-16 max-w-[1600px] mx-auto">
             <Search className="w-4 h-4 text-gray-400 shrink-0" />
             <input
               autoFocus={searchOpen}
@@ -227,11 +250,8 @@ export const Navbar = () => {
           ? 'opacity-100 pointer-events-auto translate-y-0'
           : 'opacity-0 pointer-events-none -translate-y-4'
       )}>
-        {/* Spacer for navbar height */}
-        <div className="h-[89px] shrink-0" />
-
+        <div className="h-[30px] shrink-0" />
         <div className="flex-1 flex flex-col px-7 py-8 overflow-y-auto">
-          {/* Nav links — big editorial style */}
           <nav className="flex-1 space-y-1">
             {navLinks.map((link, i) => (
               <Link
@@ -257,7 +277,6 @@ export const Navbar = () => {
               </Link>
             ))}
 
-            {/* Categories sub-list */}
             <div className="pt-6">
               <p className="text-[9px] tracking-[0.35em] uppercase text-gray-300 mb-3 font-semibold">Categories</p>
               <div className="flex flex-wrap gap-2">
@@ -275,7 +294,6 @@ export const Navbar = () => {
             </div>
           </nav>
 
-          {/* Bottom section */}
           <div className="pt-8 space-y-4 border-t border-gray-100 mt-8">
             <Link
               to={user ? '/account' : '/login'}
@@ -289,10 +307,9 @@ export const Navbar = () => {
           </div>
         </div>
       </div>
-        {/* atur jarak content dan navbar*/}
+
       {/* Spacer */}
       <div className="h-14" />
     </>
   );
 };
-

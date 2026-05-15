@@ -1,10 +1,5 @@
 import { ProductCard } from './ProductCard';
 
-/**
- * ProductGrid — Neighborhood style
- * 6 kolom di desktop, 2 di mobile, 3 di tablet
- * Gap minimal (2px) kayak referensi
- */
 export const ProductGrid = ({ products = [] }) => {
   if (products.length === 0) {
     return (
@@ -17,11 +12,11 @@ export const ProductGrid = ({ products = [] }) => {
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-5 gap-1">
+    // divide-x divide-y = garis abu tipis antar card, tanpa bg abu di belakang
+<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-[1px] bg-gray-200">
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}
     </div>
   );
-
 };

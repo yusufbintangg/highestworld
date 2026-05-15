@@ -39,6 +39,10 @@ export const ProductsPage = () => {
     onBadgeFilter: handleBadgeFilter,
     onHideSoldOut: handleHideSoldOut,
     onReset: resetFilters,
+    // sort — dipakai di desktop dropdown panel
+    sortOptions: SORT_OPTIONS,
+    sortBy,
+    onSortChange: handleSortChange,
   };
 
   return (
@@ -46,7 +50,7 @@ export const ProductsPage = () => {
 
       {/* Breadcrumb */}
       <div className="border-b border-gray-200">
-        <div className="max-w-[1400px] mx-auto px-6 py-2 text-[10px] tracking-widest uppercase text-gray-400 flex gap-2">
+        <div className="mx-auto px-6 py-2 text-[10px] tracking-widest uppercase text-gray-400 flex gap-2">
           <span>Top</span><span>/</span>
           <span className="text-black font-semibold">Online Store</span>
         </div>
@@ -88,59 +92,40 @@ export const ProductsPage = () => {
         />
       )}
 
+      {/* ── DESKTOP ── */}
+      <div className="hidden lg:block">
 
-        {/* ── DESKTOP: Main only (Filter in topbar) ── */}
-        <div className="hidden lg:flex max-w-[1400px] mx-auto">
-          {/* Filter dropdown - desktop only */}
-          <ProductFilter 
-            {...filterProps} 
-            isDropdown={true}
-            className="ml-6 mt-4 mb-2"
-          />
-
-          {/* Main content */}
-          <div className="flex-1 min-w-0">
-
-
-          {/* Top bar: count + sort */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-
-            <div className="flex items-center gap-4">
-              <p className="text-[10px] tracking-widest uppercase text-gray-400">
-                {loading ? 'Loading...' : `${totalCount} Products`}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* Filter button will be here via ProductFilter(isDropdown) */}
-              <ProductSort
-                sortBy={sortBy}
-                sortOptions={SORT_OPTIONS}
-                onSortChange={handleSortChange}
-              />
-            </div>
-
+        {/* Top bar: Filter dropdown + item count */}
+        <div className="border-b border-gray-200">
+          <div className="px-6 flex items-center gap-6 h-12">
+            <ProductFilter
+              {...filterProps}
+              isDropdown={true}
+            />
+            <span className="text-[10px] tracking-widest uppercase text-gray-400">
+              {loading ? 'Loading...' : `${totalCount} Items`}
+            </span>
           </div>
-
-          {/* Product Grid */}
-          <div className="px-4">
-            {loading ? (
-              <div className="grid grid-cols-3 lg:grid-cols-4 gap-[2px] pt-[2px]">
-                {[...Array(PRODUCTS_PER_PAGE)].map((_, i) => (
-                  <div key={i} className="aspect-[3/4] bg-gray-100 animate-pulse" />
-                ))}
-              </div>
-            ) : (
-              <ProductGrid products={products} />
-            )}
-          </div>
-
-          {/* Pagination */}
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
         </div>
+
+        {/* Product Grid — full width */}
+        <div className="w-full">
+          {loading ? (
+            <div className="grid grid-cols-6 divide-x divide-y divide-gray-200">
+              {[...Array(PRODUCTS_PER_PAGE)].map((_, i) => (
+                <div key={i} className="aspect-[3/4] bg-gray-50 animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <ProductGrid products={products} />
+          )}
+        </div>
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </div>
 
       {/* ── MOBILE: Product Grid ── */}

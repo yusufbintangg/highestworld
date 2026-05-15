@@ -14,26 +14,24 @@ export const ProductCard = ({ product }) => {
 
   const images = product.images || [];
   const firstImage = images[0] || null;
-  const secondImage = images[1] || null; // gambar yang muncul saat hover
+  const secondImage = images[1] || null;
 
   const discount = calculateDiscount(product.original_price, product.price);
   const badges = product.badges || [];
 
-  // Cek sold out: kalau ga ada field stock di products, skip
-  // Bisa disesuaikan jika ada field is_sold_out atau total_stock
   const isSoldOut = product.total_stock === 0;
 
   return (
     <div
-      className="group cursor-pointer"
+      className="group cursor-pointer bg-white"
       onClick={() => navigate(`/products/${product.slug}`)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {/* Image Container */}
-      <div className="relative aspect-[3/4] overflow-hidden">
+      <div className="relative aspect-[3/4] overflow-hidden bg-[#f0f0f0]">
         {/* Main Image */}
-        {firstImage && (
+        {firstImage ? (
           <img
             src={firstImage}
             alt={product.name}
@@ -41,6 +39,9 @@ export const ProductCard = ({ product }) => {
               hovered && secondImage ? 'opacity-0' : 'opacity-100'
             }`}
           />
+        ) : (
+          /* Placeholder jika gambar belum ada */
+          <div className="absolute inset-0 bg-gray-100" />
         )}
 
         {/* Hover Image (gambar ke-2) */}
@@ -84,15 +85,12 @@ export const ProductCard = ({ product }) => {
           </div>
         )}
 
-        {/* Rotating label (opsional, kayak "INFINITE ARCHIVES" di Neighborhood) */}
+        {/* Rotating label on hover */}
         {badges.includes('New') && (
           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <div
               className="text-[7px] tracking-[0.25em] uppercase text-gray-400 font-medium"
-              style={{
-                writingMode: 'vertical-rl',
-                textOrientation: 'mixed',
-              }}
+              style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
             >
               New Arrivals
             </div>
@@ -100,8 +98,8 @@ export const ProductCard = ({ product }) => {
         )}
       </div>
 
-      {/* Info */}
-      <div className="pt-2 pb-1 space-y-0.5">
+      {/* Info — bg-white sudah dari wrapper, padding horizontal konsisten */}
+      <div className="px-3 pt-2 pb-3 space-y-0.5">
         {/* Brand / Category */}
         <p className="text-[9px] tracking-widest uppercase text-gray-400">
           {product.categories?.name || 'HIGHEST WORLD'}

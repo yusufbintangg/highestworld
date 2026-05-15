@@ -1,5 +1,5 @@
-import { X, ChevronDown, Check } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { X, ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 const FilterDropdown = ({
   categories,
@@ -10,6 +10,9 @@ const FilterDropdown = ({
   onBadgeFilter,
   onHideSoldOut,
   onReset,
+  sortOptions,
+  sortBy,
+  onSortChange,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -28,105 +31,100 @@ const FilterDropdown = ({
 
   return (
     <div data-filter-dropdown className="relative">
+      {/* Trigger button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 text-[11px] tracking-widest uppercase text-gray-500 hover:text-black transition-colors group"
+        className="flex items-center gap-2 text-[11px] tracking-widest uppercase text-gray-500 hover:text-black transition-colors"
       >
         {currentLabel}
-        <ChevronDown className={`w-3.5 h-3.5 transition-transform group-hover:-rotate-180 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+        />
       </button>
 
+      {/* Full-width panel — posisi fixed di bawah top bar */}
       {isOpen && (
         <>
-          <div 
-            className="fixed inset-0 z-10" 
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-20"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 top-full mt-2 z-20 bg-white border border-gray-200 min-w-[200px] shadow-sm rounded-md overflow-hidden">
-            
-            {/* Categories */}
-            <div>
-              <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                <p className="text-[10px] tracking-widest uppercase text-gray-500 mb-1">Categories</p>
-              </div>
-              <div className="py-1">
+
+          {/* Panel — full width, attached ke bawah top bar */}
+          <div
+            className="fixed left-0 right-0 z-30 bg-white border-b border-gray-200"
+            style={{ top: 'var(--filter-panel-top, 89px)' }}
+          >
+            <div className="grid grid-cols-3 divide-x divide-gray-200">
+
+              {/* Col 1: Categories */}
+              <div className="py-6 px-8">
                 <button
-                  onClick={() => {
-                    onCategoryFilter('all');
-                    setIsOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-3 text-[11px] tracking-widest uppercase transition-colors flex items-center gap-2 hover:bg-gray-50"
+                  onClick={() => { onCategoryFilter('all'); setIsOpen(false); }}
+                  className={`block text-left w-full text-[11px] tracking-widest uppercase mb-3 transition-colors ${
+                    filters.category === 'all' ? 'text-black font-bold' : 'text-gray-400 hover:text-black'
+                  }`}
                 >
-                  {filters.category === 'all' && <Check className="w-4 h-4 text-black" />}
-                  <span className={filters.category === 'all' ? 'font-bold text-black' : 'text-gray-500'}>
-                    All Categories
-                  </span>
+                  All Categories
                 </button>
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
-                    onClick={() => {
-                      onCategoryFilter(cat.slug);
-                      setIsOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-3 text-[11px] tracking-widest uppercase transition-colors flex items-center gap-2 hover:bg-gray-50"
+                    onClick={() => { onCategoryFilter(cat.slug); setIsOpen(false); }}
+                    className={`block text-left w-full text-[11px] tracking-widest uppercase mb-3 transition-colors ${
+                      filters.category === cat.slug ? 'text-black font-bold' : 'text-gray-400 hover:text-black'
+                    }`}
                   >
-                    {filters.category === cat.slug && <Check className="w-4 h-4 text-black" />}
-                    <span className={filters.category === cat.slug ? 'font-bold text-black' : 'text-gray-500'}>
-                      {cat.name}
-                    </span>
+                    {cat.name}
                   </button>
                 ))}
               </div>
-            </div>
 
-            {/* Badges */}
-            <div>
-              <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                <p className="text-[10px] tracking-widest uppercase text-gray-500 mb-1">Tags</p>
-              </div>
-              <div className="py-1">
-                {badgeOptions.map((badge) => (
+              {/* Col 2: Sort */}
+              <div className="py-6 px-8">
+                {sortOptions?.map((opt) => (
                   <button
-                    key={badge.value}
-                    onClick={() => onBadgeFilter(badge.value, !filters.badges.includes(badge.value))}
-                    className="w-full text-left px-4 py-3 text-[11px] tracking-widest uppercase transition-colors flex items-center gap-2 hover:bg-gray-50"
+                    key={opt.value}
+                    onClick={() => { onSortChange(opt.value); setIsOpen(false); }}
+                    className={`block text-left w-full text-[11px] tracking-widest uppercase mb-3 transition-colors ${
+                      sortBy === opt.value ? 'text-black font-bold' : 'text-gray-400 hover:text-black'
+                    }`}
                   >
-                    {filters.badges.includes(badge.value) && <Check className="w-4 h-4 text-black" />}
-                    <span className={filters.badges.includes(badge.value) ? 'font-bold text-black' : 'text-gray-500'}>
-                      {badge.label}
-                    </span>
+                    {opt.label}
                   </button>
                 ))}
               </div>
-            </div>
 
-            {/* Hide Sold Out & Clear */}
-            <div className="border-t border-gray-200">
-              <div className="px-4 py-3 hover:bg-gray-50">
-                <label className="flex items-center justify-between cursor-pointer">
-                  <span className="text-[11px] tracking-widest uppercase text-gray-500">
-                    Hide Sold Out
-                  </span>
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 accent-black cursor-pointer"
-                    checked={hideSoldOut}
-                    onChange={(e) => {
-                      onHideSoldOut(e.target.checked);
-                    }}
-                  />
-                </label>
+              {/* Col 3: Hide Sold Out + Clear */}
+              <div className="py-6 px-8 flex flex-col justify-between">
+                <div>
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <span className={`text-[11px] tracking-widest uppercase transition-colors ${
+                      hideSoldOut ? 'text-black font-bold' : 'text-gray-400 group-hover:text-black'
+                    }`}>
+                      Hide Sold Out
+                    </span>
+                    <input
+                      type="checkbox"
+                      className="w-3.5 h-3.5 accent-black cursor-pointer"
+                      checked={hideSoldOut}
+                      onChange={(e) => onHideSoldOut(e.target.checked)}
+                    />
+                  </label>
+                </div>
+
+                {/* Clear — pojok kanan bawah */}
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => { onReset(); setIsOpen(false); }}
+                    className="text-[11px] tracking-widest uppercase text-gray-400 hover:text-black transition-colors font-semibold"
+                  >
+                    Clear
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={() => {
-                  onReset();
-                  setIsOpen(false);
-                }}
-                className="w-full px-4 py-3 text-[11px] tracking-widest uppercase text-gray-400 hover:text-black hover:bg-gray-50 border-t border-gray-200 font-semibold transition-colors"
-              >
-                Clear ({activeCount})
-              </button>
+
             </div>
           </div>
         </>
@@ -147,6 +145,10 @@ export const ProductFilter = ({
   onHideSoldOut,
   onReset,
   onClose,
+  // sort props — hanya dipakai di desktop dropdown
+  sortOptions,
+  sortBy,
+  onSortChange,
 }) => {
   if (isDropdown) {
     return (
@@ -160,12 +162,15 @@ export const ProductFilter = ({
           onBadgeFilter={onBadgeFilter}
           onHideSoldOut={onHideSoldOut}
           onReset={onReset}
+          sortOptions={sortOptions}
+          sortBy={sortBy}
+          onSortChange={onSortChange}
         />
       </div>
     );
   }
 
-  // Original sidebar/mobile modal (unchanged)
+  // Mobile modal — unchanged
   return (
     <div className="flex flex-col h-full">
       {onClose && (
@@ -192,10 +197,7 @@ export const ProductFilter = ({
             {categories.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => {
-                  onCategoryFilter(cat.slug);
-                  onClose?.();
-                }}
+                onClick={() => { onCategoryFilter(cat.slug); onClose?.(); }}
                 className={`text-left text-[11px] tracking-widest uppercase transition-colors ${
                   filters.category === cat.slug ? 'text-black font-bold' : 'text-gray-400 hover:text-black'
                 }`}
@@ -242,10 +244,7 @@ export const ProductFilter = ({
 
       <div className="px-6 py-5">
         <button
-          onClick={() => {
-            onReset();
-            onClose?.();
-          }}
+          onClick={() => { onReset(); onClose?.(); }}
           className="w-full text-[11px] tracking-widest uppercase text-center text-gray-400 hover:text-black transition-colors border border-gray-200 py-3 hover:border-black"
         >
           Clear
@@ -254,4 +253,3 @@ export const ProductFilter = ({
     </div>
   );
 };
-
