@@ -34,8 +34,7 @@ export const Footer = () => {
   ];
 
   return (
-    <footer className="bg-black text-white mt-24">
-
+    <footer className="bg-black text-white mt-20">
       {/* ── Big tagline banner ── */}
       <div className="border-b border-white/10 overflow-hidden">
         <div className="max-w-[1600px] mx-auto px-5 lg:px-8 py-14 lg:py-20 flex flex-col lg:flex-row items-start lg:items-end justify-between gap-8">
@@ -72,7 +71,6 @@ export const Footer = () => {
 
       {/* ── Main grid ── */}
       <div className="max-w-[1600px] mx-auto px-5 lg:px-8 py-14 grid grid-cols-2 lg:grid-cols-4 gap-10 border-b border-white/10">
-
         {/* Quick Links */}
         <div>
           <p className="text-[9px] tracking-[0.35em] uppercase text-white/30 mb-5 font-semibold">Menu</p>

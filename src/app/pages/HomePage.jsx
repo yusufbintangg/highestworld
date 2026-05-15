@@ -7,10 +7,9 @@ import { SHIPPING_INFO } from '../../lib/config';
 import { formatPrice } from '../../lib/utils';
 
 // Fallback banner URLs — akan dipakai kalau Supabase belum ada data
-const FALLBACK_BANNERS = [
-];
+const FALLBACK_BANNERS = [];
 
-const BANNER_INTERVAL = 10000; // 10 detik
+const BANNER_INTERVAL = 5000; // 5 detik per pergantian banner  
 
 export const HomePage = () => {
   const [categories, setCategories] = useState([]);
@@ -88,18 +87,15 @@ export const HomePage = () => {
     products.sale;
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-white text-black w-full overflow-x-hidden">
       {/* ===================== HERO BANNER ===================== */}
       <section className="w-full border-b border-gray-200">
-
         {/* === DESKTOP: square kiri + kolom kanan === */}
         <div className="hidden lg:flex">
-
           {/* Kiri: Banner Square */}
           <div
             className="relative flex-shrink-0 bg-gray-100 overflow-hidden"
-            style={{ width: 'min(55vw, 760px)', 
-                     aspectRatio: '1 / 1' }}
+            style={{ width: 'min(55vw, 760px)', aspectRatio: '1 / 1' }}
           >
             {heroBanners.map((banner, i) => (
               <div
@@ -163,12 +159,11 @@ export const HomePage = () => {
               </p>
             </div>
             {categories.slice(0, 3).map((cat) => (
-
-                <Link
-                  key={cat.id}
-                  to={`/products?category=${encodeURIComponent(cat.slug)}`}
-                  className="flex-1 px-8 py-6 flex items-center hover:bg-gray-50 transition-colors group"
-                >
+              <Link
+                key={cat.id}
+                to={`/products?category=${encodeURIComponent(cat.slug)}`}
+                className="flex-1 px-8 py-6 flex items-center hover:bg-gray-50 transition-colors group"
+              >
                 <span className="text-[12px] tracking-widest uppercase font-semibold text-gray-400 group-hover:text-black transition-colors">
                   {cat.name}
                 </span>
@@ -179,7 +174,6 @@ export const HomePage = () => {
 
         {/* === MOBILE: banner full width + list kategori di bawah === */}
         <div className="lg:hidden flex flex-col">
-
           {/* Banner full width — square */}
           <div className="relative w-full overflow-hidden bg-gray-100" style={{ aspectRatio: '1/1' }}>
             {heroBanners.map((banner, i) => (
@@ -194,7 +188,6 @@ export const HomePage = () => {
                   alt={banner.title || `Banner ${i + 1}`}
                   className="w-full h-full object-cover"
                 />
-                {/* Vertical title kanan */}
                 {banner.title && (
                   <div className="absolute top-4 right-3 z-20">
                     <p
@@ -205,7 +198,6 @@ export const HomePage = () => {
                     </p>
                   </div>
                 )}
-                {/* Bottom: subtitle + view more */}
                 <div className="absolute bottom-0 left-0 right-0 z-20 flex items-end justify-between px-4 pb-4">
                   {banner.subtitle && (
                     <p className="text-[9px] tracking-widest uppercase text-white/70">{banner.subtitle}</p>
@@ -218,7 +210,6 @@ export const HomePage = () => {
                 </div>
               </div>
             ))}
-            {/* Progress bar mobile */}
             {heroBanners.length > 1 && (
               <div className="absolute bottom-0 left-0 right-0 z-30 h-[2px] bg-white/10">
                 <div key={`pm-${currentBanner}`} className="h-full bg-white/50"
@@ -226,14 +217,12 @@ export const HomePage = () => {
               </div>
             )}
           </div>
-
           {/* List kategori di bawah banner */}
           <div className="flex flex-col divide-y divide-gray-200 border-t border-gray-200 max-h-96 overflow-y-auto">
             <div className="px-5 py-4">
               <p className="text-[12px] tracking-widest uppercase font-bold text-black">Highest World</p>
             </div>
             {categories.map((cat) => (
-
               <Link
                 key={cat.id}
                 to={`/products?category=${encodeURIComponent(cat.slug)}`}
@@ -244,7 +233,6 @@ export const HomePage = () => {
             ))}
           </div>
         </div>
-
         <style>{`
           @keyframes progress {
             from { width: 0%; }
@@ -254,11 +242,12 @@ export const HomePage = () => {
       </section>
 
       {/* ===================== PRODUCT TABS ===================== */}
-      <section className="pt-0 pb-16">
-
+      {/* Perubahan: Hapus pb-16 agar nempel ke elemen bawahnya jika dibutuhkan, atau sesuaikan */}
+      <section className="pt-0 pb-12 w-full">
         {/* Tab Bar */}
-        <div className="border-b border-gray-200">
-          <div className="max-w-[1400px] mx-auto px-4 lg:px-6 flex gap-8">
+        <div className="border-b border-gray-200 w-full">
+          {/* Perubahan: px-4 lg:px-6 diganti ke px-5 untuk menyamakan indentasi teks kategori mobile */}
+          <div className="px-5 flex gap-8">
             {[
               { key: 'newest', label: 'New Arrivals' },
               { key: 'bestsellers', label: 'Best Sellers' },
@@ -279,15 +268,18 @@ export const HomePage = () => {
           </div>
         </div>
 
-        {/* Grid */}
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6 pt-[2px]">
+        {/* Grid Produk — FULL MEPEET SCREEN */}
+        {/* Perubahan: Menghapus mx-auto dan px-4 / lg:px-6 agar menyentuh ujung layar luar */}
+        <div className="w-full pt-0">
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[2px]">
+            /* Perubahan: gap-[2px] diubah ke gap-0 atau hapus gap agar kotak skeleton mepet */
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-0">
               {[...Array(12)].map((_, i) => (
-                <div key={i} className="aspect-[4/4] bg-gray-100 animate-pulse" />
+                <div key={i} className="aspect-[1/1] bg-gray-100 animate-pulse border-r border-b border-gray-200" />
               ))}
             </div>
           ) : activeProducts.length > 0 ? (
+            /* CATATAN: Pastikan di dalam komponen <ProductGrid /> Anda juga TIDAK menggunakan padding atau gap besar. */
             <ProductGrid products={activeProducts} />
           ) : (
             <p className="text-center py-16 text-[11px] tracking-widest uppercase text-gray-400">
@@ -296,30 +288,32 @@ export const HomePage = () => {
           )}
         </div>
 
-        {/* View All */}
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6 pt-8 text-center">
-            <Link
-              to="/products"
-              className="inline-block text-[11px] tracking-widest uppercase border border-black px-10 py-3 hover:bg-black hover:text-white transition-all duration-200"
-            >
+        {/* View All Button */}
+        {/* Perubahan: Hapus px-4/lg:px-6, buat layout pembungkus full width */}
+        <div className="w-full pt-10 text-center">
+          <Link
+            to="/products"
+            className="inline-block text-[11px] tracking-widest uppercase border border-black px-10 py-3 hover:bg-black hover:text-white transition-all duration-200"
+          >
             View All
           </Link>
         </div>
       </section>
 
       {/* ===================== WHY US ===================== */}
-      <section className="border-t border-gray-200">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-3 divide-x divide-y md:divide-y-0 divide-gray-200">
+      {/* Perubahan: Hapus padding container utama (px-4 / lg:px-6) agar border pembatas menyentuh ujung layar kanan-kiri */}
+      <section className="border-t border-b border-gray-200 w-full">
+        <div className="w-full">
+          {/* Perubahan: Pastikan grid membagi rata dan mepet layar. Ditambahkan border-b-0 pada item untuk struktur grid clean */}
+          <div className="grid grid-cols-2 md:grid-cols-3 divide-x divide-y md:divide-y-0 divide-gray-200 w-full">
             {[
               { icon: Package,    title: 'Big Size Ready', desc: '2XL sampai 10XL tersedia' },
               { icon: ShieldCheck, title: 'Premium Quality', desc: 'Material pilihan, QC ketat' },
               { icon: Zap,        title: 'Fast Shipping',   desc: `Estimasi ${SHIPPING_INFO.estimatedDays}` },
-          //  { icon: Truck,      title: 'Free Ongkir',     desc: `Belanja di atas ${formatPrice(SHIPPING_INFO.freeShippingMinimum)}` },
             ].map((item, i) => {
               const Icon = item.icon;
               return (
-                <div key={i} className="px-6 py-8 flex flex-col items-center gap-3 text-center">
+                <div key={i} className="px-4 py-8 flex flex-col items-center gap-3 text-center bg-white">
                   <Icon className="w-5 h-5 text-gray-400" />
                   <p className="text-[11px] tracking-widest uppercase font-semibold">{item.title}</p>
                   <p className="text-[10px] text-gray-400 leading-relaxed">{item.desc}</p>
@@ -329,7 +323,6 @@ export const HomePage = () => {
           </div>
         </div>
       </section>
-
     </div>
   );
 };

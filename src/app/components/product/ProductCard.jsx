@@ -23,13 +23,13 @@ export const ProductCard = ({ product }) => {
 
   return (
     <div
-      className="group cursor-pointer bg-white"
+      className="group cursor-pointer bg-white border border-gray-200"
       onClick={() => navigate(`/products/${product.slug}`)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {/* Image Container */}
-      <div className="relative aspect-[3/4] overflow-hidden bg-[#f0f0f0]">
+      <div className="relative aspect-[4/4] overflow-hidden bg-[#f0f0f0]">
         {/* Main Image */}
         {firstImage ? (
           <img
