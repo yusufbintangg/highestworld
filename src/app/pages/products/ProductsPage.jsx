@@ -102,7 +102,7 @@ export const ProductsPage = () => {
               {...filterProps}
               isDropdown={true}
             />
-            <span className="text-[10px] tracking-widest uppercase border-b border-gray-400 text-gray-400">
+            <span className="text-[10px] tracking-widest uppercase border-gray-400 text-gray-400">
               {loading ? 'Loading...' : `${totalCount} Items`}
             </span>
           </div>
