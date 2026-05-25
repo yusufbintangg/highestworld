@@ -42,6 +42,7 @@ export const AdminAuthProvider = ({ children }) => {
           setAdmin(null);
         } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           await checkAdminRole(session?.user ?? null);
+          setLoading(false); // ← tambah ini biar loading false setelah cek role selesai, bukan setelah event fire aja
         }
       }
     );
