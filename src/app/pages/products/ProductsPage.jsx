@@ -102,7 +102,7 @@ export const ProductsPage = () => {
               {...filterProps}
               isDropdown={true}
             />
-            <span className="text-[10px] tracking-widest uppercase text-gray-400">
+            <span className="text-[10px] tracking-widest uppercase border-b border-gray-400 text-gray-400">
               {loading ? 'Loading...' : `${totalCount} Items`}
             </span>
           </div>
@@ -129,8 +129,8 @@ export const ProductsPage = () => {
       </div>
 
       {/* ── MOBILE: Product Grid ── */}
-      <div className="lg:hidden px-4 pt-4">
-        <div className="text-[10px] tracking-widest uppercase text-gray-400 mb-3">
+      <div className="lg:hidden pt-4">
+        <div className="text-[10px] px-4 tracking-widest uppercase text-gray-400 mb-3">
           {loading ? 'Loading...' : `${totalCount} Products`}
         </div>
         {loading ? (

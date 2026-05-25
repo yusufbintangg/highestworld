@@ -23,7 +23,7 @@ export const ProductCard = ({ product }) => {
 
   return (
     <div
-      className="group cursor-pointer bg-white border border-gray-200"
+      className="group cursor-pointer bg-white border-[0.5px] border-gray-200/70 rounded-sm overflow-hidden"
       onClick={() => navigate(`/products/${product.slug}`)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
