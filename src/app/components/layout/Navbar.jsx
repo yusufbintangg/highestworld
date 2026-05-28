@@ -96,7 +96,7 @@ export const Navbar = () => {
             <img
               src="https://res.cloudinary.com/dopr9tvnv/image/upload/v1778581365/fedhplb62vyrza2qrobp.png"
               alt="Highest World"
-              className="h-9 w-auto transition-opacity duration-200 group-hover:opacity-75"
+              className="h-12 w-auto transition-opacity duration-200 group-hover:opacity-75"
             />
           </Link>
 
