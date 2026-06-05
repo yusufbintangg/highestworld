@@ -65,8 +65,8 @@ export const Navbar = () => {
   // Disesuaikan dengan menu yang ada di gambar contoh
   const navLinks = [
     { name: 'Brands',     path: '/products' },
-    { name: 'Collection', path: '/collections' },
-    { name: 'Look',       path: '/about' },
+    { name: 'Look Book', path: '/collections' },
+    { name: 'About',       path: '/about' },
     { name: 'Dealers',    path: '/contact' },
   ];
 
