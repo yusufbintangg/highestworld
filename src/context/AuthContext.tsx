@@ -45,6 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const initialized = useRef(false);
 
   const fetchProfile = async (supabaseUser: User) => {
   try {
@@ -71,7 +72,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     // Use only onAuthStateChange to avoid race between getSession() and listener
-    const initialized = useRef(false);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
