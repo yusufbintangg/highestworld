@@ -39,6 +39,13 @@ export const useAdminProducts = () => {
 
   // ─── Fetch ───────────────────────────────────────────────────────────
   const fetchProducts = async () => {
+    const timeoutId = setTimeout(() => {
+      console.error('fetchProducts timeout');
+      toast.error('Request timeout saat load produk');
+      setProducts([]);
+      setLoading(false);
+    }, 12000);
+
     try {
       const { data, error } = await supabase
         .from('products')
@@ -53,6 +60,7 @@ export const useAdminProducts = () => {
       toast.error('Gagal load produk');
       setProducts([]);
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   };

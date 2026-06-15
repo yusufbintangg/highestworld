@@ -34,6 +34,13 @@ export const useOrders = () => {
   const [batchBiteshipProgress, setBatchBiteshipProgress] = useState({ done: 0, total: 0, errors: [] });
 
   const fetchOrders = async () => {
+    const timeoutId = setTimeout(() => {
+      console.error('fetchOrders timeout');
+      toast.error('Request timeout saat load orders');
+      setOrders([]);
+      setLoading(false);
+    }, 12000);
+
     try {
       const { data, error } = await supabase
         .from('orders')
@@ -47,6 +54,7 @@ export const useOrders = () => {
       toast.error('Gagal load orders');
       setOrders([]);
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   };

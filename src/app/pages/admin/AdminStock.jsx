@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../../../lib/supabase';
+import { supabase } from '../../../lib/supabaseAdmin';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { Search, Save, Plus, Minus } from 'lucide-react';
@@ -31,20 +31,41 @@ export const AdminStock = () => {
   const [saving, setSaving] = useState(false);
 
   const fetchData = async () => {
-    const { data: prods } = await supabase
-      .from('products')
-      .select('id, name, price, original_price')
-      .eq('is_active', true)
-      .order('name');
+    const timeoutId = setTimeout(() => {
+      console.error('fetchData (stock) timeout');
+      toast.error('Request timeout saat load stock');
+      setProducts([]);
+      setVariants([]);
+      setLoading(false);
+    }, 12000);
 
-    const { data: vars } = await supabase
-      .from('product_variants')
-      .select('*, products(id, name, price, original_price)')
-      .order('products(name)');
+    try {
+      const { data: prods, error: errProds } = await supabase
+        .from('products')
+        .select('id, name, price, original_price')
+        .eq('is_active', true)
+        .order('name');
 
-    setProducts(prods || []);
-    setVariants(vars || []);
-    setLoading(false);
+      if (errProds) throw errProds;
+
+      const { data: vars, error: errVars } = await supabase
+        .from('product_variants')
+        .select('*, products(id, name, price, original_price)')
+        .order('products(name)');
+
+      if (errVars) throw errVars;
+
+      setProducts(prods || []);
+      setVariants(vars || []);
+    } catch (err) {
+      console.error('Failed to fetch stock data:', err);
+      toast.error('Gagal load data stock');
+      setProducts([]);
+      setVariants([]);
+    } finally {
+      clearTimeout(timeoutId);
+      setLoading(false);
+    }
   };
 
     useEffect(() => { fetchData(); }, []);
