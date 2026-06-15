@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 
@@ -70,27 +70,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
   useEffect(() => {
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    setSession(session);
-    setIsLoading(false); // ← pindah ke sini, jangan tunggu fetchProfile
-    if (session?.user) {
-      fetchProfile(session.user); // jalankan di background
-    }
-  });
+    // Use only onAuthStateChange to avoid race between getSession() and listener
+    const initialized = useRef(false);
 
-    
-    // Listen for auth changes (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-    async (_event, session) => {
-      setSession(session);
-      setIsLoading(false); // ← tambah di sini juga
-      if (session?.user) {
-        fetchProfile(session.user);
-      } else {
-        setUser(null);
+      async (event, session) => {
+        // First event is INITIAL_SESSION (session may be null or valid)
+        if (!initialized.current) {
+          initialized.current = true;
+          setSession(session);
+          setIsLoading(false);
+          if (session?.user) await fetchProfile(session.user);
+          return;
+        }
+
+        // Subsequent events: SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, etc.
+        setSession(session);
+        if (session?.user) {
+          await fetchProfile(session.user);
+        } else {
+          setUser(null);
+        }
       }
-    }
-  );
+    );
 
     return () => subscription.unsubscribe();
   }, []);
