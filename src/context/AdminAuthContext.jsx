@@ -152,6 +152,11 @@ export const AdminAuthProvider = ({ children }) => {
           setAdmin(null);
           roleCheckRetries.current = 0;
         }
+
+        // Log token expiry
+        const expiresAt = currentSession.expires_at;
+        const expiresIn = expiresAt ? (expiresAt * 1000 - Date.now()) / 1000 : null;
+        console.log(`Token expires in ${expiresIn?.toFixed(0)}s`);
       } catch (err) {
         console.error('Session validation error:', err);
         // Don't logout on validation errors — just log and continue

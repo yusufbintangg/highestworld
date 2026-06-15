@@ -2,6 +2,33 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseAdmin';
 import { toast } from 'sonner';
 
+// Helper: Ensure token is fresh before queries
+const ensureTokenFresh = async () => {
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      throw new Error('No active session');
+    }
+    
+    // If token expires in < 30s, refresh it now
+    const expiresAt = data.session.expires_at;
+    const expiresIn = expiresAt ? (expiresAt * 1000 - Date.now()) / 1000 : 0;
+    
+    if (expiresIn < 30) {
+      console.log(`Token expires soon (${expiresIn.toFixed(0)}s), refreshing...`);
+      const { data: refreshed, error } = await supabase.auth.refreshSession();
+      if (error) throw error;
+      console.log('Token refreshed successfully');
+      return refreshed.session;
+    }
+    
+    return data.session;
+  } catch (err) {
+    console.error('Failed to ensure token fresh:', err);
+    throw err;
+  }
+};
+
 const SIZES_PAKAIAN = ['S','M','L','XL','2XL','3XL','4XL','5XL','6XL','7XL','8XL','9XL','10XL'];
 const SIZES_CELANA = ['36','38','40','42','44','46','48','50'];
 
@@ -47,6 +74,9 @@ export const useAdminProducts = () => {
     }, 12000);
 
     try {
+      console.log('Ensuring token is fresh...');
+      await ensureTokenFresh();
+      
       console.log('Fetching products from admin client...');
       const { data, error } = await supabase
         .from('products')

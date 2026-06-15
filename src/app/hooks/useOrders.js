@@ -3,6 +3,33 @@ import { toast } from 'sonner';
 import { supabase } from '../../lib/supabaseAdmin';
 import { isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 
+// Helper: Ensure token is fresh before queries
+const ensureTokenFresh = async () => {
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      throw new Error('No active session');
+    }
+    
+    // If token expires in < 30s, refresh it now
+    const expiresAt = data.session.expires_at;
+    const expiresIn = expiresAt ? (expiresAt * 1000 - Date.now()) / 1000 : 0;
+    
+    if (expiresIn < 30) {
+      console.log(`Token expires soon (${expiresIn.toFixed(0)}s), refreshing...`);
+      const { data: refreshed, error } = await supabase.auth.refreshSession();
+      if (error) throw error;
+      console.log('Token refreshed successfully');
+      return refreshed.session;
+    }
+    
+    return data.session;
+  } catch (err) {
+    console.error('Failed to ensure token fresh:', err);
+    throw err;
+  }
+};
+
 export const STATUS_ORDER = [
   { value: 'waiting_payment',  label: 'Pending',    color: 'text-red-500 border-red-500/30 bg-red-500/10' },
   { value: 'payment_confirmed',label: 'Paid',       color: 'text-blue-500 border-blue-500/30 bg-blue-500/10' },
@@ -42,6 +69,9 @@ export const useOrders = () => {
     }, 12000);
 
     try {
+      console.log('Ensuring token is fresh...');
+      await ensureTokenFresh();
+      
       console.log('Fetching orders from admin client...');
       const { data, error } = await supabase
         .from('orders')

@@ -3,6 +3,33 @@ import { ShoppingBag, Package, Clock, TrendingUp } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseAdmin';
 import { formatPrice } from '../../../lib/utils';
 
+// Helper: Ensure token is fresh before queries
+const ensureTokenFresh = async () => {
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      throw new Error('No active session');
+    }
+    
+    // If token expires in < 30s, refresh it now
+    const expiresAt = data.session.expires_at;
+    const expiresIn = expiresAt ? (expiresAt * 1000 - Date.now()) / 1000 : 0;
+    
+    if (expiresIn < 30) {
+      console.log(`Token expires soon (${expiresIn.toFixed(0)}s), refreshing...`);
+      const { data: refreshed, error } = await supabase.auth.refreshSession();
+      if (error) throw error;
+      console.log('Token refreshed successfully');
+      return refreshed.session;
+    }
+    
+    return data.session;
+  } catch (err) {
+    console.error('Failed to ensure token fresh:', err);
+    throw err;
+  }
+};
+
 export const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalProducts: 0,
@@ -22,6 +49,9 @@ export const AdminDashboard = () => {
       }, 12000);
 
       try {
+        console.log('Ensuring token is fresh...');
+        await ensureTokenFresh();
+        
         // Total produk
         const { count: totalProducts, error: errP } = await supabase
           .from('products')

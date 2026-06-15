@@ -5,6 +5,33 @@ import { Button } from '../../components/ui/button';
 import { Search, Save, Plus, Minus } from 'lucide-react';
 import { toast } from 'sonner';
 
+// Helper: Ensure token is fresh before queries
+const ensureTokenFresh = async () => {
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      throw new Error('No active session');
+    }
+    
+    // If token expires in < 30s, refresh it now
+    const expiresAt = data.session.expires_at;
+    const expiresIn = expiresAt ? (expiresAt * 1000 - Date.now()) / 1000 : 0;
+    
+    if (expiresIn < 30) {
+      console.log(`Token expires soon (${expiresIn.toFixed(0)}s), refreshing...`);
+      const { data: refreshed, error } = await supabase.auth.refreshSession();
+      if (error) throw error;
+      console.log('Token refreshed successfully');
+      return refreshed.session;
+    }
+    
+    return data.session;
+  } catch (err) {
+    console.error('Failed to ensure token fresh:', err);
+    throw err;
+  }
+};
+
 const formatPrice = (price) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
 };
@@ -32,7 +59,7 @@ export const AdminStock = () => {
 
   const fetchData = async () => {
     const timeoutId = setTimeout(() => {
-      console.error('fetchData (stock) timeout');
+      console.error('fetchData (stock) timeout - Supabase tidak merespons dalam 12s');
       toast.error('Request timeout saat load stock');
       setProducts([]);
       setVariants([]);
@@ -40,6 +67,9 @@ export const AdminStock = () => {
     }, 12000);
 
     try {
+      console.log('Ensuring token is fresh...');
+      await ensureTokenFresh();
+      
       const { data: prods, error: errProds } = await supabase
         .from('products')
         .select('id, name, price, original_price')
