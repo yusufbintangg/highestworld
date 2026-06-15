@@ -35,23 +35,38 @@ export const useOrders = () => {
 
   const fetchOrders = async () => {
     const timeoutId = setTimeout(() => {
-      console.error('fetchOrders timeout');
+      console.error('fetchOrders timeout - Supabase tidak merespons dalam 12s');
       toast.error('Request timeout saat load orders');
       setOrders([]);
       setLoading(false);
     }, 12000);
 
     try {
+      console.log('Fetching orders from admin client...');
       const { data, error } = await supabase
         .from('orders')
         .select('*, order_items(*)')
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error response:', {
+          message: error.message,
+          code: error.code,
+          status: error.status,
+          details: error.details
+        });
+        throw error;
+      }
+      console.log('Orders fetched successfully:', data?.length || 0);
       setOrders(data || []);
     } catch (err) {
-      console.error('Failed to fetch orders:', err);
-      toast.error('Gagal load orders');
+      console.error('Failed to fetch orders:', {
+        message: err.message,
+        code: err.code,
+        status: err.status,
+        details: err.details
+      });
+      toast.error(`Gagal load orders: ${err.message}`);
       setOrders([]);
     } finally {
       clearTimeout(timeoutId);

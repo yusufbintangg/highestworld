@@ -40,24 +40,39 @@ export const useAdminProducts = () => {
   // ─── Fetch ───────────────────────────────────────────────────────────
   const fetchProducts = async () => {
     const timeoutId = setTimeout(() => {
-      console.error('fetchProducts timeout');
-      toast.error('Request timeout saat load produk');
+      console.error('fetchProducts timeout - Supabase tidak merespons dalam 12s');
+      toast.error('Request timeout saat load produk (Supabase tidak merespons)');
       setProducts([]);
       setLoading(false);
     }, 12000);
 
     try {
+      console.log('Fetching products from admin client...');
       const { data, error } = await supabase
         .from('products')
         .select('*, categories(name)')
         .order('is_active', { ascending: false })
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error response:', {
+          message: error.message,
+          code: error.code,
+          status: error.status,
+          details: error.details
+        });
+        throw error;
+      }
+      console.log('Products fetched successfully:', data?.length || 0);
       setProducts(data || []);
     } catch (err) {
-      console.error('Failed to fetch products:', err);
-      toast.error('Gagal load produk');
+      console.error('Failed to fetch products:', {
+        message: err.message,
+        code: err.code,
+        status: err.status,
+        details: err.details
+      });
+      toast.error(`Gagal load produk: ${err.message}`);
       setProducts([]);
     } finally {
       clearTimeout(timeoutId);
