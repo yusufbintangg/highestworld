@@ -25,29 +25,63 @@ export const AdminAuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // ✅ Fix: pakai onAuthStateChange INITIAL_SESSION event aja
-    // jangan gabungin getSession() + onAuthStateChange bersamaan
+    // ✅ Use onAuthStateChange INITIAL_SESSION event as primary source
+    // Add a safety fallback: if INITIAL_SESSION doesn't arrive within 3s,
+    // fetch the current session and proceed to check role.
+    let fallbackTimeout;
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth event:', event, !!session);
+
+        // If the initial session hasn't been handled yet, treat this as INITIAL_SESSION
         if (!initialized.current) {
-          // First fire = initial session load
           initialized.current = true;
-          await checkAdminRole(session?.user ?? null);
-          setLoading(false);
+          if (fallbackTimeout) clearTimeout(fallbackTimeout);
+          try {
+            await checkAdminRole(session?.user ?? null);
+          } catch (err) {
+            console.error('checkAdminRole error (initial):', err);
+          } finally {
+            setLoading(false);
+          }
           return;
         }
 
-        // Subsequent events (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, dll)
-        if (event === 'SIGNED_OUT') {
-          setAdmin(null);
-        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          await checkAdminRole(session?.user ?? null);
-          setLoading(false); // ← tambah ini biar loading false setelah cek role selesai, bukan setelah event fire aja
+        // Subsequent events (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, etc.)
+        try {
+          if (event === 'SIGNED_OUT') {
+            setAdmin(null);
+          } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            await checkAdminRole(session?.user ?? null);
+          }
+        } catch (err) {
+          console.error('checkAdminRole error (event):', err);
+        } finally {
+          setLoading(false);
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    // Safety fallback: if INITIAL_SESSION doesn't fire within 3s, try to get session
+    fallbackTimeout = setTimeout(async () => {
+      if (!initialized.current) {
+        initialized.current = true;
+        try {
+          const { data } = await supabase.auth.getSession();
+          const sessUser = data?.session?.user ?? null;
+          await checkAdminRole(sessUser);
+        } catch (err) {
+          console.error('Fallback getSession/checkAdminRole error:', err);
+        } finally {
+          setLoading(false);
+        }
+      }
+    }, 3000);
+
+    return () => {
+      if (fallbackTimeout) clearTimeout(fallbackTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email, password) => {
