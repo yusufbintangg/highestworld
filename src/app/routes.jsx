@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router';
+import { createBrowserRouter, Outlet } from 'react-router';
 // Import all page components
 import { HomePage } from './pages/HomePage';
 import { ProductsPage } from './pages/products/ProductsPage';
@@ -38,15 +38,9 @@ import LoyaltyReferralPage from './pages/account/loyalty/LoyaltyReferralPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 
-const AdminWrapper = () => (
+const AdminRoot = () => (
   <AdminAuthProvider>
-    <AdminLayout />
-  </AdminAuthProvider>
-);
-
-const AdminLoginWrapper = () => (
-  <AdminAuthProvider>
-    <AdminLogin />
+    <Outlet />
   </AdminAuthProvider>
 );
 export const router = createBrowserRouter([
@@ -91,8 +85,10 @@ export const router = createBrowserRouter([
   // Di routes:
 {
   path: '/admin',
-  element: <AdminWrapper />,
+  element: <AdminRoot />,
   children: [
+    // Admin login route
+    { path: 'login', element: <AdminLogin /> },
     // Admin dashboard and management routes
     { index: true, element: <AdminDashboard /> },
     { path: 'produk', element: <AdminProducts /> },
@@ -100,6 +96,4 @@ export const router = createBrowserRouter([
     { path: 'stock', element: <AdminStock /> },
   ],
 },
-  // Admin login route (separate from the main layout)
-{ path: '/admin/login', element: <AdminLoginWrapper /> },
 ]);
