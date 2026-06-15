@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../lib/supabaseAdmin';
 import { isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 
 export const STATUS_ORDER = [
@@ -34,12 +34,21 @@ export const useOrders = () => {
   const [batchBiteshipProgress, setBatchBiteshipProgress] = useState({ done: 0, total: 0, errors: [] });
 
   const fetchOrders = async () => {
-    const { data } = await supabase
-      .from('orders')
-      .select('*, order_items(*)')
-      .order('created_at', { ascending: false });
-    setOrders(data || []);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*, order_items(*)')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setOrders(data || []);
+    } catch (err) {
+      console.error('Failed to fetch orders:', err);
+      toast.error('Gagal load orders');
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchOrders(); }, []);

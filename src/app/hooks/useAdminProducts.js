@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../lib/supabaseAdmin';
 import { toast } from 'sonner';
 
 const SIZES_PAKAIAN = ['S','M','L','XL','2XL','3XL','4XL','5XL','6XL','7XL','8XL','9XL','10XL'];
@@ -39,18 +39,33 @@ export const useAdminProducts = () => {
 
   // ─── Fetch ───────────────────────────────────────────────────────────
   const fetchProducts = async () => {
-    const { data } = await supabase
-      .from('products')
-      .select('*, categories(name)')
-      .order('is_active', { ascending: false })
-      .order('created_at', { ascending: false });
-    setProducts(data || []);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*, categories(name)')
+        .order('is_active', { ascending: false })
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (err) {
+      console.error('Failed to fetch products:', err);
+      toast.error('Gagal load produk');
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchCategories = async () => {
-    const { data } = await supabase.from('categories').select('*').eq('is_active', true);
-    setCategories(data || []);
+    try {
+      const { data, error } = await supabase.from('categories').select('*').eq('is_active', true);
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (err) {
+      console.error('Failed to fetch categories:', err);
+      toast.error('Gagal load kategori');
+    }
   };
 
   useEffect(() => {

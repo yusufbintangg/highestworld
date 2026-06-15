@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../lib/supabaseAdmin';
 import { formatPrice } from '../../lib/utils';
 
 export const handleWhatsApp = (order) => {
