@@ -87,13 +87,16 @@ export const router = createBrowserRouter([
   path: '/admin',
   element: <AdminRoot />,
   children: [
-    // Admin login route
     { path: 'login', element: <AdminLogin /> },
-    // Admin dashboard and management routes
-    { index: true, element: <AdminDashboard /> },
-    { path: 'produk', element: <AdminProducts /> },
-    { path: 'order', element: <AdminOrders /> },
-    { path: 'stock', element: <AdminStock /> },
+    {
+      element: <AdminLayout />,
+      children: [
+        { index: true, element: <AdminDashboard /> },
+        { path: 'produk', element: <AdminProducts /> },
+        { path: 'order', element: <AdminOrders /> },
+        { path: 'stock', element: <AdminStock /> },
+      ],
+    },
   ],
 },
 ]);
