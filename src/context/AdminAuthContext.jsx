@@ -54,6 +54,7 @@ export const AdminAuthProvider = ({ children }) => {
         // After retries exhausted, keep the user logged in but alert them
         console.error('Role check failed after retries. User may have lost admin status.');
         // DO NOT call setAdmin(null) — let them stay logged in, but show warning
+        roleCheckRetries.current = 0;
       }
     }
   };
@@ -94,6 +95,7 @@ export const AdminAuthProvider = ({ children }) => {
             // Skip unnecessary DB query — user identity is unchanged
             // The admin state is still valid from the previous role check
             console.log('Token refreshed, admin role preserved');
+            setLoading(false);
           }
         } catch (err) {
           console.error('checkAdminRole error (event):', err);
