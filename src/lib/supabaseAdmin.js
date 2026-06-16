@@ -31,6 +31,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: memoryStorage,
     persistSession: false,
     autoRefreshToken: true,
-    detectSessionInUrl: false
+    detectSessionInUrl: false,
+    storageKey: 'hw-admin-session', // ← key beda, ga bentrok sama customer
   }
 })
