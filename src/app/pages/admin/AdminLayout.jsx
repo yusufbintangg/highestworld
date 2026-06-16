@@ -10,12 +10,13 @@ export const AdminLayout = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Kalau belum login, redirect ke login
+  // Kalau belum login DAN loading sudah selesai, baru redirect ke login
+  // (loading = true berarti context masih restore session dari storage)
   React.useEffect(() => {
     if (!loading && !admin) {
       navigate('/admin/login');
     }
-  }, [admin, loading]);
+  }, [admin, loading, navigate]);
 
   if (loading) {
     return (

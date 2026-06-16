@@ -60,15 +60,60 @@ export const AdminAuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // ✅ Use onAuthStateChange INITIAL_SESSION event as primary source
-    // Add a safety fallback: if INITIAL_SESSION doesn't arrive within 3s,
-    // fetch the current session and proceed to check role.
+    // ✅ IMMEDIATE: Check localStorage first for instant restore on refresh
+    const initFromStorage = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data?.session?.user) {
+          console.log('Session restored from storage, checking admin role...');
+          await checkAdminRole(data.session.user);
+          initialized.current = true;
+          setLoading(false);
+        } else {
+          console.log('No session in storage, waiting for auth event...');
+          // Session not in storage, wait for onAuthStateChange to handle it
+        }
+      } catch (err) {
+        console.error('Failed to restore from storage:', err);
+        // Fallback: wait for onAuthStateChange
+      }
+    };
+
+    // Start restore immediately
+    initFromStorage();
+
+    // ✅ Use onAuthStateChange INITIAL_SESSION event as backup
     let fallbackTimeout;
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth event:', event, !!session);
+        console.log('Auth event:', event, !!session, 'initialized:', initialized.current);
 
-        // If the initial session hasn't been handled yet, treat this as INITIAL_SESSION
+        // If already initialized (from initFromStorage), skip re-init
+        if (initialized.current) {
+          // Just handle state updates from subsequent events
+          try {
+            if (event === 'SIGNED_OUT') {
+              setAdmin(null);
+              roleCheckRetries.current = 0;
+              setLoading(false);
+            } else if (event === 'SIGNED_IN') {
+              await checkAdminRole(session?.user ?? null);
+              setLoading(false);
+            } else if (event === 'TOKEN_REFRESHED') {
+              if (session?.user && admin) {
+                setAdmin(prev => prev ? { ...prev, ...session.user } : null);
+              }
+              console.log('Token refreshed, admin state updated');
+              setLoading(false);
+            }
+          } catch (err) {
+            console.error('checkAdminRole error (event):', err);
+            setLoading(false);
+          }
+          return;
+        }
+
+        // First time initialization (initFromStorage didn't find session)
         if (!initialized.current) {
           initialized.current = true;
           if (fallbackTimeout) clearTimeout(fallbackTimeout);
@@ -80,27 +125,6 @@ export const AdminAuthProvider = ({ children }) => {
             setLoading(false);
           }
           return;
-        }
-
-        // Subsequent events (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, etc.)
-        try {
-          if (event === 'SIGNED_OUT') {
-            setAdmin(null);
-            roleCheckRetries.current = 0;
-          } else if (event === 'SIGNED_IN') {
-            // ✅ FIX: Only check role on SIGNED_IN, NOT on TOKEN_REFRESHED
-            // TOKEN_REFRESHED just means the JWT was refreshed, user identity hasn't changed
-            await checkAdminRole(session?.user ?? null);
-          } else if (event === 'TOKEN_REFRESHED') {
-            // Skip unnecessary DB query — user identity is unchanged
-            // The admin state is still valid from the previous role check
-            console.log('Token refreshed, admin role preserved');
-            setLoading(false);
-          }
-        } catch (err) {
-          console.error('checkAdminRole error (event):', err);
-        } finally {
-          setLoading(false);
         }
       }
     );
