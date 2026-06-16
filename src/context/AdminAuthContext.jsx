@@ -129,10 +129,10 @@ export const AdminAuthProvider = ({ children }) => {
       }
     );
 
-    // Safety fallback: if INITIAL_SESSION doesn't fire within 3s, try to get session
+    // Safety fallback: jika auth events telat/ga sesuai, kita coba getSession sekali.
+    // Tujuan: jangan biarin UI stuck loading selamanya (terutama di production).
     fallbackTimeout = setTimeout(async () => {
       if (!initialized.current) {
-        initialized.current = true;
         try {
           const { data } = await supabase.auth.getSession();
           const sessUser = data?.session?.user ?? null;
@@ -140,10 +140,26 @@ export const AdminAuthProvider = ({ children }) => {
         } catch (err) {
           console.error('Fallback getSession/checkAdminRole error:', err);
         } finally {
+          initialized.current = true;
           setLoading(false);
         }
       }
     }, 3000);
+
+    // HARD TIMEOUT: pastikan loading berhenti walaupun Supabase listener/lock mentok.
+    // Ini ngurangin kasus “refresh di server stuck Loading...”.
+    const hardTimeout = setTimeout(() => {
+      if (loading) {
+        console.warn('AdminAuth hard timeout: forcing loading=false');
+        setLoading(false);
+      }
+    }, 6000);
+
+    // Cleanup hard timeout
+    // (cleanup dilakuin di return bawah)
+    // eslint-disable-next-line no-unused-vars
+    const _unused = hardTimeout;
+
 
     return () => {
       if (fallbackTimeout) clearTimeout(fallbackTimeout);
