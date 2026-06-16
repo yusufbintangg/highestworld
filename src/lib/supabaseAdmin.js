@@ -28,10 +28,12 @@ const memoryStorage = new MemoryStorage()
 // This prevents conflicts with customer auth client using localStorage
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: memoryStorage,
-    persistSession: false,
+    // Pakai localStorage tetap (biar session survive refresh)
+    // tapi isolasi storageKey admin supaya nggak bentrok dengan customer auth.
     autoRefreshToken: true,
+    persistSession: true,
     detectSessionInUrl: false,
-    storageKey: 'hw-admin-session', // ← key beda, ga bentrok sama customer
-  }
-})
+    storageKey: 'hw-admin-session',
+  },
+});
+
