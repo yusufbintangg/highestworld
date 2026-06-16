@@ -1,34 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '../../lib/supabaseAdmin';
 import { isWithinInterval, startOfDay, endOfDay } from 'date-fns';
-
-// Helper: Ensure token is fresh before queries
-const ensureTokenFresh = async () => {
-  try {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) {
-      throw new Error('No active session');
-    }
-    
-    // If token expires in < 30s, refresh it now
-    const expiresAt = data.session.expires_at;
-    const expiresIn = expiresAt ? (expiresAt * 1000 - Date.now()) / 1000 : 0;
-    
-    if (expiresIn < 30) {
-      console.log(`Token expires soon (${expiresIn.toFixed(0)}s), refreshing...`);
-      const { data: refreshed, error } = await supabase.auth.refreshSession();
-      if (error) throw error;
-      console.log('Token refreshed successfully');
-      return refreshed.session;
-    }
-    
-    return data.session;
-  } catch (err) {
-    console.error('Failed to ensure token fresh:', err);
-    throw err;
-  }
-};
 
 export const STATUS_ORDER = [
   { value: 'waiting_payment',  label: 'Pending',    color: 'text-red-500 border-red-500/30 bg-red-500/10' },
@@ -43,35 +17,12 @@ export const getStatusInfo = (status) =>
   STATUS_ORDER.find(s => s.value === status) || { label: status, color: 'text-muted-foreground' };
 
 export const useOrders = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [dateRange, setDateRange] = useState(null);
-  const [filters, setFilters] = useState({ status: 'all', search: '' });
-  const [updateData, setUpdateData] = useState({ status: '', trackingNumber: '', notes: '' });
+  const queryClient = useQueryClient();
 
-  // Multi-select
-  const [selectedOrders, setSelectedOrders] = useState(new Set());
-  const [showBatchUpdateDialog, setShowBatchUpdateDialog] = useState(false);
-  const [showBatchBiteshipDialog, setShowBatchBiteshipDialog] = useState(false);
-  const [batchStatus, setBatchStatus] = useState('');
-
-  // Biteship
-  const [pushingBiteship, setPushingBiteship] = useState(false);
-  const [batchBiteshipProgress, setBatchBiteshipProgress] = useState({ done: 0, total: 0, errors: [] });
-
-  const fetchOrders = async () => {
-    const timeoutId = setTimeout(() => {
-      console.error('fetchOrders timeout - Supabase tidak merespons dalam 12s');
-      toast.error('Request timeout saat load orders');
-      setOrders([]);
-      setLoading(false);
-    }, 12000);
-
-    try {
-      console.log('Ensuring token is fresh...');
-      await ensureTokenFresh();
-      
+  // Fetch orders with React Query
+  const { data: orders = [], isLoading, error } = useQuery({
+    queryKey: ['admin-orders'],
+    queryFn: async () => {
       console.log('Fetching orders from admin client...');
       const { data, error } = await supabase
         .from('orders')
@@ -88,23 +39,25 @@ export const useOrders = () => {
         throw error;
       }
       console.log('Orders fetched successfully:', data?.length || 0);
-      setOrders(data || []);
-    } catch (err) {
-      console.error('Failed to fetch orders:', {
-        message: err.message,
-        code: err.code,
-        status: err.status,
-        details: err.details
-      });
-      toast.error(`Gagal load orders: ${err.message}`);
-      setOrders([]);
-    } finally {
-      clearTimeout(timeoutId);
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+  });
 
-  useEffect(() => { fetchOrders(); }, []);
+  // Local state for filters and UI
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [dateRange, setDateRange] = useState(null);
+  const [filters, setFilters] = useState({ status: 'all', search: '' });
+  const [updateData, setUpdateData] = useState({ status: '', trackingNumber: '', notes: '' });
+
+  // Multi-select
+  const [selectedOrders, setSelectedOrders] = useState(new Set());
+  const [showBatchUpdateDialog, setShowBatchUpdateDialog] = useState(false);
+  const [showBatchBiteshipDialog, setShowBatchBiteshipDialog] = useState(false);
+  const [batchStatus, setBatchStatus] = useState('');
+
+  // Biteship
+  const [pushingBiteship, setPushingBiteship] = useState(false);
+  const [batchBiteshipProgress, setBatchBiteshipProgress] = useState({ done: 0, total: 0, errors: [] });
 
   // ── Filter & Stats ──────────────────────────────────────────────
   const filtered = orders.filter(o => {
@@ -167,7 +120,7 @@ export const useOrders = () => {
 
     toast.success('Order berhasil diupdate!');
     setSelectedOrder(null);
-    fetchOrders();
+    queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
   };
 
   // ── Push Biteship (single) ──────────────────────────────────────
@@ -184,7 +137,7 @@ export const useOrders = () => {
       const data = await response.json();
       if (!data.success) throw new Error(data.error);
       toast.success(`Order dipush ke Biteship! AWB: ${data.awb_number || 'Pending'}`);
-      fetchOrders();
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
       setSelectedOrder(prev => ({ ...prev, biteship_order_id: data.biteship_order_id, awb_number: data.awb_number }));
     } catch (error) {
       toast.error('Gagal push ke Biteship: ' + error.message);
@@ -230,7 +183,7 @@ export const useOrders = () => {
       setBatchBiteshipProgress({ done: i + 1, total: eligibleOrders.length, errors: [...errors] });
     }
 
-    fetchOrders();
+    queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
     setSelectedOrders(new Set());
 
     if (errors.length === 0) {
@@ -255,7 +208,7 @@ export const useOrders = () => {
     setSelectedOrders(new Set());
     setShowBatchUpdateDialog(false);
     setBatchStatus('');
-    fetchOrders();
+    queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
   };
 
   // ── Select Helpers ──────────────────────────────────────────────
@@ -275,7 +228,7 @@ export const useOrders = () => {
 
   return {
     // data
-    orders, filtered, loading, stats,
+    orders, filtered, loading: isLoading, stats,
     selectedOrder, setSelectedOrder,
     updateData, setUpdateData,
     dateRange, setDateRange,
@@ -289,7 +242,6 @@ export const useOrders = () => {
     // biteship
     pushingBiteship,
     // handlers
-    fetchOrders,
     handleOpenUpdateDialog,
     handleUpdateOrder,
     handlePushBiteship,

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabaseAdmin';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
@@ -22,24 +23,12 @@ const getSizeOrder = (size) => {
 };
 
 export const AdminStock = () => {
-  const [variants, setVariants] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [filterProduct, setFilterProduct] = useState('all');
-  const [editedStocks, setEditedStocks] = useState({});
-  const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
 
-  const fetchData = async () => {
-    const timeoutId = setTimeout(() => {
-      console.error('fetchData (stock) timeout - Supabase tidak merespons dalam 12s');
-      toast.error('Request timeout saat load stock');
-      setProducts([]);
-      setVariants([]);
-      setLoading(false);
-    }, 12000);
-
-    try {
+  // Fetch stock data with React Query
+  const { data: stockData = { products: [], variants: [] }, isLoading } = useQuery({
+    queryKey: ['admin-stock'],
+    queryFn: async () => {
       const { data: prods, error: errProds } = await supabase
         .from('products')
         .select('id, name, price, original_price')
@@ -55,20 +44,16 @@ export const AdminStock = () => {
 
       if (errVars) throw errVars;
 
-      setProducts(prods || []);
-      setVariants(vars || []);
-    } catch (err) {
-      console.error('Failed to fetch stock data:', err);
-      toast.error('Gagal load data stock');
-      setProducts([]);
-      setVariants([]);
-    } finally {
-      clearTimeout(timeoutId);
-      setLoading(false);
-    }
-  };
+      return { products: prods || [], variants: vars || [] };
+    },
+  });
 
-    useEffect(() => { fetchData(); }, []);
+  const { products, variants } = stockData;
+
+  const [search, setSearch] = useState('');
+  const [filterProduct, setFilterProduct] = useState('all');
+  const [editedStocks, setEditedStocks] = useState({});
+  const [saving, setSaving] = useState(false);
 
   const handleStockChange = (variantId, value) => {
     setEditedStocks(prev => ({ ...prev, [variantId]: value }));
@@ -89,15 +74,15 @@ export const AdminStock = () => {
     }
     setSaving(true);
 
-     const updates = Object.entries(editedStocks).map(([id, stock]) =>
+    const updates = Object.entries(editedStocks).map(([id, stock]) =>
       supabase.from('product_variants').update({ stock: parseInt(stock) }).eq('id', id)
     );
 
-     await Promise.all(updates);
+    await Promise.all(updates);
     toast.success(`${Object.keys(editedStocks).length} varian berhasil diupdate!`);
     setEditedStocks({});
     setSaving(false);
-    fetchData();
+    queryClient.invalidateQueries({ queryKey: ['admin-stock'] });
   };
 
     const filtered = variants.filter(v => {

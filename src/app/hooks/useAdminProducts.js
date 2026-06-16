@@ -1,33 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabaseAdmin';
 import { toast } from 'sonner';
-
-// Helper: Ensure token is fresh before queries
-const ensureTokenFresh = async () => {
-  try {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) {
-      throw new Error('No active session');
-    }
-    
-    // If token expires in < 30s, refresh it now
-    const expiresAt = data.session.expires_at;
-    const expiresIn = expiresAt ? (expiresAt * 1000 - Date.now()) / 1000 : 0;
-    
-    if (expiresIn < 30) {
-      console.log(`Token expires soon (${expiresIn.toFixed(0)}s), refreshing...`);
-      const { data: refreshed, error } = await supabase.auth.refreshSession();
-      if (error) throw error;
-      console.log('Token refreshed successfully');
-      return refreshed.session;
-    }
-    
-    return data.session;
-  } catch (err) {
-    console.error('Failed to ensure token fresh:', err);
-    throw err;
-  }
-};
 
 const SIZES_PAKAIAN = ['S','M','L','XL','2XL','3XL','4XL','5XL','6XL','7XL','8XL','9XL','10XL'];
 const SIZES_CELANA = ['36','38','40','42','44','46','48','50'];
@@ -48,35 +22,12 @@ const generateSlug = (name) =>
   name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
 export const useAdminProducts = () => {
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const queryClient = useQueryClient();
 
-  // Form / modal state
-  const [showForm, setShowForm] = useState(false);
-  const [editProduct, setEditProduct] = useState(null);
-  const [form, setForm] = useState(emptyForm);
-
-  // Variant state
-  const [variants, setVariants] = useState([{ ...emptyVariant }]);
-  const [existingVariants, setExistingVariants] = useState([]);
-  const [editingVariant, setEditingVariant] = useState(null);
-  const [sizeType, setSizeType] = useState('pakaian');
-
-  // ─── Fetch ───────────────────────────────────────────────────────────
-  const fetchProducts = async () => {
-    const timeoutId = setTimeout(() => {
-      console.error('fetchProducts timeout - Supabase tidak merespons dalam 12s');
-      toast.error('Request timeout saat load produk (Supabase tidak merespons)');
-      setProducts([]);
-      setLoading(false);
-    }, 12000);
-
-    try {
-      console.log('Ensuring token is fresh...');
-      await ensureTokenFresh();
-      
+  // Fetch products with React Query
+  const { data: products = [], isLoading: isLoadingProducts } = useQuery({
+    queryKey: ['admin-products'],
+    queryFn: async () => {
       console.log('Fetching products from admin client...');
       const { data, error } = await supabase
         .from('products')
@@ -94,37 +45,32 @@ export const useAdminProducts = () => {
         throw error;
       }
       console.log('Products fetched successfully:', data?.length || 0);
-      setProducts(data || []);
-    } catch (err) {
-      console.error('Failed to fetch products:', {
-        message: err.message,
-        code: err.code,
-        status: err.status,
-        details: err.details
-      });
-      toast.error(`Gagal load produk: ${err.message}`);
-      setProducts([]);
-    } finally {
-      clearTimeout(timeoutId);
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+  });
 
-  const fetchCategories = async () => {
-    try {
+  // Fetch categories with React Query
+  const { data: categories = [] } = useQuery({
+    queryKey: ['admin-categories'],
+    queryFn: async () => {
       const { data, error } = await supabase.from('categories').select('*').eq('is_active', true);
       if (error) throw error;
-      setCategories(data || []);
-    } catch (err) {
-      console.error('Failed to fetch categories:', err);
-      toast.error('Gagal load kategori');
-    }
-  };
+      return data || [];
+    },
+  });
 
-  useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-  }, []);
+  const [search, setSearch] = useState('');
+
+  // Form / modal state
+  const [showForm, setShowForm] = useState(false);
+  const [editProduct, setEditProduct] = useState(null);
+  const [form, setForm] = useState(emptyForm);
+
+  // Variant state
+  const [variants, setVariants] = useState([{ ...emptyVariant }]);
+  const [existingVariants, setExistingVariants] = useState([]);
+  const [editingVariant, setEditingVariant] = useState(null);
+  const [sizeType, setSizeType] = useState('pakaian');
 
   // ─── Product CRUD ─────────────────────────────────────────────────────
   const handleOpenAdd = () => {
@@ -169,12 +115,12 @@ export const useAdminProducts = () => {
     const { error } = await supabase.from('products').delete().eq('id', id);
     if (error) { toast.error('Gagal hapus produk'); return; }
     toast.success('Produk dihapus');
-    fetchProducts();
+    queryClient.invalidateQueries({ queryKey: ['admin-products'] });
   };
 
   const handleToggleActive = async (id, currentStatus) => {
     await supabase.from('products').update({ is_active: !currentStatus }).eq('id', id);
-    fetchProducts();
+    queryClient.invalidateQueries({ queryKey: ['admin-products'] });
   };
 
   const handleSubmit = async (e) => {
@@ -238,7 +184,7 @@ export const useAdminProducts = () => {
     }
 
     setShowForm(false);
-    fetchProducts();
+    queryClient.invalidateQueries({ queryKey: ['admin-products'] });
   };
 
   // ─── Variant CRUD ─────────────────────────────────────────────────────
@@ -283,7 +229,7 @@ export const useAdminProducts = () => {
 
   return {
     // Data
-    filtered, categories, loading, search, setSearch,
+    filtered, categories, loading: isLoadingProducts, search, setSearch,
     // Form modal
     showForm, setShowForm, editProduct, form, setForm,
     handleOpenAdd, handleOpenEdit, handleDelete, handleToggleActive, handleSubmit,

@@ -1,4 +1,5 @@
 import { createBrowserRouter, Outlet } from 'react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // Import all page components
 import { HomePage } from './pages/HomePage';
 import { ProductsPage } from './pages/products/ProductsPage';
@@ -38,10 +39,23 @@ import LoyaltyReferralPage from './pages/account/loyalty/LoyaltyReferralPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 
+const adminQueryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,      // data fresh for 5 minutes
+      gcTime: 1000 * 60 * 10,         // keep in cache for 10 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,    // don't refetch when tab regains focus
+    },
+  },
+});
+
 const AdminRoot = () => (
-  <AdminAuthProvider>
-    <Outlet />
-  </AdminAuthProvider>
+  <QueryClientProvider client={adminQueryClient}>
+    <AdminAuthProvider>
+      <Outlet />
+    </AdminAuthProvider>
+  </QueryClientProvider>
 );
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },

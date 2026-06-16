@@ -1,85 +1,71 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ShoppingBag, Package, Clock, TrendingUp } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseAdmin';
 import { formatPrice } from '../../../lib/utils';
 
 export const AdminDashboard = () => {
-  const [stats, setStats] = useState({
-    totalProducts: 0,
-    totalOrders: 0,
-    pendingOrders: 0,
-    totalRevenue: 0,
+  // Fetch all dashboard stats with React Query
+  const { data: dashboardData = {}, isLoading } = useQuery({
+    queryKey: ['admin-dashboard'],
+    queryFn: async () => {
+      // Total produk
+      const { count: totalProducts, error: errP } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true });
+      if (errP) throw errP;
+
+      // Total order
+      const { count: totalOrders, error: errO } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true });
+      if (errO) throw errO;
+
+      // Order pending
+      const { count: pendingOrders, error: errPO } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'waiting_payment');
+      if (errPO) throw errPO;
+
+      // Revenue dari order yang sudah confirmed
+      const { data: revenueData, error: errRev } = await supabase
+        .from('orders')
+        .select('total')
+        .in('status', ['payment_confirmed', 'processing', 'shipped', 'completed']);
+      if (errRev) throw errRev;
+
+      const totalRevenue = revenueData?.reduce((sum, o) => sum + o.total, 0) || 0;
+
+      // 5 order terbaru
+      const { data: orders, error: errOrders } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (errOrders) throw errOrders;
+
+      // Varian dengan stok < 5
+      const { data: variants, error: errVar } = await supabase
+        .from('product_variants')
+        .select('*, products(name)')
+        .lt('stock', 5)
+        .order('stock', { ascending: true })
+        .limit(5);
+      if (errVar) throw errVar;
+
+      return {
+        stats: { totalProducts, totalOrders, pendingOrders, totalRevenue },
+        recentOrders: orders || [],
+        lowStock: variants || [],
+      };
+    },
   });
-  const [recentOrders, setRecentOrders] = useState([]);
-  const [lowStock, setLowStock] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      const timeoutId = setTimeout(() => {
-        console.error('fetchStats timeout');
-        setLoading(false);
-      }, 12000);
-
-      try {
-        // Total produk
-        const { count: totalProducts, error: errP } = await supabase
-          .from('products')
-          .select('*', { count: 'exact', head: true });
-        if (errP) throw errP;
-
-        // Total order
-        const { count: totalOrders, error: errO } = await supabase
-          .from('orders')
-          .select('*', { count: 'exact', head: true });
-        if (errO) throw errO;
-
-        // Order pending
-        const { count: pendingOrders, error: errPO } = await supabase
-          .from('orders')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'waiting_payment');
-        if (errPO) throw errPO;
-
-        // Revenue dari order yang sudah confirmed
-        const { data: revenueData, error: errRev } = await supabase
-          .from('orders')
-          .select('total')
-          .in('status', ['payment_confirmed', 'processing', 'shipped', 'completed']);
-        if (errRev) throw errRev;
-
-        const totalRevenue = revenueData?.reduce((sum, o) => sum + o.total, 0) || 0;
-
-        // 5 order terbaru
-        const { data: orders, error: errOrders } = await supabase
-          .from('orders')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(5);
-        if (errOrders) throw errOrders;
-
-        // Varian dengan stok < 5
-        const { data: variants, error: errVar } = await supabase
-          .from('product_variants')
-          .select('*, products(name)')
-          .lt('stock', 5)
-          .order('stock', { ascending: true })
-          .limit(5);
-        if (errVar) throw errVar;
-
-        setStats({ totalProducts, totalOrders, pendingOrders, totalRevenue });
-        setRecentOrders(orders || []);
-        setLowStock(variants || []);
-      } catch (err) {
-        console.error('Failed to fetch dashboard stats:', err);
-      } finally {
-        clearTimeout(timeoutId);
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, []);
+  const {
+    stats = { totalProducts: 0, totalOrders: 0, pendingOrders: 0, totalRevenue: 0 },
+    recentOrders = [],
+    lowStock = [],
+  } = dashboardData;
 
   const statCards = [
     { label: 'Total Produk', value: stats.totalProducts, icon: Package, color: 'text-blue-500' },
@@ -97,7 +83,7 @@ export const AdminDashboard = () => {
     cancelled: { label: 'Dibatalkan', color: 'bg-red-500/10 text-red-500' },
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
