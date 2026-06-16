@@ -97,13 +97,14 @@ export const AdminAuthProvider = ({ children }) => {
               roleCheckRetries.current = 0;
               setLoading(false);
             } else if (event === 'SIGNED_IN') {
-              await checkAdminRole(session?.user ?? null);
+              if (session?.user) await checkAdminRole(session.user);
               setLoading(false);
             } else if (event === 'TOKEN_REFRESHED') {
-              if (session?.user && admin) {
-                setAdmin(prev => prev ? { ...prev, ...session.user } : null);
+              if (session?.user) {
+                // Jangan tergantung admin sudah tersedia; validasi ulang dari sessionUser
+                await checkAdminRole(session.user);
               }
-              console.log('Token refreshed, admin state updated');
+              console.log('Token refreshed, admin state re-checked');
               setLoading(false);
             }
           } catch (err) {
@@ -117,8 +118,10 @@ export const AdminAuthProvider = ({ children }) => {
         if (!initialized.current) {
           initialized.current = true;
           if (fallbackTimeout) clearTimeout(fallbackTimeout);
+          // Jangan langsung check role kalau session belum siap (race di refresh)
+          if (!session?.user) return;
           try {
-            await checkAdminRole(session?.user ?? null);
+            await checkAdminRole(session.user);
           } catch (err) {
             console.error('checkAdminRole error (initial):', err);
           } finally {
