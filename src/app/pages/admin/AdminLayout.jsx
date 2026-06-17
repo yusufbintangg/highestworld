@@ -45,7 +45,7 @@ export const AdminLayout = () => {
       {/* Logo */}
       <div className="p-6 border-b border-border">
         <h1 className="font-bold tracking-widest text-sm">HIGHEST WORLD</h1>
-        <p className="text-xs text-muted-foreground mt-1">Admin Panel</p>
+        <p className="text-xs text-muted-foreground mt-1">Admin Panel </p>
       </div>
 
       {/* Nav */}
