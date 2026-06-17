@@ -31,7 +31,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     // Admin session: sengaja JANGAN persist ke storage browser
     // supaya nggak kena corrupted localStorage/session lock yang bikin refresh stuck.
     autoRefreshToken: true,
-    persistSession: false,
+    persistSession: true,
     detectSessionInUrl: false,
     storageKey: 'hw-admin-session',
   },
