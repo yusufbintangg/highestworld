@@ -176,10 +176,15 @@ export const AdminAuthProvider = ({ children }) => {
         const currentSession = data?.session;
 
         if (!currentSession) {
-          // Session is gone from Supabase, but admin state still exists
-          console.warn('Session became invalid. Logging out.');
-          setAdmin(null);
-          roleCheckRetries.current = 0;
+          // Session is gone from Supabase.
+          // HOTFIX: jangan auto-logout saat refresh race / refresh interval belum settle.
+          // Cuma logout kalau ini kejadian berulang.
+          roleCheckRetries.current++;
+          if (roleCheckRetries.current >= 2) {
+            console.warn('Session became invalid (confirmed). Logging out.');
+            setAdmin(null);
+            roleCheckRetries.current = 0;
+          }
           return;
         }
 
