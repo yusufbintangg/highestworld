@@ -3,237 +3,320 @@ import { supabase } from '../lib/supabaseAdmin';
 
 const AdminAuthContext = createContext(null);
 
+// ============================================================
+// DEBUG LOGGER
+// Semua log dikasih timestamp + tag [ADMIN-AUTH] biar gampang
+// di-filter di console (ketik "ADMIN-AUTH" di filter box Console).
+// Juga nge-dump localStorage tiap kali dipanggil.
+// ============================================================
+const STORAGE_KEY = 'hw-admin-session';
+
+function ts() {
+  const d = new Date();
+  return d.toISOString().split('T')[1].replace('Z', '');
+}
+
+function dumpStorage(label) {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      console.log(`%c[ADMIN-AUTH ${ts()}] STORAGE(${label}): EMPTY/MISSING`, 'color: orange');
+      return;
+    }
+    const parsed = JSON.parse(raw);
+    const expiresAt = parsed?.expires_at;
+    const expiresIn = expiresAt ? Math.round(expiresAt * 1000 - Date.now()) / 1000 : null;
+    console.log(
+      `%c[ADMIN-AUTH ${ts()}] STORAGE(${label}): user=${parsed?.user?.email ?? '?'} expires_in=${expiresIn}s access_token_len=${parsed?.access_token?.length ?? 0} refresh_token_len=${parsed?.refresh_token?.length ?? 0}`,
+      'color: cyan'
+    );
+  } catch (err) {
+    console.log(`%c[ADMIN-AUTH ${ts()}] STORAGE(${label}): CORRUPT/UNPARSEABLE -> ${err.message}`, 'color: red; font-weight: bold');
+    console.log('Raw value:', localStorage.getItem(STORAGE_KEY));
+  }
+}
+
+function log(...args) {
+  console.log(`%c[ADMIN-AUTH ${ts()}]`, 'color: lime', ...args);
+}
+
+function warn(...args) {
+  console.warn(`%c[ADMIN-AUTH ${ts()}]`, 'color: orange', ...args);
+}
+
+function err(...args) {
+  console.error(`%c[ADMIN-AUTH ${ts()}]`, 'color: red; font-weight: bold', ...args);
+}
+
 export const AdminAuthProvider = ({ children }) => {
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
-  const initialized = useRef(false); // ← guard biar getSession ga bentrok sama onAuthStateChange
-  const roleCheckRetries = useRef(0); // retry counter KHUSUS buat checkAdminRole
-  const sessionMissCount = useRef(0); // counter KHUSUS buat validator interval (terpisah!)
+  const initialized = useRef(false);
+  const roleCheckRetries = useRef(0);
+  const sessionMissCount = useRef(0);
   const maxRetries = 3;
 
   const checkAdminRole = async (user, isRetry = false) => {
+    log('checkAdminRole() CALLED for', user?.email, 'isRetry=', isRetry);
     if (!user) {
+      warn('checkAdminRole: no user passed -> setAdmin(null)');
       setAdmin(null);
       roleCheckRetries.current = 0;
       return;
     }
 
     try {
+      const t0 = performance.now();
       const { data: adminUser, error } = await supabase
         .from('admin_users')
         .select('id, email, full_name, role, is_active')
         .eq('id', user.id)
         .eq('is_active', true)
         .maybeSingle();
+      log(`admin_users query took ${(performance.now() - t0).toFixed(0)}ms`, { adminUser, error });
 
       if (error) {
-        console.error('Role check query error:', error);
+        err('Role check query error:', error);
         throw error;
       }
 
       if (!adminUser) {
-        console.warn('User is not an active admin');
+        warn('User is not an active admin (query returned null) -> setAdmin(null)');
         setAdmin(null);
         roleCheckRetries.current = 0;
         return;
       }
 
+      log('Role check OK -> setAdmin(...)', adminUser);
       setAdmin({ ...user, ...adminUser });
       roleCheckRetries.current = 0;
-    } catch (err) {
-      // ✅ CRITICAL FIX: Don't silently logout on query failure
-      // Instead, preserve current admin state if available
-      console.error('checkAdminRole error:', err);
-      
-      // Only retry on initial checks or network-related errors
+    } catch (caught) {
+      err('checkAdminRole EXCEPTION:', caught);
+
       if (!isRetry && roleCheckRetries.current < maxRetries) {
         roleCheckRetries.current++;
         const delay = Math.min(1000 * Math.pow(2, roleCheckRetries.current - 1), 8000);
-        console.log(`Retrying role check in ${delay}ms (attempt ${roleCheckRetries.current}/${maxRetries})`);
+        warn(`Retrying role check in ${delay}ms (attempt ${roleCheckRetries.current}/${maxRetries})`);
         setTimeout(() => checkAdminRole(user, true), delay);
       } else {
-        // After retries exhausted, keep the user logged in but alert them
-        console.error('Role check failed after retries. User may have lost admin status.');
-        // DO NOT call setAdmin(null) — let them stay logged in, but show warning
+        err('Role check failed after retries. Keeping current admin state (NOT logging out).');
         roleCheckRetries.current = 0;
       }
     }
   };
 
   useEffect(() => {
-    // ✅ IMMEDIATE: Check localStorage first for instant restore on refresh
+    log('=== AdminAuthProvider MOUNTED ===');
+    dumpStorage('on-mount');
+
     const initFromStorage = async () => {
+      log('initFromStorage() START -> calling getSession()');
       try {
-        const { data } = await supabase.auth.getSession();
+        const t0 = performance.now();
+        const { data, error } = await supabase.auth.getSession();
+        log(`getSession() resolved in ${(performance.now() - t0).toFixed(0)}ms`, { hasSession: !!data?.session, error });
+        dumpStorage('after-getSession-in-initFromStorage');
+
+        if (error) {
+          err('getSession() returned an ERROR object:', error);
+        }
+
         if (data?.session?.user) {
-          console.log('Session restored from storage, checking admin role...');
+          log('Session FOUND in storage for', data.session.user.email, '-> checkAdminRole');
           await checkAdminRole(data.session.user);
           initialized.current = true;
           setLoading(false);
+          log('initFromStorage DONE, loading=false, initialized=true');
         } else {
-          console.log('No session in storage, waiting for auth event...');
-          // Session not in storage, wait for onAuthStateChange to handle it
+          warn('No session found in storage via getSession(). Waiting for onAuthStateChange...');
         }
-      } catch (err) {
-        console.error('Failed to restore from storage:', err);
-        // Fallback: wait for onAuthStateChange
+      } catch (caught) {
+        err('initFromStorage THREW:', caught);
       }
     };
 
-    // Start restore immediately
     initFromStorage();
 
-    // ✅ Use onAuthStateChange INITIAL_SESSION event as backup
     let fallbackTimeout;
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth event:', event, !!session, 'initialized:', initialized.current);
+        log(`onAuthStateChange FIRED: event=${event} hasSession=${!!session} initialized=${initialized.current}`);
+        dumpStorage(`onAuthStateChange-${event}`);
 
-        // If already initialized (from initFromStorage), skip re-init
         if (initialized.current) {
-          // Just handle state updates from subsequent events
           try {
             if (event === 'SIGNED_OUT') {
+              warn('SIGNED_OUT event -> setAdmin(null)');
               setAdmin(null);
               roleCheckRetries.current = 0;
               setLoading(false);
             } else if (event === 'SIGNED_IN') {
+              log('SIGNED_IN event, session.user=', session?.user?.email);
               if (session?.user) await checkAdminRole(session.user);
               setLoading(false);
             } else if (event === 'TOKEN_REFRESHED') {
+              log('TOKEN_REFRESHED event, session.user=', session?.user?.email);
               if (session?.user) {
-                // Jangan tergantung admin sudah tersedia; validasi ulang dari sessionUser
                 await checkAdminRole(session.user);
+              } else {
+                warn('TOKEN_REFRESHED but session.user is missing!');
               }
-              console.log('Token refreshed, admin state re-checked');
               setLoading(false);
+            } else {
+              log(`Unhandled event type (no-op): ${event}`);
             }
-          } catch (err) {
-            console.error('checkAdminRole error (event):', err);
+          } catch (caught) {
+            err('Error handling auth event (post-init):', caught);
             setLoading(false);
           }
           return;
         }
 
-        // First time initialization (initFromStorage didn't find session)
         if (!initialized.current) {
           initialized.current = true;
           if (fallbackTimeout) clearTimeout(fallbackTimeout);
-          // Jangan langsung check role kalau session belum siap (race di refresh)
-          if (!session?.user) return;
+          log('First-time init via onAuthStateChange. event=', event);
+          if (!session?.user) {
+            warn('No session.user on first init event -> staying logged out, loading=false');
+            setLoading(false);
+            return;
+          }
           try {
             await checkAdminRole(session.user);
-          } catch (err) {
-            console.error('checkAdminRole error (initial):', err);
+          } catch (caught) {
+            err('checkAdminRole error (initial):', caught);
           } finally {
             setLoading(false);
+            log('First-time init DONE, loading=false');
           }
           return;
         }
       }
     );
 
-    // Safety fallback: jika auth events telat/ga sesuai, kita coba getSession sekali.
-    // Tujuan: jangan biarin UI stuck loading selamanya (terutama di production).
     fallbackTimeout = setTimeout(async () => {
       if (!initialized.current) {
+        warn('FALLBACK TIMEOUT (3s) fired — neither initFromStorage nor onAuthStateChange finished. Forcing getSession() check.');
+        dumpStorage('fallback-timeout-before-getSession');
         try {
-          const { data } = await supabase.auth.getSession();
+          const { data, error } = await supabase.auth.getSession();
+          log('Fallback getSession() result:', { hasSession: !!data?.session, error });
           const sessUser = data?.session?.user ?? null;
           await checkAdminRole(sessUser);
-        } catch (err) {
-          console.error('Fallback getSession/checkAdminRole error:', err);
+        } catch (caught) {
+          err('Fallback getSession/checkAdminRole error:', caught);
         } finally {
           initialized.current = true;
           setLoading(false);
+          log('Fallback path DONE, loading=false, initialized=true');
         }
       }
     }, 3000);
 
-    // HARD TIMEOUT: pastikan loading berhenti walaupun Supabase listener/lock mentok.
-    // Ini ngurangin kasus “refresh di server stuck Loading...”.
     const hardTimeout = setTimeout(() => {
-      console.warn('AdminAuth hard timeout: forcing loading=false');
+      warn('HARD TIMEOUT (6s) fired — forcing loading=false regardless of state.');
+      dumpStorage('hard-timeout');
       setLoading(false);
     }, 6000);
 
     return () => {
+      log('=== AdminAuthProvider UNMOUNTING / cleanup ===');
       if (fallbackTimeout) clearTimeout(fallbackTimeout);
       clearTimeout(hardTimeout);
       subscription.unsubscribe();
     };
-
   }, []);
 
-  // ✅ NEW: Session validation listener
-  // Detects if admin session becomes invalid (e.g., localStorage corruption, RLS denial)
-  // and provides graceful recovery
   useEffect(() => {
     if (!admin || loading) return;
 
+    log('Starting 30s session validation interval for admin:', admin.email);
+
     const validateSessionInterval = setInterval(async () => {
+      log('--- validateSessionInterval TICK ---');
       try {
-        const { data } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSession();
         const currentSession = data?.session;
+        dumpStorage('validate-interval-tick');
+
+        if (error) err('validateSessionInterval getSession() error object:', error);
 
         if (!currentSession) {
-          // Session is gone from Supabase.
-          // Pakai counter terpisah (sessionMissCount), BUKAN roleCheckRetries,
-          // supaya retry checkAdminRole ga ikut numpuk ke logika logout ini.
           sessionMissCount.current++;
+          warn(`Session MISSING in validate tick. sessionMissCount=${sessionMissCount.current}`);
           if (sessionMissCount.current >= 2) {
-            console.warn('Session became invalid (confirmed). Logging out.');
+            err('Session confirmed invalid (2 consecutive misses). Logging out.');
             setAdmin(null);
             sessionMissCount.current = 0;
           }
           return;
         }
 
-        // Session ketemu lagi → reset counter miss
         sessionMissCount.current = 0;
 
-        // Session exists, verify user ID matches (sanity check)
         if (currentSession.user.id !== admin.id) {
-          console.warn('Session user ID mismatch. Forcing re-check.');
+          warn(`Session user ID MISMATCH: session=${currentSession.user.id} admin=${admin.id}. Logging out.`);
           setAdmin(null);
+          return;
         }
 
-        // Log token expiry
         const expiresAt = currentSession.expires_at;
         const expiresIn = expiresAt ? (expiresAt * 1000 - Date.now()) / 1000 : null;
-        console.log(`Token expires in ${expiresIn?.toFixed(0)}s`);
-      } catch (err) {
-        console.error('Session validation error:', err);
-        // Don't logout on validation errors — just log and continue
+        log(`Session OK. Token expires in ${expiresIn?.toFixed(0)}s`);
+      } catch (caught) {
+        err('validateSessionInterval THREW:', caught);
       }
-    }, 30000); // Check every 30 seconds
+    }, 30000);
 
-    return () => clearInterval(validateSessionInterval);
+    return () => {
+      log('Clearing 30s validation interval');
+      clearInterval(validateSessionInterval);
+    };
   }, [admin, loading]);
 
   const signIn = async (email, password) => {
+    log('signIn() CALLED for', email);
+    dumpStorage('before-signIn');
+    const t0 = performance.now();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    log(`signInWithPassword resolved in ${(performance.now() - t0).toFixed(0)}ms`, { hasData: !!data, error });
+    dumpStorage('after-signInWithPassword');
 
-    const { data: adminUser } = await supabase
+    if (error) {
+      err('signIn FAILED at signInWithPassword:', error);
+      throw error;
+    }
+
+    log('signInWithPassword OK, now checking admin_users table for', data.user.id);
+    const t1 = performance.now();
+    const { data: adminUser, error: roleError } = await supabase
       .from('admin_users')
       .select('id, email, full_name, role, is_active')
       .eq('id', data.user.id)
       .eq('is_active', true)
       .maybeSingle();
+    log(`admin_users lookup in signIn took ${(performance.now() - t1).toFixed(0)}ms`, { adminUser, roleError });
 
     if (!adminUser) {
+      err('signIn: user is NOT an active admin. Signing out and throwing.');
       await supabase.auth.signOut();
+      dumpStorage('after-signOut-in-failed-signIn');
       throw new Error('Akses ditolak. Bukan admin.');
     }
 
+    log('signIn() SUCCESS, returning data. Note: setAdmin() will happen via onAuthStateChange SIGNED_IN event, not here.');
     return data;
   };
 
   const signOut = async () => {
+    log('signOut() CALLED');
     await supabase.auth.signOut();
+    dumpStorage('after-signOut');
     setAdmin(null);
   };
+
+  // Log every render with current state snapshot
+  log(`RENDER: loading=${loading} admin=${admin?.email ?? 'null'}`);
 
   return (
     <AdminAuthContext.Provider value={{ admin, loading, signIn, signOut }}>
