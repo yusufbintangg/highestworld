@@ -7,7 +7,8 @@ export const AdminAuthProvider = ({ children }) => {
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
   const initialized = useRef(false); // ← guard biar getSession ga bentrok sama onAuthStateChange
-  const roleCheckRetries = useRef(0);
+  const roleCheckRetries = useRef(0); // retry counter KHUSUS buat checkAdminRole
+  const sessionMissCount = useRef(0); // counter KHUSUS buat validator interval (terpisah!)
   const maxRetries = 3;
 
   const checkAdminRole = async (user, isRetry = false) => {
@@ -177,22 +178,24 @@ export const AdminAuthProvider = ({ children }) => {
 
         if (!currentSession) {
           // Session is gone from Supabase.
-          // HOTFIX: jangan auto-logout saat refresh race / refresh interval belum settle.
-          // Cuma logout kalau ini kejadian berulang.
-          roleCheckRetries.current++;
-          if (roleCheckRetries.current >= 2) {
+          // Pakai counter terpisah (sessionMissCount), BUKAN roleCheckRetries,
+          // supaya retry checkAdminRole ga ikut numpuk ke logika logout ini.
+          sessionMissCount.current++;
+          if (sessionMissCount.current >= 2) {
             console.warn('Session became invalid (confirmed). Logging out.');
             setAdmin(null);
-            roleCheckRetries.current = 0;
+            sessionMissCount.current = 0;
           }
           return;
         }
+
+        // Session ketemu lagi → reset counter miss
+        sessionMissCount.current = 0;
 
         // Session exists, verify user ID matches (sanity check)
         if (currentSession.user.id !== admin.id) {
           console.warn('Session user ID mismatch. Forcing re-check.');
           setAdmin(null);
-          roleCheckRetries.current = 0;
         }
 
         // Log token expiry
@@ -244,7 +247,3 @@ export const useAdminAuth = () => {
   if (!context) throw new Error('useAdminAuth must be used within AdminAuthProvider');
   return context;
 };
-
-
-
-518
