@@ -23,7 +23,6 @@ export const useOrders = () => {
   const { data: orders = [], isLoading, error } = useQuery({
     queryKey: ['admin-orders'],
     queryFn: async () => {
-      console.log('Fetching orders from admin client...');
       const { data, error } = await supabase
         .from('orders')
         .select('*, order_items(*)')
@@ -38,7 +37,6 @@ export const useOrders = () => {
         });
         throw error;
       }
-      console.log('Orders fetched successfully:', data?.length || 0);
       return data || [];
     },
   });

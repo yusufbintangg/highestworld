@@ -14,24 +14,26 @@ function dumpStorage(label) {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      console.log(`%c[ADMIN-AUTH ${ts()}] STORAGE(${label}): EMPTY/MISSING`, 'color: orange');
+      // console.log(`%c[ADMIN-AUTH ${ts()}] STORAGE(${label}): EMPTY/MISSING`, 'color: orange');
       return;
     }
     const parsed = JSON.parse(raw);
     const expiresAt = parsed?.expires_at;
     const expiresIn = expiresAt ? Math.round(expiresAt * 1000 - Date.now()) / 1000 : null;
-    console.log(
-      `%c[ADMIN-AUTH ${ts()}] STORAGE(${label}): user=${parsed?.user?.email ?? '?'} expires_in=${expiresIn}s`,
-      'color: cyan'
-    );
+    // console.log(
+    //   `%c[ADMIN-AUTH ${ts()}] STORAGE(${label}): user=${parsed?.user?.email ?? '?'} expires_in=${expiresIn}s`,
+    //   'color: cyan'
+    // );
   } catch (e) {
-    console.log(`%c[ADMIN-AUTH ${ts()}] STORAGE(${label}): CORRUPT -> ${e.message}`, 'color: red; font-weight: bold');
+    // console.log(`%c[ADMIN-AUTH ${ts()}] STORAGE(${label}): CORRUPT -> ${e.message}`, 'color: red; font-weight: bold');
   }
 }
 
-function log(...args) { console.log(`%c[ADMIN-AUTH ${ts()}]`, 'color: lime', ...args); }
-function warn(...args) { console.warn(`%c[ADMIN-AUTH ${ts()}]`, 'color: orange', ...args); }
-function err(...args) { console.error(`%c[ADMIN-AUTH ${ts()}]`, 'color: red; font-weight: bold', ...args); }
+function log(...args) { /* console.log(`%c[ADMIN-AUTH ${ts()}]`, 'color: lime', ...args); */ }
+function warn(...args) { /* console.warn(`%c[ADMIN-AUTH ${ts()}]`, 'color: orange', ...args); */ }
+function err(...args) { /* console.error(`%c[ADMIN-AUTH ${ts()}]`, 'color: red; font-weight: bold', ...args); */ }
+
+
 
 // ============================================================
 // PROMISE TIMEOUT WRAPPER
@@ -98,10 +100,10 @@ export const AdminAuthProvider = ({ children }) => {
       return;
     }
 
-    if (checkInFlightFor.current === user.id && !isRetry) {
-      warn(`checkAdminRole: query untuk ${user.email} sudah sedang berjalan, skip duplicate call`);
-      return;
-    }
+   // if (checkInFlightFor.current === user.id && !isRetry) {
+   //   warn(`checkAdminRole: query untuk ${user.email} sudah sedang berjalan, skip duplicate call`);
+   //   return;
+   // }
     checkInFlightFor.current = user.id;
 
     log('checkAdminRole() CALLED for', user.email, 'isRetry=', isRetry);
