@@ -231,13 +231,23 @@ export const AdminAuthProvider = ({ children }) => {
               return;
             }
 
+            // SIGNED_IN sebelum INITIAL_SESSION (initialized masih false):
+            // Ini terjadi di production karena _recoverAndRefresh overlap
+            // dengan inisialisasi client. Kita SKIP -- biar INITIAL_SESSION
+            // yang jadi satu-satunya trigger checkAdminRole di fase init.
+            // INITIAL_SESSION pasti akan menyusul dan handle dengan benar.
+            if (!initialized.current) {
+              log(`SIGNED_IN sebelum INITIAL_SESSION untuk ${session.user.email}, SKIP -- tunggu INITIAL_SESSION`);
+              return;
+            }
+
             // Kalau admin state sudah ada dan user-nya sama persis,
             // ini kemungkinan besar SIGNED_IN dari token refresh cycle
             // (Supabase SDK kadang nembak SIGNED_IN alih-alih TOKEN_REFRESHED).
             // Tidak perlu re-query admin_users -- admin state masih valid.
             const currentAdmin = adminRef.current;
             if (currentAdmin && currentAdmin.id === session.user.id) {
-              log(`SIGNED_IN: user ${session.user.email} sama dengan admin state saat ini, SKIP checkAdminRole (kemungkinan token refresh cycle)`);
+              log(`SIGNED_IN: user ${session.user.email} sama dengan admin state saat ini, SKIP checkAdminRole (token refresh cycle)`);
               setLoading(false);
               return;
             }
