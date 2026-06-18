@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Copy, Trash2 } from 'lucide-react';
+import { Copy, Trash2, Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const ProductFormModal = ({
@@ -9,7 +9,7 @@ export const ProductFormModal = ({
   categories, toggleBadge,
   variants, sizeType, setSizeType, sizeOptions,
   addVariant, removeVariant, updateVariant,
-  existingVariants,
+  existingVariants, isLoadingVariants, variantsError,
   handleDeleteExistingVariant, handleOpenEditExistingVariant,
   handleSubmit, onClose,
   generateSlug,
@@ -186,7 +186,43 @@ https://example.com/img2.jpg"
             </section>
 
             {/* ── Existing Variants (edit mode only) ──────────────── */}
-            {editProduct && existingVariants?.length > 0 && (
+            {/* SEBELUM: kondisi render-nya `existingVariants?.length > 0`,
+                jadi kalau data masih loading (cache miss di useQuery),
+                existingVariants = [] dan SECTION INI HILANG TOTAL --
+                tidak ada indikasi sedang loading, admin bisa mengira
+                produk ini memang tidak punya varian.
+                SEKARANG: loading dan error ditangani eksplisit, jadi
+                tidak ada state yang "diam-diam" salah. */}
+            {editProduct && isLoadingVariants && (
+              <section className="space-y-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Varian Existing
+                </p>
+                <div className="border border-border rounded-lg p-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Memuat varian...
+                </div>
+              </section>
+            )}
+
+            {editProduct && !isLoadingVariants && variantsError && (
+              <section className="space-y-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Varian Existing
+                </p>
+                <div className="border border-destructive/30 bg-destructive/5 rounded-lg p-4 flex items-start gap-2 text-sm">
+                  <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-destructive">Gagal memuat varian</p>
+                    <p className="text-muted-foreground text-xs">
+                      {variantsError.message || 'Terjadi kesalahan saat mengambil data varian.'} Coba tutup dan buka kembali form ini.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {editProduct && !isLoadingVariants && !variantsError && existingVariants?.length > 0 && (
               <section className="space-y-3">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Varian Existing ({existingVariants.length})
@@ -229,6 +265,17 @@ https://example.com/img2.jpg"
                       </div>
                     ))}
                   </div>
+                </div>
+              </section>
+            )}
+
+            {editProduct && !isLoadingVariants && !variantsError && existingVariants?.length === 0 && (
+              <section className="space-y-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Varian Existing
+                </p>
+                <div className="border border-dashed border-border rounded-lg p-4 text-center text-xs text-muted-foreground">
+                  Produk ini belum punya varian. Tambahkan lewat form "Tambah Varian Baru" di bawah.
                 </div>
               </section>
             )}
@@ -342,5 +389,3 @@ https://example.com/img2.jpg"
     </div>
   );
 };
-
-

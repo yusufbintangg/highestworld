@@ -35,7 +35,7 @@ export const AdminLogin = () => {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold tracking-widest mb-1">HIGHEST WORLD</h1>
-          <p className="text-muted-foreground text-sm">Admin Panel masmasjawa@highest.id MASBINGANTENG12345</p>
+          <p className="text-muted-foreground text-sm">Admin Panel</p>
         </div>
 
         <div className="bg-card border border-border rounded-lg p-6 space-y-4">

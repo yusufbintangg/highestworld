@@ -77,11 +77,16 @@ export const AdminAuthProvider = ({ children }) => {
   // alih-alih silent fail / diam-diam redirect ke login.
   const [authError, setAuthError] = useState(null);
 
+  // adminRef: mirror dari state `admin` dalam bentuk ref, supaya closure
+  // di onAuthStateChange selalu bisa baca nilai admin TERKINI tanpa
+  // stale closure -- nilai state tidak bisa dibaca fresh dari dalam
+  // useEffect closure yang didaftarkan sekali saat mount.
+  const adminRef = useRef(null);
+
   const initialized = useRef(false);
   const roleCheckRetries = useRef(0);
   const maxRetries = 3;
-  // Guard supaya checkAdminRole tidak dipanggil 2x bersamaan untuk user yang sama
-  // (mis. event SIGNED_IN dan TOKEN_REFRESHED nembak hampir berbarengan).
+  // Guard supaya checkAdminRole tidak dipanggil 2x bersamaan untuk user yang sama.
   const checkInFlightFor = useRef(null);
 
   const checkAdminRole = async (user, isRetry = false) => {
@@ -159,6 +164,13 @@ export const AdminAuthProvider = ({ children }) => {
     }
   };
 
+  // Sync adminRef setiap kali admin state berubah, supaya closure
+  // di onAuthStateChange selalu baca nilai terkini (bukan nilai stale
+  // dari saat listener pertama kali didaftarkan).
+  useEffect(() => {
+    adminRef.current = admin;
+  }, [admin]);
+
   useEffect(() => {
     log('=== MOUNTED ===');
     dumpStorage('on-mount');
@@ -204,12 +216,35 @@ export const AdminAuthProvider = ({ children }) => {
             return;
           }
 
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            if (session?.user) {
-              await checkAdminRole(session.user);
-            } else {
-              warn(`event=${event} tapi session/user kosong — ini tidak seharusnya terjadi, cek Supabase SDK version`);
+          if (event === 'TOKEN_REFRESHED') {
+            // Token refresh TIDAK mengubah role admin -- user yang sama,
+            // cuma token barunya yang berbeda. Tidak perlu re-query admin_users.
+            log(`TOKEN_REFRESHED: token diperbarui untuk ${session?.user?.email ?? '?'}, admin state dipertahankan, SKIP checkAdminRole`);
+            setLoading(false);
+            return;
+          }
+
+          if (event === 'SIGNED_IN') {
+            if (!session?.user) {
+              warn('SIGNED_IN tapi session/user kosong — tidak seharusnya terjadi');
+              setLoading(false);
+              return;
             }
+
+            // Kalau admin state sudah ada dan user-nya sama persis,
+            // ini kemungkinan besar SIGNED_IN dari token refresh cycle
+            // (Supabase SDK kadang nembak SIGNED_IN alih-alih TOKEN_REFRESHED).
+            // Tidak perlu re-query admin_users -- admin state masih valid.
+            const currentAdmin = adminRef.current;
+            if (currentAdmin && currentAdmin.id === session.user.id) {
+              log(`SIGNED_IN: user ${session.user.email} sama dengan admin state saat ini, SKIP checkAdminRole (kemungkinan token refresh cycle)`);
+              setLoading(false);
+              return;
+            }
+
+            // User berbeda atau belum ada admin state -- perlu verifikasi role.
+            log(`SIGNED_IN: user ${session.user.email} perlu verifikasi role`);
+            await checkAdminRole(session.user);
             setLoading(false);
             return;
           }

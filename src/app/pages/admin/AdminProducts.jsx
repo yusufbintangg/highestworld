@@ -1,4 +1,4 @@
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, AlertTriangle } from 'lucide-react';
 import { formatPrice } from '../../../lib/utils';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -9,12 +9,13 @@ import { EditVariantModal } from '../../components/admin/EditVariantModal';
 export const AdminProducts = () => {
   const {
     filtered, categories, loading, search, setSearch,
+    productsError, categoriesError,
     showForm, setShowForm, editProduct, form, setForm,
     handleOpenAdd, handleOpenEdit, handleDelete, handleToggleActive, handleSubmit,
     toggleBadge, generateSlug,
     variants, sizeType, setSizeType, sizeOptions,
     addVariant, removeVariant, updateVariant,
-    existingVariants,
+    existingVariants, isLoadingVariants, variantsError,
     handleDeleteExistingVariant, handleOpenEditExistingVariant,
     editingVariant, setEditingVariant, handleSaveEditingVariant,
   } = useAdminProducts();
@@ -40,6 +41,22 @@ export const AdminProducts = () => {
         />
       </div>
 
+      {/* Error banner -- jangan diam-diam tampilkan list kosong kalau
+          sebenarnya fetch produk/kategori GAGAL, bukan karena memang
+          tidak ada data. */}
+      {(productsError || categoriesError) && (
+        <div className="flex items-start gap-2 p-3 rounded-lg border border-destructive/30 bg-destructive/5 text-sm">
+          <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium text-destructive">Gagal memuat data</p>
+            <p className="text-muted-foreground text-xs">
+              {productsError?.message || categoriesError?.message || 'Terjadi kesalahan saat mengambil data dari server.'}
+              {' '}Coba refresh halaman.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Form Modal */}
       {showForm && (
         <ProductFormModal
@@ -57,6 +74,8 @@ export const AdminProducts = () => {
           removeVariant={removeVariant}
           updateVariant={updateVariant}
           existingVariants={existingVariants}
+          isLoadingVariants={isLoadingVariants}
+          variantsError={variantsError}
           handleDeleteExistingVariant={handleDeleteExistingVariant}
           handleOpenEditExistingVariant={handleOpenEditExistingVariant}
           handleSubmit={handleSubmit}
