@@ -3,12 +3,6 @@ import { supabase } from '../lib/supabaseAdmin';
 
 const AdminAuthContext = createContext(null);
 
-// ============================================================
-// DEBUG LOGGER
-// Semua log dikasih timestamp + tag [ADMIN-AUTH] biar gampang
-// di-filter di console (ketik "ADMIN-AUTH" di filter box Console).
-// Juga nge-dump localStorage tiap kali dipanggil.
-// ============================================================
 const STORAGE_KEY = 'hw-admin-session';
 
 function ts() {
@@ -27,299 +21,296 @@ function dumpStorage(label) {
     const expiresAt = parsed?.expires_at;
     const expiresIn = expiresAt ? Math.round(expiresAt * 1000 - Date.now()) / 1000 : null;
     console.log(
-      `%c[ADMIN-AUTH ${ts()}] STORAGE(${label}): user=${parsed?.user?.email ?? '?'} expires_in=${expiresIn}s access_token_len=${parsed?.access_token?.length ?? 0} refresh_token_len=${parsed?.refresh_token?.length ?? 0}`,
+      `%c[ADMIN-AUTH ${ts()}] STORAGE(${label}): user=${parsed?.user?.email ?? '?'} expires_in=${expiresIn}s`,
       'color: cyan'
     );
-  } catch (err) {
-    console.log(`%c[ADMIN-AUTH ${ts()}] STORAGE(${label}): CORRUPT/UNPARSEABLE -> ${err.message}`, 'color: red; font-weight: bold');
-    console.log('Raw value:', localStorage.getItem(STORAGE_KEY));
+  } catch (e) {
+    console.log(`%c[ADMIN-AUTH ${ts()}] STORAGE(${label}): CORRUPT -> ${e.message}`, 'color: red; font-weight: bold');
   }
 }
 
-function log(...args) {
-  console.log(`%c[ADMIN-AUTH ${ts()}]`, 'color: lime', ...args);
-}
+function log(...args) { console.log(`%c[ADMIN-AUTH ${ts()}]`, 'color: lime', ...args); }
+function warn(...args) { console.warn(`%c[ADMIN-AUTH ${ts()}]`, 'color: orange', ...args); }
+function err(...args) { console.error(`%c[ADMIN-AUTH ${ts()}]`, 'color: red; font-weight: bold', ...args); }
 
-function warn(...args) {
-  console.warn(`%c[ADMIN-AUTH ${ts()}]`, 'color: orange', ...args);
-}
+// ============================================================
+// PROMISE TIMEOUT WRAPPER
+// Dipertahankan dari versi lama, dipakai HANYA untuk checkAdminRole
+// (query ke tabel admin_users), bukan untuk getSession.
+// getSession TIDAK PERLU timeout manual lagi karena kita tidak
+// lagi memanggilnya secara manual — lihat catatan di bawah.
+// ============================================================
+function withTimeout(promiseLike, ms, label) {
+  const t0 = performance.now();
+  let settled = false;
 
-function err(...args) {
-  console.error(`%c[ADMIN-AUTH ${ts()}]`, 'color: red; font-weight: bold', ...args);
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => {
+      if (!settled) {
+        err(`⏱️ TIMEOUT after ${ms}ms on: ${label}. The underlying promise NEVER resolved or rejected.`);
+      }
+      reject(new Error(`TIMEOUT: ${label} exceeded ${ms}ms`));
+    }, ms);
+  });
+
+  const wrapped = Promise.resolve(promiseLike).then(
+    (result) => {
+      settled = true;
+      log(`✅ "${label}" resolved in ${(performance.now() - t0).toFixed(0)}ms`);
+      return result;
+    },
+    (error) => {
+      settled = true;
+      err(`❌ "${label}" rejected in ${(performance.now() - t0).toFixed(0)}ms:`, error);
+      throw error;
+    }
+  );
+
+  return Promise.race([wrapped, timeoutPromise]);
 }
 
 export const AdminAuthProvider = ({ children }) => {
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
+  // authError: dipakai untuk menampilkan pesan error yang JELAS di UI
+  // (mis. AdminLayout bisa render banner "Gagal verifikasi sesi, coba refresh")
+  // alih-alih silent fail / diam-diam redirect ke login.
+  const [authError, setAuthError] = useState(null);
+
   const initialized = useRef(false);
   const roleCheckRetries = useRef(0);
-  const sessionMissCount = useRef(0);
   const maxRetries = 3;
+  // Guard supaya checkAdminRole tidak dipanggil 2x bersamaan untuk user yang sama
+  // (mis. event SIGNED_IN dan TOKEN_REFRESHED nembak hampir berbarengan).
+  const checkInFlightFor = useRef(null);
 
   const checkAdminRole = async (user, isRetry = false) => {
-    log('checkAdminRole() CALLED for', user?.email, 'isRetry=', isRetry);
     if (!user) {
-      warn('checkAdminRole: no user passed -> setAdmin(null)');
+      warn('checkAdminRole: no user -> setAdmin(null)');
       setAdmin(null);
+      setAuthError(null);
       roleCheckRetries.current = 0;
       return;
     }
 
+    if (checkInFlightFor.current === user.id && !isRetry) {
+      warn(`checkAdminRole: query untuk ${user.email} sudah sedang berjalan, skip duplicate call`);
+      return;
+    }
+    checkInFlightFor.current = user.id;
+
+    log('checkAdminRole() CALLED for', user.email, 'isRetry=', isRetry);
+
     try {
-      const t0 = performance.now();
-      const { data: adminUser, error } = await supabase
+      const queryBuilder = supabase
         .from('admin_users')
         .select('id, email, full_name, role, is_active')
         .eq('id', user.id)
         .eq('is_active', true)
         .maybeSingle();
-      log(`admin_users query took ${(performance.now() - t0).toFixed(0)}ms`, { adminUser, error });
+
+      const { data: adminUser, error } = await withTimeout(
+        queryBuilder,
+        8000,
+        `admin_users SELECT for ${user.email}`
+      );
 
       if (error) {
-        err('Role check query error:', error);
+        err('Role check query error (Supabase returned an error object):', error);
         throw error;
       }
 
       if (!adminUser) {
-        warn('User is not an active admin (query returned null) -> setAdmin(null)');
+        warn(`User ${user.email} TIDAK ditemukan sebagai admin aktif di tabel admin_users -> setAdmin(null)`);
         setAdmin(null);
+        setAuthError(null);
         roleCheckRetries.current = 0;
         return;
       }
 
-      log('Role check OK -> setAdmin(...)', adminUser);
+      log('Role check OK -> setAdmin', adminUser.email, adminUser.role);
       setAdmin({ ...user, ...adminUser });
+      setAuthError(null);
       roleCheckRetries.current = 0;
     } catch (caught) {
-      err('checkAdminRole EXCEPTION:', caught);
+      const message = caught?.message || String(caught);
+      err('checkAdminRole EXCEPTION:', message);
 
       if (!isRetry && roleCheckRetries.current < maxRetries) {
         roleCheckRetries.current++;
         const delay = Math.min(1000 * Math.pow(2, roleCheckRetries.current - 1), 8000);
-        warn(`Retrying role check in ${delay}ms (attempt ${roleCheckRetries.current}/${maxRetries})`);
+        warn(`Retrying in ${delay}ms (attempt ${roleCheckRetries.current}/${maxRetries})`);
+        checkInFlightFor.current = null;
         setTimeout(() => checkAdminRole(user, true), delay);
+        return; // jangan jatuh ke finally di bawah, retry masih berlangsung
       } else {
-        err('Role check failed after retries. Keeping current admin state (NOT logging out).');
+        // Retry habis. INI BUKAN "anggap saja gagal" -> kita SET authError
+        // yang jelas, supaya UI bisa menampilkan pesan eksplisit alih-alih
+        // diam-diam logout / redirect tanpa penjelasan.
+        err(`Retries exhausted untuk ${user.email}. Set authError, JANGAN logout otomatis.`);
+        setAuthError(
+          `Gagal memverifikasi sesi admin (${message}). Token Anda masih ada, tapi server tidak merespons. Coba refresh halaman.`
+        );
         roleCheckRetries.current = 0;
+        setLoading(false);
       }
+    } finally {
+      checkInFlightFor.current = null;
     }
   };
 
   useEffect(() => {
-    log('=== AdminAuthProvider MOUNTED ===');
+    log('=== MOUNTED ===');
     dumpStorage('on-mount');
 
-    const initFromStorage = async () => {
-      log('initFromStorage() START -> calling getSession()');
-      try {
-        const t0 = performance.now();
-        const { data, error } = await supabase.auth.getSession();
-        log(`getSession() resolved in ${(performance.now() - t0).toFixed(0)}ms`, { hasSession: !!data?.session, error });
-        dumpStorage('after-getSession-in-initFromStorage');
-
-        if (error) {
-          err('getSession() returned an ERROR object:', error);
-        }
-
-        if (data?.session?.user) {
-          log('Session FOUND in storage for', data.session.user.email, '-> checkAdminRole');
-          await checkAdminRole(data.session.user);
-          initialized.current = true;
-          setLoading(false);
-          log('initFromStorage DONE, loading=false, initialized=true');
-        } else {
-          warn('No session found in storage via getSession(). Waiting for onAuthStateChange...');
-        }
-      } catch (caught) {
-        err('initFromStorage THREW:', caught);
-      }
-    };
-
-    initFromStorage();
-
-    let fallbackTimeout;
+    // ============================================================
+    // SINGLE SOURCE OF TRUTH: hanya onAuthStateChange.
+    //
+    // Supabase SDK otomatis menembak event 'INITIAL_SESSION' sesaat
+    // setelah listener didaftarkan, berisi hasil restore dari
+    // localStorage (kalau ada). Ini menggantikan getSession() manual
+    // yang dulu jalan PARALEL dengan listener ini dan menyebabkan race
+    // condition: dua jalur sama-sama berusaha set `admin`/`loading`
+    // dengan urutan resolve yang tidak deterministik antara local dan
+    // production (beda latency network).
+    //
+    // Dengan hanya 1 jalur, urutan event SELALU:
+    //   INITIAL_SESSION -> (SIGNED_IN | SIGNED_OUT | TOKEN_REFRESHED | ...)
+    // dan tidak ada lagi dua proses yang berebut men-set state yang sama.
+    // ============================================================
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        log(`onAuthStateChange FIRED: event=${event} hasSession=${!!session} initialized=${initialized.current}`);
-        dumpStorage(`onAuthStateChange-${event}`);
+        log(`onAuthStateChange: event=${event} hasSession=${!!session} initialized=${initialized.current}`);
+        dumpStorage(`event-${event}`);
 
-        if (initialized.current) {
-          try {
-            if (event === 'SIGNED_OUT') {
-              warn('SIGNED_OUT event -> setAdmin(null)');
-              setAdmin(null);
-              roleCheckRetries.current = 0;
-              setLoading(false);
-            } else if (event === 'SIGNED_IN') {
-              log('SIGNED_IN event, session.user=', session?.user?.email);
-              if (session?.user) await checkAdminRole(session.user);
-              setLoading(false);
-            } else if (event === 'TOKEN_REFRESHED') {
-              log('TOKEN_REFRESHED event, session.user=', session?.user?.email);
-              if (session?.user) {
-                await checkAdminRole(session.user);
-              } else {
-                warn('TOKEN_REFRESHED but session.user is missing!');
-              }
-              setLoading(false);
+        try {
+          if (event === 'INITIAL_SESSION') {
+            initialized.current = true;
+            if (session?.user) {
+              await checkAdminRole(session.user);
             } else {
-              log(`Unhandled event type (no-op): ${event}`);
+              log('INITIAL_SESSION tanpa session -> tidak ada token tersimpan, user belum login');
+              setAdmin(null);
             }
-          } catch (caught) {
-            err('Error handling auth event (post-init):', caught);
-            setLoading(false);
-          }
-          return;
-        }
-
-        if (!initialized.current) {
-          initialized.current = true;
-          if (fallbackTimeout) clearTimeout(fallbackTimeout);
-          log('First-time init via onAuthStateChange. event=', event);
-          if (!session?.user) {
-            warn('No session.user on first init event -> staying logged out, loading=false');
             setLoading(false);
             return;
           }
-          try {
-            await checkAdminRole(session.user);
-          } catch (caught) {
-            err('checkAdminRole error (initial):', caught);
-          } finally {
+
+          if (event === 'SIGNED_OUT') {
+            setAdmin(null);
+            setAuthError(null);
+            roleCheckRetries.current = 0;
             setLoading(false);
-            log('First-time init DONE, loading=false');
+            return;
           }
-          return;
+
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            if (session?.user) {
+              await checkAdminRole(session.user);
+            } else {
+              warn(`event=${event} tapi session/user kosong — ini tidak seharusnya terjadi, cek Supabase SDK version`);
+            }
+            setLoading(false);
+            return;
+          }
+
+          // Event lain (USER_UPDATED, PASSWORD_RECOVERY, dll) - tidak
+          // perlu aksi khusus untuk admin dashboard, tapi tetap dicatat.
+          log(`Event ${event} tidak ditangani secara khusus, diabaikan`);
+        } catch (caught) {
+          // INI KUNCI: kalau ada error tak terduga di handler ini,
+          // JANGAN biarkan silent. Tampilkan di authError, dan jangan
+          // logout paksa hanya karena handler error.
+          err('Unhandled error di onAuthStateChange handler:', caught?.message || caught);
+          setAuthError(`Error tak terduga saat memproses status sesi: ${caught?.message || caught}`);
+          setLoading(false);
         }
       }
     );
 
-    fallbackTimeout = setTimeout(async () => {
-      if (!initialized.current) {
-        warn('FALLBACK TIMEOUT (3s) fired — neither initFromStorage nor onAuthStateChange finished. Forcing getSession() check.');
-        dumpStorage('fallback-timeout-before-getSession');
-        try {
-          const { data, error } = await supabase.auth.getSession();
-          log('Fallback getSession() result:', { hasSession: !!data?.session, error });
-          const sessUser = data?.session?.user ?? null;
-          await checkAdminRole(sessUser);
-        } catch (caught) {
-          err('Fallback getSession/checkAdminRole error:', caught);
-        } finally {
-          initialized.current = true;
-          setLoading(false);
-          log('Fallback path DONE, loading=false, initialized=true');
-        }
-      }
-    }, 3000);
-
-    const hardTimeout = setTimeout(() => {
-      warn('HARD TIMEOUT (6s) fired — forcing loading=false regardless of state.');
-      dumpStorage('hard-timeout');
-      setLoading(false);
-    }, 6000);
-
     return () => {
-      log('=== AdminAuthProvider UNMOUNTING / cleanup ===');
-      if (fallbackTimeout) clearTimeout(fallbackTimeout);
-      clearTimeout(hardTimeout);
+      log('=== UNMOUNT ===');
       subscription.unsubscribe();
     };
   }, []);
 
-  useEffect(() => {
-    if (!admin || loading) return;
-
-    log('Starting 30s session validation interval for admin:', admin.email);
-
-    const validateSessionInterval = setInterval(async () => {
-      log('--- validateSessionInterval TICK ---');
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        const currentSession = data?.session;
-        dumpStorage('validate-interval-tick');
-
-        if (error) err('validateSessionInterval getSession() error object:', error);
-
-        if (!currentSession) {
-          sessionMissCount.current++;
-          warn(`Session MISSING in validate tick. sessionMissCount=${sessionMissCount.current}`);
-          if (sessionMissCount.current >= 2) {
-            err('Session confirmed invalid (2 consecutive misses). Logging out.');
-            setAdmin(null);
-            sessionMissCount.current = 0;
-          }
-          return;
-        }
-
-        sessionMissCount.current = 0;
-
-        if (currentSession.user.id !== admin.id) {
-          warn(`Session user ID MISMATCH: session=${currentSession.user.id} admin=${admin.id}. Logging out.`);
-          setAdmin(null);
-          return;
-        }
-
-        const expiresAt = currentSession.expires_at;
-        const expiresIn = expiresAt ? (expiresAt * 1000 - Date.now()) / 1000 : null;
-        log(`Session OK. Token expires in ${expiresIn?.toFixed(0)}s`);
-      } catch (caught) {
-        err('validateSessionInterval THREW:', caught);
-      }
-    }, 30000);
-
-    return () => {
-      log('Clearing 30s validation interval');
-      clearInterval(validateSessionInterval);
-    };
-  }, [admin, loading]);
-
   const signIn = async (email, password) => {
     log('signIn() CALLED for', email);
-    dumpStorage('before-signIn');
-    const t0 = performance.now();
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    log(`signInWithPassword resolved in ${(performance.now() - t0).toFixed(0)}ms`, { hasData: !!data, error });
-    dumpStorage('after-signInWithPassword');
+    setAuthError(null);
 
-    if (error) {
-      err('signIn FAILED at signInWithPassword:', error);
-      throw error;
+    let signInResult;
+    try {
+      signInResult = await withTimeout(
+        supabase.auth.signInWithPassword({ email, password }),
+        8000,
+        'signInWithPassword'
+      );
+    } catch (caught) {
+      err('signIn: signInWithPassword call THREW (network/timeout):', caught?.message || caught);
+      throw new Error(`Tidak bisa menghubungi server otentikasi: ${caught?.message || caught}`);
     }
 
-    log('signInWithPassword OK, now checking admin_users table for', data.user.id);
-    const t1 = performance.now();
-    const { data: adminUser, error: roleError } = await supabase
-      .from('admin_users')
-      .select('id, email, full_name, role, is_active')
-      .eq('id', data.user.id)
-      .eq('is_active', true)
-      .maybeSingle();
-    log(`admin_users lookup in signIn took ${(performance.now() - t1).toFixed(0)}ms`, { adminUser, roleError });
+    const { data, error } = signInResult;
+    if (error) {
+      err('signIn FAILED (Supabase returned error):', error);
+      throw error;
+    }
+    if (!data?.user) {
+      err('signIn: tidak ada error tapi data.user kosong — kondisi tidak terduga dari Supabase');
+      throw new Error('Login gagal: respons server tidak berisi data user.');
+    }
+
+    let roleCheckResult;
+    try {
+      roleCheckResult = await withTimeout(
+        supabase
+          .from('admin_users')
+          .select('id, email, full_name, role, is_active')
+          .eq('id', data.user.id)
+          .eq('is_active', true)
+          .maybeSingle(),
+        8000,
+        'admin_users lookup (signIn)'
+      );
+    } catch (caught) {
+      err('signIn: role lookup THREW:', caught?.message || caught);
+      // Sign out supaya tidak ada sesi "menggantung" tanpa kepastian role
+      await supabase.auth.signOut();
+      throw new Error(`Gagal memverifikasi role admin: ${caught?.message || caught}`);
+    }
+
+    const { data: adminUser, error: roleError } = roleCheckResult;
+    if (roleError) {
+      err('signIn: role lookup returned error:', roleError);
+      await supabase.auth.signOut();
+      throw new Error(`Gagal memverifikasi role admin: ${roleError.message}`);
+    }
 
     if (!adminUser) {
-      err('signIn: user is NOT an active admin. Signing out and throwing.');
+      warn(`signIn: ${email} berhasil auth tapi BUKAN admin aktif -> signOut + reject`);
       await supabase.auth.signOut();
-      dumpStorage('after-signOut-in-failed-signIn');
       throw new Error('Akses ditolak. Bukan admin.');
     }
 
-    log('signIn() SUCCESS, returning data. Note: setAdmin() will happen via onAuthStateChange SIGNED_IN event, not here.');
+    log('signIn SUCCESS for', email, 'role=', adminUser.role);
     return data;
   };
 
   const signOut = async () => {
     log('signOut() CALLED');
-    await supabase.auth.signOut();
-    dumpStorage('after-signOut');
+    try {
+      await supabase.auth.signOut();
+    } catch (caught) {
+      // Tetap clear state lokal walau signOut ke server gagal (mis. offline),
+      // supaya user tidak "terjebak" di state admin walau sudah klik logout.
+      err('signOut: supabase.auth.signOut() THREW (state lokal tetap dibersihkan):', caught?.message || caught);
+    }
     setAdmin(null);
+    setAuthError(null);
   };
 
-  // Log every render with current state snapshot
-  log(`RENDER: loading=${loading} admin=${admin?.email ?? 'null'}`);
-
   return (
-    <AdminAuthContext.Provider value={{ admin, loading, signIn, signOut }}>
+    <AdminAuthContext.Provider value={{ admin, loading, authError, signIn, signOut }}>
       {children}
     </AdminAuthContext.Provider>
   );

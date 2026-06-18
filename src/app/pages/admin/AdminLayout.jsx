@@ -1,27 +1,55 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router';
-import { LayoutDashboard, Package, ShoppingBag, Layers, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Layers, LogOut, Menu, X, AlertTriangle } from 'lucide-react';
 import { useAdminAuth } from '../../../context/AdminAuthContext';
 import { Button } from '../../components/ui/button';
 import { useState } from 'react';
 
 export const AdminLayout = () => {
-  const { admin, loading, signOut } = useAdminAuth();
+  const { admin, loading, authError, signOut } = useAdminAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Kalau belum login DAN loading sudah selesai, baru redirect ke login
-  // (loading = true berarti context masih restore session dari storage)
+  // Kalau belum login DAN loading sudah selesai DAN tidak ada authError,
+  // baru redirect ke login. authError berarti ada token tapi gagal
+  // diverifikasi karena masalah jaringan/server -- BUKAN berarti user
+  // benar-benar belum login. Jangan redirect dalam kondisi ini, biarkan
+  // user lihat pesan error + tombol retry.
   React.useEffect(() => {
-    if (!loading && !admin) {
+    if (!loading && !admin && !authError) {
       navigate('/admin/login');
     }
-  }, [admin, loading, navigate]);
+  }, [admin, loading, authError, navigate]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  // Ada error verifikasi sesi (timeout/network) DAN belum ada admin state.
+  // Tampilkan pesan eksplisit + tombol refresh, JANGAN redirect ke login
+  // diam-diam -- token di localStorage masih valid, masalahnya cuma di
+  // komunikasi ke server.
+  if (authError && !admin) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="max-w-md w-full border border-destructive/30 bg-destructive/5 rounded-lg p-6 text-center space-y-4">
+          <AlertTriangle className="w-8 h-8 text-destructive mx-auto" />
+          <p className="text-sm text-foreground font-medium">Gagal memverifikasi sesi admin</p>
+          <p className="text-xs text-muted-foreground">{authError}</p>
+          <Button onClick={() => window.location.reload()} className="w-full">
+            Coba Lagi (Refresh)
+          </Button>
+          <button
+            onClick={() => navigate('/admin/login')}
+            className="text-xs text-muted-foreground underline block w-full"
+          >
+            atau login ulang
+          </button>
+        </div>
       </div>
     );
   }
