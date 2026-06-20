@@ -30,26 +30,21 @@ export const HomePage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-  console.log('[HomePage] fetchData START');
   setLoading(true);
 
   // Categories
-  console.log('[HomePage] before categories query');
   const { data: catData, error: catErr } = await supabase
     .from('categories')
     .select('*')
     .eq('is_active', true)
     .order('name');
-  console.log('[HomePage] after categories query', { catData, catErr });
   if (catData) setCategories(catData);
 
   // Products
-  console.log('[HomePage] before products query');
   const { data: prodData, error: prodErr } = await supabase
     .from('products')
     .select('*, categories(name, slug)')
     .eq('is_active', true);
-  console.log('[HomePage] after products query', { prodData, prodErr });
 
   // ... lanjut kode aslinya (banners, dst) tetep sama
 
