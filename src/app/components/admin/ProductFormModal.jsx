@@ -73,6 +73,7 @@ export const ProductFormModal = ({
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
 
+                <p className="text-xs text-muted-foreground mt-2">Harga yang ditampilkan di halaman produk page</p>
               <div className="grid grid-cols-3 gap-3">
                 <Input type="number" placeholder="Harga Jual *" value={form.price}
                   onChange={(e) => setForm(p => ({ ...p, price: parseInt(e.target.value) || 0 }))} required />
@@ -233,7 +234,7 @@ https://example.com/img2.jpg"
                     <div className="col-span-1 text-center">Size</div>
                     <div className="col-span-1 text-center">SKU</div>
                     <div className="col-span-1 text-center">MSKU</div>
-                    <div className="col-span-2 text-center">Harga</div>
+                    <div className="col-span-2 text-center">Harga Variant</div>
                     <div className="col-span-2 text-center">Coret</div>
                     <div className="col-span-1 text-center">Stok</div>
                     <div className="col-span-2 text-right">Aksi</div>
@@ -305,7 +306,7 @@ https://example.com/img2.jpg"
                 <span className="col-span-1 text-center">Size</span>
                 <span className="col-span-2 text-center">SKU</span>
                 <span className="col-span-2 text-center">MSKU</span>
-                <span className="col-span-2 text-center">Harga</span>
+                <span className="col-span-2 text-center">Harga Variant</span>
                 <span className="col-span-2 text-center">Coret</span>
                 <span className="col-span-2 text-center">Stok</span>
               </div>

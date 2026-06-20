@@ -307,10 +307,40 @@ waiting_payment → payment_confirmed → processing → shipped → completed
 3. SELECT * FROM admin_users WHERE id = user.id AND is_active = true
 4. Not found → signOut() + throw 'Akses ditolak'
 5. Found → setAdmin({ ...authUser, ...adminUser })
-6. AdminLayout: if (!admin && !loading) → navigate('/admin/login')
+6. AdminLayout: if (!admin && !loading && !authError) → navigate('/admin/login')
 ```
 
-### 4.3 Protected Routes
+### 4.3 Session Persistence & Single Source of Truth (Updated June 2026)
+
+`AdminAuthContext` previously called `supabase.auth.getSession()` manually on mount **in parallel** with the `onAuthStateChange` listener, plus a separate 30-second polling interval to validate the session. This caused a race condition between local dev (fast, low-latency) and production (variable network latency), resulting in two symptoms: false logouts after a few minutes of admin inactivity, and the dashboard logging the admin out on every page refresh in production.
+
+**Fix:** `AdminAuthContext` now relies on a single source of truth — the `onAuthStateChange` listener only. Supabase's SDK automatically fires an `INITIAL_SESSION` event on mount with the restored session (if any) from `localStorage`, which replaces the manual `getSession()` call. The 30-second polling interval was removed entirely; `autoRefreshToken: true` (set in `supabaseAdmin.js`) already handles token refresh in the background without needing manual validation.
+
+| Event | Behavior |
+|---|---|
+| `INITIAL_SESSION` | Sole trigger for `checkAdminRole()` during mount/refresh. Restores admin state from the token already in `localStorage` — this is what makes refresh "just work" without a re-login. |
+| `SIGNED_IN` (before `INITIAL_SESSION` has fired) | Skipped. In production, Supabase's internal `_recoverAndRefresh` can occasionally fire `SIGNED_IN` before `INITIAL_SESSION`; deferring to `INITIAL_SESSION` avoids a duplicate, slower `admin_users` query during the cold-start window. |
+| `SIGNED_IN` (after init, same user as current `admin` state) | Skipped — this is Supabase's refresh cycle re-emitting `SIGNED_IN` instead of `TOKEN_REFRESHED`. Role doesn't change just because the token did. |
+| `TOKEN_REFRESHED` | Always skipped for role re-check — token refresh never changes `admin_users.role`. |
+| `SIGNED_OUT` | Clears `admin` state immediately. |
+
+A `checkInFlightFor` ref guards against `checkAdminRole()` being called twice concurrently for the same user. Any unexpected failure (timeout, network error, Supabase error) after retries are exhausted sets an explicit `authError` string rather than silently logging the admin out — `AdminLayout` renders a retry banner in that case instead of redirecting to `/admin/login`, since the token may still be valid and the failure is transient.
+
+> **No time-based session limit by design.** As long as a valid token exists in `localStorage` (`hw-admin-session` key) and Supabase's refresh token hasn't expired (default 30 days, rotated on each refresh), the admin stays logged in indefinitely across refreshes and browser restarts — there's no manual session-length enforcement.
+
+### 4.4 Admin Data Caching Strategy
+
+`useAdminProducts.js` uses React Query (`adminQueryClient` in `routes.jsx`) with explicit `staleTime`/`gcTime` to avoid redundant Supabase queries as the product catalog grows:
+
+| Query Key | staleTime | Behavior |
+|---|---|---|
+| `['admin-products']` | 5 min | Refetched only on mutation (`invalidateQueries`) or after 5 min idle |
+| `['admin-categories']` | 5 min | Rarely changes, cached aggressively |
+| `['admin-product-variants', productId]` | 5 min, `enabled: !!editProduct?.id` | Fetched only when the edit modal opens; cached per product — reopening the same product within 5 min hits cache, not network |
+
+Mutations are split by impact: structural changes (create/update/delete product, insert variants) call `invalidateQueries` since the server-side data shape changes meaningfully. Simple boolean toggles (`handleToggleActive`) use `queryClient.setQueryData()` for an optimistic update with rollback on error — no network round-trip or full list refetch for a single-field change.
+
+### 4.5 Protected Routes
 
 | Route | Guard | Redirect if Unauthorized |
 |---|---|---|
@@ -670,4 +700,4 @@ supabase secrets set BITESHIP_API_KEY=biteship-xxxxx
 
 ---
 
-*Technical System Documentation v1.1 — May 2026 — Internal Use Only*
+*Technical System Documentation v1.2 — June 2026 — Internal Use Only*
