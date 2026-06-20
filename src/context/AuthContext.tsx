@@ -71,32 +71,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
   useEffect(() => {
-    // Use only onAuthStateChange to avoid race between getSession() and listener
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        // First event is INITIAL_SESSION (session may be null or valid)
-          console.log('[Auth] event:', event, 'session?', !!session);
-        if (!initialized.current) {
-          initialized.current = true;
-          setSession(session);
-          setIsLoading(false);
-          if (session?.user) await fetchProfile(session.user);
-          return;
-        }
-
-        // Subsequent events: SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, etc.
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    (event, session) => {
+      if (!initialized.current) {
+        initialized.current = true;
         setSession(session);
+        setIsLoading(false);
         if (session?.user) {
-          await fetchProfile(session.user);
-        } else {
-          setUser(null);
+          setTimeout(() => { fetchProfile(session.user); }, 0);
         }
+        return;
       }
-    );
 
-    return () => subscription.unsubscribe();
-  }, []);
+      setSession(session);
+      if (session?.user) {
+        setTimeout(() => { fetchProfile(session.user); }, 0);
+      } else {
+        setUser(null);
+      }
+    }
+  );
+
+  return () => subscription.unsubscribe();
+}, []);
 
   const logout = async () => {
     await supabase.auth.signOut();
