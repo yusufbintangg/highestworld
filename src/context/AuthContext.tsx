@@ -76,6 +76,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         // First event is INITIAL_SESSION (session may be null or valid)
+          console.log('[Auth] event:', event, 'session?', !!session);
         if (!initialized.current) {
           initialized.current = true;
           setSession(session);

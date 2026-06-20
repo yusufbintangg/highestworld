@@ -30,31 +30,28 @@ export const HomePage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
+  console.log('[HomePage] fetchData START');
+  setLoading(true);
 
-      // Categories
-      const { data: catData } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
-      if (catData) setCategories(catData);
+  // Categories
+  console.log('[HomePage] before categories query');
+  const { data: catData, error: catErr } = await supabase
+    .from('categories')
+    .select('*')
+    .eq('is_active', true)
+    .order('name');
+  console.log('[HomePage] after categories query', { catData, catErr });
+  if (catData) setCategories(catData);
 
-      // Products
-      const { data: prodData } = await supabase
-        .from('products')
-        .select('*, categories(name, slug)')
-        .eq('is_active', true);
+  // Products
+  console.log('[HomePage] before products query');
+  const { data: prodData, error: prodErr } = await supabase
+    .from('products')
+    .select('*, categories(name, slug)')
+    .eq('is_active', true);
+  console.log('[HomePage] after products query', { prodData, prodErr });
 
-      if (prodData) {
-        setProducts({
-          newest: prodData
-            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-            .slice(0, 12),
-          bestsellers: prodData.filter(p => p.badges?.includes('Best Seller')).slice(0, 12),
-          sale: prodData.filter(p => p.badges?.includes('Sale')).slice(0, 12),
-        });
-      }
+  // ... lanjut kode aslinya (banners, dst) tetep sama
 
       // Banners dari Supabase
       const { data: bannerData } = await supabase
